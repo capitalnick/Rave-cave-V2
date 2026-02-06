@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Wine } from '../types';
 import { X, Star, Wine as WineIcon, Plus, Minus, MapPin, AlertTriangle, Clock } from 'lucide-react';
 import { getWineColors, getMaturityStatus } from '../constants';
+import { getDirectImageUrl } from '../utils/imageUrl';
 
 interface WineModalProps {
   wine: Wine;
@@ -12,7 +13,7 @@ interface WineModalProps {
 const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
   const maturity = getMaturityStatus(wine.drinkFrom, wine.drinkUntil);
   const colors = getWineColors(wine.type);
-  const displayImageUrl = wine.resolvedImageUrl;
+  const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
   
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -110,10 +111,11 @@ const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
         <div className="relative">
           <div className="h-60 bg-black flex items-center justify-center border-b-8 border-black overflow-hidden">
             {displayImageUrl ? (
-              <img 
-                src={displayImageUrl} 
-                alt={wine.name} 
+              <img
+                src={displayImageUrl}
+                alt={wine.name}
                 className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <WineIcon size={64} className="text-white opacity-20" />

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Wine } from '../types';
 import { Wine as WineIcon, Plus, Minus, Star, Clock, AlertTriangle } from 'lucide-react';
 import { getWineColors, getMaturityStatus } from '../constants';
+import { getDirectImageUrl } from '../utils/imageUrl';
 
 interface WineCardProps {
   wine: Wine;
@@ -21,7 +22,7 @@ const getPriceSymbol = (price: number) => {
 const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) => {
   const maturity = getMaturityStatus(wine.drinkFrom, wine.drinkUntil);
   const colors = getWineColors(wine.type);
-  const displayImageUrl = wine.resolvedImageUrl;
+  const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
   const stampRotation = React.useMemo(() => Math.random() * 6 - 3, []);
 
   const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
@@ -62,10 +63,11 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
 
       <div className="aspect-square bg-[#EBEBDF] relative overflow-hidden flex items-center justify-center border-b-2 sm:border-b-4 border-black">
         {displayImageUrl ? (
-          <img 
-            src={displayImageUrl} 
-            alt={wine.name} 
-            className="w-full h-full object-cover contrast-110" 
+          <img
+            src={displayImageUrl}
+            alt={wine.name}
+            className="w-full h-full object-cover contrast-110"
+            referrerPolicy="no-referrer"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100">
