@@ -1,42 +1,40 @@
 /**
- * TTS Text Formatter — Prosody-aware
+ * TTS Text Formatter
  *
- * Converts rich/markdown AI responses into TTS-friendly plain text.
- * Designed for ElevenLabs eleven_multilingual_v2 which produces
- * excessively long pauses after full stops but valuable inflection
- * on ! and ? — so we soften periods while preserving those marks.
+ * Transforms AI markdown responses into TTS-optimized plain text for
+ * ElevenLabs eleven_multilingual_v2. Applied ONLY to text sent to TTS —
+ * UI text is never modified.
  *
- * Rules are intentionally simple and deterministic — no NLP.
+ * Core rules:
+ *  - ALL "." → ", " (eliminates long pauses)
+ *  - ALL ":" → ", " (eliminates long pauses)
+ *  - ALL newlines/paragraphs → ", "
+ *  - "!" and "?" preserved exactly (inflection)
+ *  - **bold** → comma-wrapped emphasis (", text,")
+ *  - Abbreviations and decimals protected via placeholders
+ *  - Em-dashes kept as natural micro-pauses
  */
 
-export type SofteningLevel = 'OFF' | 'LOW' | 'MED' | 'HIGH';
-
-export const TTS_PROSODY_CONFIG = {
-  softeningLevel: 'MED' as SofteningLevel,
-};
-
-// ── Protection patterns (must NOT be altered) ───────────────────────
+// ── Protection patterns ─────────────────────────────────────────────
 const ABBREV = /\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|etc|e\.g|i\.e|approx|vol|no)\./gi;
 const DECIMAL_VERSION = /\d+\.\d+/g;
 const PLACEHOLDER = '\x00';
 
-// ── Connector words that signal continuation ────────────────────────
-const CONNECTORS = /^(?:And|But|So|Then|Also|Now|However|Still|Plus|Next|Or|Yet)\b/i;
-
-export function formatForSpeech(
-  text: string,
-  level?: SofteningLevel,
-): string {
-  const softening = level ?? TTS_PROSODY_CONFIG.softeningLevel;
+export function formatForSpeech(text: string): string {
   let s = text;
 
+  // ── Bold → comma-wrapped emphasis ─────────────────────────────────
+  // Must run BEFORE italic strip so **text** isn't caught by *text*
+  // When ! or ? follows bold, skip trailing comma to preserve inflection
+  s = s.replace(/\*\*(.+?)\*\*([!?])/g, ', $1$2');
+  s = s.replace(/\*\*(.+?)\*\*/g, ', $1,');
+
   // ── Markdown cleanup ──────────────────────────────────────────────
-  s = s.replace(/\*\*(.+?)\*\*/g, '$1');        // Bold **text** → text
   s = s.replace(/\*(.+?)\*/g, '$1');            // Italic *text* → text
   s = s.replace(/_(.+?)_/g, '$1');              // Underscore _text_ → text
   s = s.replace(/^#{1,6}\s+/gm, '');            // Heading markers
 
-  // ── Remove only double-quote characters ───────────────────────────
+  // ── Remove double-quote characters ────────────────────────────────
   s = s.replace(/["\u201C\u201D]/g, '');
 
   // ── Parentheticals → comma-separated ──────────────────────────────
@@ -47,118 +45,48 @@ export function formatForSpeech(
   s = s.replace(/!{2,}/g, '!');
   s = s.replace(/\?{2,}/g, '?');
 
-  // ── Preserve ! and ? inflection ───────────────────────────────────
-  // Normalize whitespace after ! and ? to exactly one space
+  // ── Normalize ! and ? whitespace ──────────────────────────────────
   s = s.replace(/!\s+/g, '! ');
   s = s.replace(/\?\s+/g, '? ');
 
   // ── Dash handling ─────────────────────────────────────────────────
-  s = s.replace(/\u2014/g, ' \u2014 ');         // em-dash: normalize spacing
-  s = s.replace(/--/g, ' \u2014 ');             // double hyphen → em-dash
+  s = s.replace(/--/g, '\u2014');                // double hyphen → em-dash
+  // Keep em-dashes as-is — they create natural micro-pauses
 
-  // ── Colon handling (context-sensitive) ─────────────────────────────
-  // Heading-style colon (followed by newline or at end of short fragment)
-  s = s.replace(/:(\s*\n)/g, ',$1');
-  // Colon followed by space + lowercase → comma
-  s = s.replace(/:\s+([a-z])/g, ', $1');
-  // Colon followed by space + uppercase → keep (ElevenLabs handles well)
+  // ── Colon → comma (all cases) ─────────────────────────────────────
+  s = s.replace(/:\s*/g, ', ');
 
-  // ── Newline handling (strength-aware) ─────────────────────────────
-  // Double newline — stronger break
-  if (softening === 'OFF' || softening === 'LOW') {
-    s = s.replace(/\n\s*\n/g, '. ');
-  } else if (softening === 'MED') {
-    s = s.replace(/\n\s*\n/g, ', ');
-  } else {
-    // HIGH
-    s = s.replace(/\n\s*\n/g, ', ');
-  }
-  // Single newline → comma at all levels
-  s = s.replace(/\n/g, ', ');
+  // ── Newlines → comma ──────────────────────────────────────────────
+  s = s.replace(/\n\s*\n/g, ', ');              // paragraph breaks
+  s = s.replace(/\n/g, ', ');                   // single newlines
 
-  // ── Full-stop softening — the core logic ──────────────────────────
-  if (softening !== 'OFF') {
-    // Phase 1: Protect abbreviations and decimals
-    const protectedSpots: string[] = [];
-    let protectIdx = 0;
+  // ── Protect abbreviations and decimals ────────────────────────────
+  const protectedSpots: string[] = [];
+  let protectIdx = 0;
 
-    s = s.replace(ABBREV, (match) => {
-      protectedSpots[protectIdx] = match;
-      const token = PLACEHOLDER.repeat(protectIdx + 1);
-      protectIdx++;
-      return token;
-    });
-    s = s.replace(DECIMAL_VERSION, (match) => {
-      protectedSpots[protectIdx] = match;
-      const token = PLACEHOLDER.repeat(protectIdx + 1);
-      protectIdx++;
-      return token;
-    });
+  s = s.replace(ABBREV, (match) => {
+    protectedSpots[protectIdx] = match;
+    const token = PLACEHOLDER.repeat(protectIdx + 1);
+    protectIdx++;
+    return token;
+  });
+  s = s.replace(DECIMAL_VERSION, (match) => {
+    protectedSpots[protectIdx] = match;
+    const token = PLACEHOLDER.repeat(protectIdx + 1);
+    protectIdx++;
+    return token;
+  });
 
-    // Phase 2: Split on sentence boundaries (period followed by whitespace)
-    const parts = s.split(/\.\s+/);
+  // ── ALL sentence-ending periods → comma ───────────────────────────
+  s = s.replace(/\.\s*/g, ', ');
 
-    if (parts.length > 1) {
-      // Phase 3: Decide replacement per boundary
-      let consecutiveSoft = 0;
-      const result: string[] = [];
-
-      for (let i = 0; i < parts.length - 1; i++) {
-        const next = parts[i + 1];
-        const isLast = i === parts.length - 2;
-        const nextLen = next.length;
-        const startsWithConnector = CONNECTORS.test(next);
-
-        let sep: string;
-
-        // Phase 4: Cadence rule (HIGH only)
-        if (softening === 'HIGH' && consecutiveSoft >= 3) {
-          sep = '. ';
-          consecutiveSoft = 0;
-        } else if (startsWithConnector) {
-          // Connectors always get comma (except OFF, handled above)
-          sep = ', ';
-          consecutiveSoft++;
-        } else if (softening === 'LOW') {
-          sep = '. ';
-        } else if (softening === 'MED') {
-          if (nextLen <= 40) {
-            sep = ', ';
-            consecutiveSoft++;
-          } else if (nextLen <= 80) {
-            sep = '; ';
-            consecutiveSoft++;
-          } else {
-            sep = '. ';
-            consecutiveSoft = 0;
-          }
-        } else {
-          // HIGH
-          if (nextLen <= 80) {
-            sep = ', ';
-            consecutiveSoft++;
-          } else {
-            sep = '; ';
-            consecutiveSoft++;
-          }
-        }
-
-        result.push(parts[i]);
-        result.push(sep);
-      }
-      // Phase 5: Keep final segment as-is (preserves final punctuation)
-      result.push(parts[parts.length - 1]);
-      s = result.join('');
-    }
-
-    // Restore protected spots
-    for (let i = protectedSpots.length - 1; i >= 0; i--) {
-      const token = PLACEHOLDER.repeat(i + 1);
-      s = s.split(token).join(protectedSpots[i]);
-    }
+  // ── Restore protected spots ───────────────────────────────────────
+  for (let i = protectedSpots.length - 1; i >= 0; i--) {
+    const token = PLACEHOLDER.repeat(i + 1);
+    s = s.split(token).join(protectedSpots[i]);
   }
 
-  // ── Common contractions for natural cadence ───────────────────────
+  // ── Common contractions ───────────────────────────────────────────
   const contractions: [RegExp, string][] = [
     [/\bIt is\b/g, "It's"],
     [/\bit is\b/g, "it's"],
@@ -198,13 +126,14 @@ export function formatForSpeech(
   }
 
   // ── Whitespace & punctuation cleanup ──────────────────────────────
-  s = s.replace(/\s{2,}/g, ' ');              // collapse multiple spaces
-  s = s.replace(/,\s*,/g, ',');               // double commas
-  s = s.replace(/,\s*\./g, '.');              // comma before period
-  s = s.replace(/\.\s*\./g, '.');             // double periods
-  s = s.replace(/;\s*;/g, ';');               // double semicolons
-  s = s.replace(/\s+([.,;:?!])/g, '$1');      // space before punctuation
-  s = s.replace(/([.,;:?!])\s*([.,;:?!])/g, '$1'); // adjacent punctuation
+  s = s.replace(/,\s*,+/g, ',');               // collapse multiple commas
+  s = s.replace(/\s{2,}/g, ' ');               // collapse multiple spaces
+  s = s.replace(/\s+([.,;:?!])/g, '$1');       // space before punctuation
+  s = s.replace(/([,;])\s*([.,;])/g, '$1');    // adjacent soft punctuation
+  s = s.replace(/^[,\s]+/, '');                 // leading commas/spaces
+  s = s.replace(/[,\s]+$/, '');                 // trailing commas/spaces
+  // Restore space after punctuation where missing
+  s = s.replace(/([,;!?])([A-Za-z])/g, '$1 $2');
 
   return s.trim();
 }

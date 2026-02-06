@@ -1,5 +1,3 @@
-export { TTS_PROSODY_CONFIG, type SofteningLevel } from './ttsFormatter';
-
 const TTS_URL =
   process.env.TTS_FUNCTION_URL ||
   `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/tts`;
