@@ -12,6 +12,9 @@ const firebaseConfig = {
   measurementId: process.env.FIREBASE_MEASUREMENT_ID
 };
 
+// DEBUG: Remove after confirming env vars work on Vercel
+console.log('[Firebase] projectId:', firebaseConfig.projectId || '⚠️ MISSING');
+
 // Initialize Firebase using modular v9+ syntax
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
