@@ -55,9 +55,9 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const stagedWineRef = useRef<StagedWine | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  
-  // FIX: Sync transcription with UI input
-  const onTranscriptionUpdate = useRef<(text: string) => void>(() => {});
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasSubmittedRef = useRef(false);
+  const liveTranscriptRef = useRef('');
 
   /**
    * VOICE SELECTION (STRICT HEURISTIC)
@@ -188,7 +188,13 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
 
   // Handle voice submission cleanup and cancellation
   useEffect(() => {
-    return () => stopSpeaking();
+    return () => {
+      stopSpeaking();
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    };
   }, [stopSpeaking]);
 
   const handleToolCalls = useCallback(async (calls: any[]) => {
@@ -306,14 +312,40 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     }
   }, [cellarSnapshot, handleToolCalls, speak, stopSpeaking]);
 
-  const startRecording = useCallback((onUpdate: (t: string) => void) => {
-    onTranscriptionUpdate.current = onUpdate;
+  const finalizeAndSubmitVoice = useCallback(() => {
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+
+    const finalText = liveTranscriptRef.current.trim();
+    if (finalText) {
+      sendMessage(finalText, undefined, true);
+    }
+
+    setLiveTranscript('');
+    liveTranscriptRef.current = '';
+  }, [sendMessage]);
+
+  const startRecording = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    // Mic toggle cancels current speech
+    hasSubmittedRef.current = false;
+    liveTranscriptRef.current = '';
+    setLiveTranscript('');
+
     stopSpeaking();
-    
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -324,25 +356,53 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         current += event.results[i][0].transcript;
       }
+      liveTranscriptRef.current = current;
       setLiveTranscript(current);
-      // Calls the passed in onUpdate (setInput) from ChatInterface
-      onTranscriptionUpdate.current(current);
+
+      // Reset silence timer on every result
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = setTimeout(finalizeAndSubmitVoice, 2000);
     };
 
-    recognition.onend = () => setIsRecording(false);
+    recognition.onend = () => {
+      if (!hasSubmittedRef.current) {
+        setIsRecording(false);
+        setLiveTranscript('');
+        liveTranscriptRef.current = '';
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+      setLiveTranscript('');
+      liveTranscriptRef.current = '';
+    };
+
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
-  }, [stopSpeaking]);
+  }, [stopSpeaking, finalizeAndSubmitVoice]);
 
   const stopRecording = useCallback(() => {
-    if (recognitionRef.current) recognitionRef.current.stop();
-    setIsRecording(false);
-    if (liveTranscript) {
-      sendMessage(liveTranscript, undefined, true);
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
-    setLiveTranscript('');
-  }, [liveTranscript, sendMessage]);
+
+    if (liveTranscriptRef.current.trim()) {
+      finalizeAndSubmitVoice();
+    } else {
+      hasSubmittedRef.current = true;
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsRecording(false);
+      setLiveTranscript('');
+      liveTranscriptRef.current = '';
+      stopSpeaking();
+    }
+  }, [finalizeAndSubmitVoice, stopSpeaking]);
 
   return {
     transcript,

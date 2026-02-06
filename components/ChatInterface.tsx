@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Camera, Mic, MicOff, Send, VolumeX, ShieldCheck, Loader2, X, Upload } from 'lucide-react';
 import { useGeminiLive } from '../hooks/useGeminiLive';
+import VoiceWaveform from './VoiceWaveform';
 import { Wine, Message } from '../types';
 import { inventoryService } from '../services/inventoryService';
 import { getRandomGreeting } from '../greetings';
@@ -121,21 +122,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) =>
               <Camera size={24} />
             </button>
 
-            <div className="flex-1 relative">
-              <input 
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder={isRecording ? "Listening..." : "Message Rémy..."}
-                className="w-full bg-[#1a1a1a] border-4 border-black px-4 py-3 font-mono text-sm focus:border-[#9d4edd] outline-none"
-              />
-              <button 
-                onClick={() => isRecording ? stopRecording() : startRecording(setInput)}
-                className={`absolute right-3 top-3 ${isRecording ? 'text-[#FF006E]' : 'text-gray-500'} transition-colors`}
-              >
-                {isRecording ? <MicOff size={20} /> : <Mic size={20} />}
-              </button>
-            </div>
+            {isRecording ? (
+              <div className="flex-1 flex items-center bg-[#1a1a1a] border-4 border-[#9d4edd] px-4 py-3">
+                <VoiceWaveform />
+                <button
+                  onClick={stopRecording}
+                  className="ml-3 text-[#FF006E] transition-colors shrink-0"
+                >
+                  <MicOff size={20} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1 relative">
+                <input
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSend()}
+                  placeholder="Message Rémy..."
+                  className="w-full bg-[#1a1a1a] border-4 border-black px-4 py-3 font-mono text-sm focus:border-[#9d4edd] outline-none"
+                />
+                <button
+                  onClick={() => startRecording()}
+                  className="absolute right-3 top-3 text-gray-500 transition-colors"
+                >
+                  <Mic size={20} />
+                </button>
+              </div>
+            )}
 
             <button onClick={handleSend} disabled={!input.trim()} className="w-12 h-12 bg-[#9d4edd] border-4 border-black flex items-center justify-center disabled:opacity-50 hover:bg-[#b565f2] transition-colors">
               <Send size={24} />
