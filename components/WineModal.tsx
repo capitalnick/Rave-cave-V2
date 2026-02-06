@@ -21,12 +21,15 @@ const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
   const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
   const qtyTimeoutRef = useRef<number | null>(null);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
-    const handlePopState = () => onClose();
+    const handlePopState = () => onCloseRef.current();
     window.history.pushState({ modalOpen: true }, '');
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [onClose]);
+  }, []);
 
   const updateQuantity = (newQty: number) => {
     setLocalQty(newQty);
@@ -34,7 +37,7 @@ const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
     
     qtyTimeoutRef.current = window.setTimeout(async () => {
       if (onUpdate) {
-        await onUpdate('Quantity', newQty.toString());
+        await onUpdate('quantity', newQty.toString());
       }
     }, 500);
   };
@@ -151,8 +154,8 @@ const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
                 onChange={e => setEditValue(e.target.value)} 
                 className="w-10 bg-transparent border-b border-[#CCFF00] font-display text-xl outline-none" 
                 autoFocus 
-                onBlur={() => handleUpdate('Vivino Rating')}
-                onKeyDown={e => e.key === 'Enter' && handleUpdate('Vivino Rating')}
+                onBlur={() => handleUpdate('vivinoRating')}
+                onKeyDown={e => e.key === 'Enter' && handleUpdate('vivinoRating')}
               />
             ) : (
               <span 

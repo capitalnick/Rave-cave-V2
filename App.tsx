@@ -124,16 +124,20 @@ const App: React.FC = () => {
   const totalBottlesFiltered = filteredInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
 
   const heroWineIds = useMemo(() => {
-    return filteredInventory.sort((a, b) => (b.vivinoRating || 0) - (a.vivinoRating || 0)).slice(0, 2).map(w => w.id);
+    return [...filteredInventory].sort((a, b) => (b.vivinoRating || 0) - (a.vivinoRating || 0)).slice(0, 2).map(w => w.id);
   }, [filteredInventory]);
 
   // Uses Firestore doc ID (wine.id) instead of row numbers
+  const NUMERIC_WINE_FIELDS = new Set(['vintage', 'quantity', 'drinkFrom', 'drinkUntil', 'vivinoRating', 'price']);
+
   const handleUpdate = async (wine: Wine, key: string, value: string) => {
     const success = await inventoryService.updateField(wine.id, key, value);
     if (success) {
+      // Coerce numeric fields so local state matches Wine type
+      const coerced: any = NUMERIC_WINE_FIELDS.has(key) ? Number(value) : value;
       // Optimistic local update — Firestore listener will also sync
-      setInventory(prev => prev.map(w => w.id === wine.id ? { ...w, [key]: value } : w));
-      if (selectedWine?.id === wine.id) setSelectedWine(prev => prev ? { ...prev, [key]: value } : null);
+      setInventory(prev => prev.map(w => w.id === wine.id ? { ...w, [key]: coerced } : w));
+      if (selectedWine?.id === wine.id) setSelectedWine(prev => prev ? { ...prev, [key]: coerced } : null);
     }
   };
 

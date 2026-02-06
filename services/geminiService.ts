@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, FunctionDeclaration, Modality } from "@google/genai";
-import { SYSTEM_PROMPT } from "../constants";
+import { SYSTEM_PROMPT, buildSystemPrompt } from "../constants";
 import { Wine } from "../types";
 import { inventoryService } from "./inventoryService";
 
@@ -61,6 +61,7 @@ export class GeminiService {
   private stagedWine: Partial<Wine> | null = null;
   private history: any[] = [];
   private MAX_HISTORY = 10;
+  inventoryContext: string = "";
   // Fixed: Corrected initialization with named parameter as per @google/genai guidelines
   private ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -121,7 +122,9 @@ export class GeminiService {
         model: GEMINI_MODEL,
         contents,
         config: {
-          systemInstruction: SYSTEM_PROMPT,
+          systemInstruction: this.inventoryContext
+            ? buildSystemPrompt(this.inventoryContext)
+            : SYSTEM_PROMPT,
           tools: [{ functionDeclarations: [stageWineTool, queryInventoryTool, commitWineTool] }]
         }
       });
@@ -132,9 +135,9 @@ export class GeminiService {
 
       let responseText = result.text || "";
 
-      if (functionCalls && functionCalls.length > 0) {
+      if (functionCalls && functionCalls.length > 0 && candidate?.content) {
         let followUpMessage = "";
-        
+
         for (const call of functionCalls) {
           if (call.name === 'stageWine') {
             this.stagedWine = call.args as Partial<Wine>;
@@ -152,13 +155,13 @@ export class GeminiService {
           } else if (call.name === 'commitWine') {
             if (this.stagedWine) {
               const args = call.args as any;
-              const final = { 
-                ...this.stagedWine, 
-                price: args.price, 
+              const final = {
+                ...this.stagedWine,
+                price: args.price,
                 quantity: args.quantity || 1,
                 name: this.stagedWine.name || "Unknown Label"
               } as Omit<Wine, 'id'>;
-              inventoryService.addWine(final);
+              await inventoryService.addWine(final);
               this.stagedWine = null;
               followUpMessage = "The wine is successfully added to the cellar database. Confirm this with joy and appreciation.";
             } else {
@@ -167,12 +170,16 @@ export class GeminiService {
           }
         }
 
+        const systemPrompt = this.inventoryContext
+          ? buildSystemPrompt(this.inventoryContext)
+          : SYSTEM_PROMPT;
+
         const toolRes = await this.ai.models.generateContent({
           model: GEMINI_MODEL,
           contents: [...contents, candidate.content, { role: 'user', parts: [{ text: followUpMessage }] }],
-          config: { systemInstruction: SYSTEM_PROMPT }
+          config: { systemInstruction: systemPrompt }
         });
-        
+
         responseText = toolRes.text || "I have processed your request.";
         this.history.push({ role: 'user', parts: currentParts });
         this.history.push({ role: 'model', parts: toolRes.candidates?.[0]?.content?.parts || [{ text: responseText }] });

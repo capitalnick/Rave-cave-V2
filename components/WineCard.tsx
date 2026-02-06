@@ -38,7 +38,7 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
     
     qtyTimeoutRef.current = window.setTimeout(async () => {
       if (onUpdate) {
-        await onUpdate('Quantity', newQty.toString());
+        await onUpdate('quantity', newQty.toString());
       }
     }, 500);
   };

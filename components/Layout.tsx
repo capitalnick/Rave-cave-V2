@@ -133,7 +133,7 @@ const Layout: React.FC<LayoutProps> = ({
                 <Filter size={14} className="text-[#FF006E]" />
                 <h3 className="font-mono text-[10px] font-bold tracking-widest uppercase">Filters</h3>
               </div>
-              <button onClick={onClearFilters} className="text-[9px] font-mono font-bold uppercase underline text-[#878787] hover:text-[#FF006E]">Clear</button>
+              <button onClick={() => onClearFilters?.()} className="text-[9px] font-mono font-bold uppercase underline text-[#878787] hover:text-[#FF006E]">Clear</button>
             </div>
             
             <div className="flex-1 overflow-y-auto pb-10 custom-scrollbar pr-1">
@@ -191,7 +191,7 @@ const Layout: React.FC<LayoutProps> = ({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-2">
-            <button onClick={onClearFilters} className="w-full py-3 bg-black text-[#CCFF00] font-mono text-xs uppercase mb-4">Clear All Filters</button>
+            <button onClick={() => onClearFilters?.()} className="w-full py-3 bg-black text-[#CCFF00] font-mono text-xs uppercase mb-4">Clear All Filters</button>
             {filterOptions && filters && (
               <>
                 <FilterSection title="Grapes" options={filterOptions.cepage} selected={filters.cepage} onToggle={(val) => onToggleFilter?.('cepage', val)} searchable />

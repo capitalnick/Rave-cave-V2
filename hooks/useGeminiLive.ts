@@ -64,6 +64,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   const recognitionRef = useRef<any>(null);
   const ttsQueueRef = useRef<string[]>([]);
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const stagedWineRef = useRef<StagedWine | null>(null);
   
   // FIX: Sync transcription with UI input
   const onTranscriptionUpdate = useRef<(text: string) => void>(() => {});
@@ -157,28 +158,32 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     for (const call of calls) {
       if (call.name === 'stageWine') {
         const args = call.args;
-        setStagedWine({ ...args, stagedId: Date.now().toString() });
+        const staged = { ...args, stagedId: Date.now().toString() };
+        stagedWineRef.current = staged;
+        setStagedWine(staged);
         setIngestionState('STAGED');
         results.push({ result: "Wine staged. Now ask the user for price and quantity." });
       } else if (call.name === 'commitWine') {
-        if (!stagedWine) {
+        const currentStaged = stagedWineRef.current;
+        if (!currentStaged) {
           results.push({ result: "Error: No wine staged." });
         } else {
           const finalWine = {
-            ...stagedWine,
+            ...currentStaged,
             price: call.args.price,
             quantity: call.args.quantity || 1,
-            name: stagedWine.name || "Unknown Label"
+            name: currentStaged.name || "Unknown Label"
           };
           const id = await inventoryService.addWine(finalWine as any);
           setIngestionState('COMMITTED');
+          stagedWineRef.current = null;
           setStagedWine(null);
           results.push({ result: `Success! Wine added to cellar with ID ${id}.` });
         }
       }
     }
     return results;
-  }, [stagedWine]);
+  }, []);
 
   const sendMessage = useCallback(async (text: string, imageBase64?: string, isVoice: boolean = false) => {
     if (!text && !imageBase64) return;
@@ -232,7 +237,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
 
       let finalContent = response.text || "";
 
-      if (toolCalls && toolCalls.length > 0) {
+      if (toolCalls && toolCalls.length > 0 && candidate?.content) {
         const toolResults = await handleToolCalls(toolCalls);
         historyRef.current.push(candidate.content);
         historyRef.current.push({ role: 'user', parts: [{ text: `Tool Output: ${JSON.stringify(toolResults)}` }] });
@@ -261,7 +266,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [cellarSnapshot, stagedWine, handleToolCalls, speak, stopSpeaking]);
+  }, [cellarSnapshot, handleToolCalls, speak, stopSpeaking]);
 
   const startRecording = useCallback((onUpdate: (t: string) => void) => {
     onTranscriptionUpdate.current = onUpdate;
