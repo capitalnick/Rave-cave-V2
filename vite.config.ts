@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
         'process.env.FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(env.FIREBASE_MESSAGING_SENDER_ID),
         'process.env.FIREBASE_APP_ID': JSON.stringify(env.FIREBASE_APP_ID),
         'process.env.FIREBASE_MEASUREMENT_ID': JSON.stringify(env.FIREBASE_MEASUREMENT_ID),
+        'process.env.TTS_FUNCTION_URL': JSON.stringify(env.TTS_FUNCTION_URL),
       },
       resolve: {
         alias: {

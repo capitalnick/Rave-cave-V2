@@ -7,9 +7,18 @@ import type {ReadableStream as NodeWebReadableStream} from "stream/web";
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 const ELEVENLABS_VOICE_ID = defineSecret("ELEVENLABS_VOICE_ID");
 
+type VoiceSettings = {
+  speed?: number;
+  stability?: number;
+  similarity_boost?: number;
+  style?: number;
+  use_speaker_boost?: boolean;
+};
+
 type TtsBody = {
   text?: string;
   voiceId?: string;
+  voiceSettings?: VoiceSettings;
 };
 
 export const tts = onRequest(
@@ -40,6 +49,7 @@ export const tts = onRequest(
 
       const text = body.text;
       const voiceId = body.voiceId;
+      const clientSettings = body.voiceSettings;
 
       if (!text || typeof text !== "string" || text.trim().length === 0) {
         res.status(400).json({error: "Missing text"});
@@ -64,6 +74,27 @@ export const tts = onRequest(
         "https://api.elevenlabs.io/v1/text-to-speech/" +
         encodeURIComponent(chosenVoice);
 
+      const defaultSettings: VoiceSettings = {
+        stability: 0.35,
+        similarity_boost: 0.8,
+        style: 0.25,
+        use_speaker_boost: true,
+      };
+
+      const mergedSettings = {...defaultSettings, ...clientSettings};
+
+      // ElevenLabs expects speed at the top level, not inside voice_settings
+      const {speed, ...voiceSettings} = mergedSettings;
+
+      const elevenBody: Record<string, unknown> = {
+        text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: voiceSettings,
+      };
+      if (speed !== undefined) {
+        elevenBody.speed = speed;
+      }
+
       const elevenResp = await fetch(url, {
         method: "POST",
         headers: {
@@ -71,16 +102,7 @@ export const tts = onRequest(
           "Content-Type": "application/json",
           "Accept": "audio/mpeg",
         },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: {
-            stability: 0.35,
-            similarity_boost: 0.8,
-            style: 0.25,
-            use_speaker_boost: true,
-          },
-        }),
+        body: JSON.stringify(elevenBody),
       });
 
       if (!elevenResp.ok) {

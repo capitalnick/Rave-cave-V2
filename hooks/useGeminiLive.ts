@@ -4,19 +4,8 @@ import { GoogleGenAI, Modality, Type } from '@google/genai';
 import { inventoryService } from '../services/inventoryService';
 import { Wine, StagedWine, Message, IngestionState } from '../types';
 import { buildSystemPrompt, CONFIG } from '../constants';
-
-/**
- * CADENCE & CLEANING RULES:
- * Removes punctuation patterns that cause long pauses or stuttering.
- */
-const cleanTextForSpeech = (text: string): string => {
-  return text
-    .replace(/\.\.\./g, '.')           // Collapse ellipses
-    .replace(/--/g, ',')               // Em-dash to comma
-    .replace(/(\r\n|\n|\r)+/gm, ' ')   // Collapse newlines
-    .replace(/[*#_]/g, '')             // Strip markdown artifacts
-    .trim();
-};
+import { fetchElevenLabsAudio, playAudioUrl, CHUNK_TIMEOUT_FIRST_MS, CHUNK_TIMEOUT_MS } from '../services/ttsService';
+import { formatForSpeech } from '../services/ttsFormatter';
 
 /**
  * ANTI-GAP CHUNKING:
@@ -65,6 +54,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   const ttsQueueRef = useRef<string[]>([]);
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const stagedWineRef = useRef<StagedWine | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // FIX: Sync transcription with UI input
   const onTranscriptionUpdate = useRef<(text: string) => void>(() => {});
@@ -105,6 +95,12 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   }, []);
 
   const stopSpeaking = useCallback(() => {
+    // Cancel ElevenLabs pipeline
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    // Cancel browser TTS fallback
     window.speechSynthesis.cancel();
     ttsQueueRef.current = [];
     currentUtteranceRef.current = null;
@@ -138,14 +134,56 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
 
   /**
    * QUEUE SPEECH:
-   * Splits and kicks off immediate playback.
+   * ElevenLabs primary, browser SpeechSynthesis fallback.
    */
-  const speak = useCallback((text: string) => {
-    stopSpeaking(); // Cancel any current or pending speech
-    const cleaned = cleanTextForSpeech(text);
-    const chunks = chunkText(cleaned);
-    ttsQueueRef.current = chunks;
-    processTTSQueue();
+  const speak = useCallback(async (text: string) => {
+    stopSpeaking();
+
+    const cleaned = formatForSpeech(text);
+    const chunks = chunkText(cleaned).filter(c => c.length > 0);
+    if (chunks.length === 0) return;
+
+    setIsSpeaking(true);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    let elevenLabsFailed = false;
+    let remainingChunks: string[] = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+      if (controller.signal.aborted) return;
+
+      if (!elevenLabsFailed) {
+        try {
+          const timeoutMs = i === 0 ? CHUNK_TIMEOUT_FIRST_MS : CHUNK_TIMEOUT_MS;
+          const blobUrl = await Promise.race([
+            fetchElevenLabsAudio(chunks[i], controller.signal),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('TTS_TIMEOUT')), timeoutMs)
+            ),
+          ]);
+
+          if (controller.signal.aborted) return;
+          await playAudioUrl(blobUrl, controller.signal);
+        } catch (err: any) {
+          if (err.name === 'AbortError') return;
+          console.warn(`ElevenLabs chunk ${i} failed, falling back to browser TTS`, err);
+          elevenLabsFailed = true;
+          remainingChunks = chunks.slice(i);
+        }
+      }
+    }
+
+    if (elevenLabsFailed && remainingChunks.length > 0 && !controller.signal.aborted) {
+      ttsQueueRef.current = remainingChunks;
+      processTTSQueue();
+      return;
+    }
+
+    if (!controller.signal.aborted) {
+      setIsSpeaking(false);
+    }
   }, [stopSpeaking, processTTSQueue]);
 
   // Handle voice submission cleanup and cancellation
