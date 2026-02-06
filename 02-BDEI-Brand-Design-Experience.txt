@@ -1,0 +1,23 @@
+
+# Rave Cave - Brand Design & Experience Intent (BDEI)
+**Version:** 3.4.3  
+**Last Updated:** February 3, 2026  
+**Creative Direction:** Jodie (R/GA)
+
+---
+
+## 1. Brand Essence
+**Name Origin:** "Rave Cave"
+- **Cave:** Traditional wine cellar, sophistication.
+- **Rave:** Modern, vibrant, tech-forward.
+
+## 2. Visual Aesthetic
+**Industrial Tech-Sommelier**
+- Exposed concrete backgrounds.
+- Neon violet/green accents against neutral tones.
+- High-contrast typography (Inter + JetBrains Mono).
+
+## 3. Color Palette
+- Background Dark: #1a1a1a
+- Neon Pink: #FF006E
+- Acid Green: #CCFF00

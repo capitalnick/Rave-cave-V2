@@ -1,0 +1,9 @@
+
+# Rave Cave - API & Logic Specification (AL-Spec)
+**Version:** 3.4.3  
+
+## 1. Core Functions
+- **doPost(e)**: Main request handler for image uploads and Gemini chat.
+- **stageWine**: Temporarily caches wine details using CacheService.
+- **commitWine**: Finalizes wine entry once price is provided.
+- **queryInventory**: AI-powered searching of the cellar.

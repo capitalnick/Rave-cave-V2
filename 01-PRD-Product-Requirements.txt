@@ -1,0 +1,333 @@
+# Rave Cave - Product Requirements Document (PRD)
+**Version:** 3.4.3  
+**Last Updated:** February 3, 2026  
+**Owner:** Jodie (Group Account Director, R/GA)
+
+---
+
+## 1. Vision Statement
+
+**Rave Cave** is an AI-powered wine cellar management system that transforms wine inventory tracking into an intelligent, conversational experience. The system combines a Google Sheets database with Gemini AI to provide instant inventory queries, expert sommelier recommendations, and sophisticated wine pairing suggestions—all through a chat interface that feels like texting with a knowledgeable friend.
+
+The name "Rave Cave" embodies the duality of the experience: the precision and control of a professional wine cellar ("Cave") meets the vibrant, immediate energy of modern tech ("Rave"). This is not a spreadsheet tool—it's your personal AI sommelier, available 24/7.
+
+---
+
+## 2. Core Features
+
+### 2.1 Wine Inventory Management
+
+**Add Wine via Photo Recognition**
+- User uploads photo of wine label
+- Gemini extracts: Producer, Vintage, Wine Name, Cépage, Region, Country, Type
+- System auto-generates: Drinking Window (drinkFrom/drinkUntil), Maturity Status, Tasting Notes, Blend %
+- Two-step flow:
+  1. `stageWine` → Caches extracted details (CacheService, 6hr TTL)
+  2. User provides price → `commitWine` → Merges price with cached data → Adds to sheet
+- Performance: ~8s for extraction, ~2-3s for price submission
+- Duplicate detection: Automatically increments quantity if same producer/vintage/grape exists
+
+**Manual Wine Addition**
+- Legacy `addWine` tool accepts all parameters directly
+- Backward compatibility maintained for API/scripted additions
+
+**Remove Wine**
+- `removeWine(producer, vintage, quantity)` decrements inventory
+- Removes row if quantity reaches zero
+
+**Update Wine Details**
+- Cell-level updates via `updateCell(row, column, value)`
+- Triggers cache invalidation
+
+### 2.2 AI Sommelier Query Engine
+
+**Natural Language Inventory Search**
+- Query examples:
+  - "Show me red wines from France under $50"
+  - "What Chardonnays should I drink now?"
+  - "Best bottle under $30"
+  - "Most expensive Italian wine"
+- Intent Router classifies query → INVENTORY, PAIRING, or UPDATE
+- `queryInventory` tool with filters:
+  - `type` (Red, White, Rosé, Sparkling, Dessert, Fortified)
+  - `country`
+  - `region`
+  - `cepage` (grape variety)
+  - `producer`
+  - `vintage`
+  - `maturity` (Hold, Drink Now, Past Peak)
+  - `priceRange` ({min, max})
+  - `drinkingWindowStart`/`drinkingWindowEnd`
+  - `sort` (price-asc, price-desc, vintage-asc, vintage-desc, rating-desc, best-desc)
+  - `limit` (max results)
+- Gemini formats results with personality
+
+**Wine Pairing Recommendations**
+- Input: Meal description or ingredients
+- Gemini searches inventory for compatible wines
+- Considers: wine type, acidity, tannins, body, flavor profiles
+- Returns ranked suggestions with pairing rationale
+
+**Drinking Window Intelligence**
+- Auto-calculated based on:
+  - Wine type (e.g., Barossa Shiraz: 2026-2040, Sauvignon Blanc: 2024-2027)
+  - Region (long-aging regions get extended windows)
+  - Producer reputation
+  - Vintage year
+- Maturity status auto-updates based on current year (2026)
+
+### 2.3 Image Processing & Storage
+
+**Hybrid Image Pipeline**
+- Client-side processing:
+  - glfx.js applies vintage filter (brightness, contrast, vignette, noise)
+  - Resizes to max 800px width
+  - Converts to JPEG with quality 0.85
+- Server-side storage:
+  - Uploads original to Google Drive folder
+  - Stores Drive ID in sheet column `driveImageId`
+  - Generates public URL: `https://drive.google.com/uc?id={driveId}`
+
+**Image Optimization**
+- Strips base64 images from conversation history after upload
+- Prevents 500KB-2MB bloat in subsequent API calls
+- Frontend logic: Remove `inline_data`/`inlineData` parts when no new image present
+
+### 2.4 Performance Optimizations
+
+**Fast-Path Queries** (No AI Required)
+- "best bottle under $X" → Direct SQL-style filter
+- "most expensive wine" → Sort by price DESC, limit 1
+- "how many wines" → Count query
+- Bypasses Gemini API for <50ms response
+
+**Intent Routing**
+- Analyzes user message to determine intent:
+  - UPDATE: Photo present, price mentioned, or bot recently asked for price
+  - PAIRING: Keywords like "pair", "serve with", "goes with"
+  - INVENTORY: Default for all other queries
+- Loads appropriate system prompt and tools per intent
+- Reduces token usage and improves response quality
+
+**Caching Architecture**
+- `CacheService.getUserCache()` for temporary staging (stageWine)
+- Script properties cache invalidation on sheet updates
+- 6-hour TTL prevents stale data
+
+---
+
+## 3. User Journeys
+
+### 3.1 Journey: Adding a Wine Bottle
+
+**Trigger:** User purchases new wine and wants to add it to cellar
+
+**Steps:**
+1. **User:** Opens Rave Cave web interface
+2. **User:** Clicks camera icon, uploads photo of wine label
+3. **System:** 
+   - Uploads image to Google Drive (~3s)
+   - Sends image to Gemini for extraction (~5s)
+   - Calls `stageWine` with extracted details
+   - Caches wine data in CacheService
+4. **Remy (AI):** Responds with extracted details:
+   ```
+   Ah, a classic Marlborough Sauvignon Blanc from Noble Fellows! ✨
+   
+   Producer: Noble Fellows
+   Wine Name: Marlborough Sauvignon Blanc
+   Vintage: 2024
+   Cépage: Sauvignon Blanc
+   Region: Marlborough, New Zealand
+   Type: White
+   Drinking Window: 2024-2027 - Best enjoyed within 3 years for maximum freshness
+   Maturity: Drink Now
+   Tasting Notes: A quintessential Marlborough Sauvignon Blanc featuring vibrant 
+   passionfruit and citrus aromas. The palate is crisp and lively, bursting with 
+   zesty lime and tropical fruit notes that lead to a refreshingly clean finish.
+   
+   What did you pay per bottle?
+   ```
+5. **User:** "$22"
+6. **System:**
+   - Calls `commitWine` with price
+   - Loads cached wine details from CacheService
+   - Merges price with cached data
+   - Adds row to Google Sheet
+   - Clears cache
+7. **Remy:** "Splendid! I've added 2024 Noble Fellows Sauvignon Blanc to your cellar."
+
+**Success Criteria:**
+- Photo → Response: <10 seconds
+- Price → Added: <3 seconds
+- All fields populated correctly
+- Duplicate detection works (increments quantity if exists)
+
+---
+
+### 3.2 Journey: Asking for Wine Pairing
+
+**Trigger:** User planning dinner and wants wine recommendation
+
+**Steps:**
+1. **User:** "What should I pair with grilled salmon and asparagus?"
+2. **System:**
+   - Intent Router detects PAIRING intent (keyword: "pair")
+   - Loads PAIRING system prompt
+   - Gemini analyzes:
+     - Salmon: Rich, fatty fish → needs acidity to cut through
+     - Asparagus: Earthy, vegetal → avoid heavy tannins
+     - Grilled: Charred notes → can handle some body
+   - Calls `queryInventory` with filters:
+     - `type`: "White", "Rosé"
+     - `maturity`: "Drink Now"
+     - `sort`: "best-desc"
+     - `limit`: 5
+3. **Remy:** 
+   ```
+   For grilled salmon with asparagus, I'd recommend the 2023 Chablis from 
+   Domaine Laroche. The crisp acidity and mineral notes will beautifully 
+   complement the richness of the salmon while the clean finish won't 
+   overpower the delicate asparagus.
+   
+   Alternative: If you prefer something with a touch more body, the 2022 
+   Chardonnay from Kumeu River offers lovely citrus notes that work 
+   wonderfully with char-grilled flavors.
+   
+   Would you like more details on either of these?
+   ```
+4. **User:** "Tell me more about the Chablis"
+5. **System:** Retrieves full wine details from sheet
+6. **Remy:** [Provides tasting notes, drinking window, serving temp, etc.]
+
+**Success Criteria:**
+- Relevant wine suggestions based on food
+- Pairing rationale provided
+- Only suggests wines in "Drink Now" maturity
+- Natural conversation flow
+
+---
+
+### 3.3 Journey: Viewing Cellar Inventory
+
+**Trigger:** User wants to know what wines they have
+
+**Steps:**
+1. **User:** "Show me all my red wines from Australia"
+2. **System:**
+   - Intent Router: INVENTORY
+   - Parses query: type="Red", country="Australia"
+   - Calls `queryInventory({type: "Red", country: "Australia", sort: "vintage-desc"})`
+3. **Remy:**
+   ```
+   You have 8 Australian reds in your cellar:
+   
+   🍷 2020 Penfolds Grange, Barossa Valley - $450
+      Maturity: Hold until 2028 | 2 bottles
+   
+   🍷 2021 Henschke Hill of Grace, Eden Valley - $380
+      Maturity: Hold until 2030 | 1 bottle
+   
+   🍷 2019 d'Arenberg Dead Arm Shiraz, McLaren Vale - $95
+      Maturity: Drink Now | 3 bottles
+   
+   [... continues for remaining 5 wines]
+   
+   Your most expensive Australian red is the Penfolds Grange at $450. 
+   The d'Arenberg is ready to drink now if you'd like to open something tonight!
+   ```
+
+**Success Criteria:**
+- Accurate filtering
+- Formatted for readability
+- Highlights actionable insights (what's ready to drink)
+- Sorted logically (vintage descending by default)
+
+---
+
+## 4. Non-Functional Requirements
+
+### 4.1 Performance
+- Photo extraction: <10 seconds
+- Price submission: <3 seconds
+- Inventory queries: <2 seconds
+- Chat response latency: <5 seconds
+
+### 4.2 Reliability
+- 99.5% uptime (dependent on Google Cloud and Gemini API SLAs)
+- Graceful degradation if Gemini API unavailable (fallback formatting)
+- Data persistence in Google Sheets (no data loss)
+
+### 4.3 Scalability
+- Supports up to 1,000 wines in single sheet (tested)
+- Could scale to 5,000+ with pagination
+- CacheService handles concurrent users via user-scoped caching
+
+### 4.4 Security
+- API keys stored in Script Properties (not in code)
+- Google Drive folder permissions restrict access
+- Web app deployed with "Execute as me" (user permissions)
+
+### 4.5 Usability
+- Mobile-responsive UI
+- Chat interface requires no training
+- Natural language processing (no query syntax to learn)
+- Conversation history persists in session
+
+---
+
+## 5. Out of Scope (Future Enhancements)
+
+- Multi-user collaboration (currently single-user)
+- Barcode scanning for wine addition
+- Purchase history tracking and spend analytics
+- Integration with online retailers (price comparison)
+- Cellar valuation and investment tracking
+- Wine collection sharing/social features
+- Mobile app (currently web-only)
+- Wine consumption logging (drinking history)
+- Advanced search filters (tannin level, oak aging, organic/biodynamic)
+
+---
+
+## 6. Success Metrics
+
+### 6.1 Adoption
+- Daily active usage
+- Number of wines added per week
+- Query frequency
+
+### 6.2 Performance
+- Average response time: <3 seconds
+- Image extraction accuracy: >95%
+- Duplicate detection rate: >90%
+
+### 6.3 User Satisfaction
+- Conversation quality (subjective)
+- Pairing recommendation accuracy
+- Time saved vs. manual spreadsheet management
+
+---
+
+## 7. Dependencies
+
+**External Services:**
+- Google Gemini API (gemini-3-flash-preview)
+- Google Drive API (image storage)
+- Google Sheets API (data persistence)
+- Vercel (frontend hosting)
+
+**Libraries:**
+- glfx.js (client-side image effects)
+- No other external dependencies
+
+**Constraints:**
+- Gemini API rate limits (default: 10 requests/minute)
+- Google Drive storage quota
+- Apps Script execution time limit (6 minutes)
+- CacheService 6-hour TTL
+
+---
+
+**Document Status:** ✅ COMPLETE  
+**Next Review:** Upon architecture changes or feature additions

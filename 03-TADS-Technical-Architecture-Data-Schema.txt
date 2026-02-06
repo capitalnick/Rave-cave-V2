@@ -1,0 +1,18 @@
+
+# Rave Cave - Technical Architecture & Data Schema (TADS)
+**Version:** 3.4.3  
+**Last Updated:** February 3, 2026  
+
+## 1. Stack
+- **Frontend:** Vanilla JS / React via CDN (Static Hosting).
+- **Backend:** Google Apps Script (Web App).
+- **Database:** Google Sheets.
+- **Storage:** Google Drive.
+- **AI:** Google Gemini API.
+
+## 2. Sheets Schema
+- A: Producer
+- B: Vintage
+- C: Wine Name
+- D: Type
+- ... (29 columns total)

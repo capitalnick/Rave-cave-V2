@@ -1,0 +1,8 @@
+{
+  "name": "Rave Cave",
+  "description": "An industrial-tech AI sommelier for cellar management, featuring intelligent wine recognition and pairing advice.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
