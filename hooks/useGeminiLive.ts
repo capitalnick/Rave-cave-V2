@@ -1,11 +1,23 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { GoogleGenAI, Modality, Type } from '@google/genai';
 import { inventoryService } from '../services/inventoryService';
 import { Wine, StagedWine, Message, IngestionState } from '../types';
 import { buildSystemPrompt, CONFIG } from '../constants';
 import { fetchElevenLabsAudio, playAudioUrl, CHUNK_TIMEOUT_FIRST_MS, CHUNK_TIMEOUT_MS } from '../services/ttsService';
 import { formatForSpeech } from '../services/ttsFormatter';
+
+const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
+  `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/gemini`;
+
+async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string; tools?: any[] }) {
+  const res = await fetch(GEMINI_PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Gemini proxy error: ${res.status}`);
+  return res.json();
+}
 
 /**
  * ANTI-GAP CHUNKING:
@@ -234,9 +246,6 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     setIsProcessing(true);
     stopSpeaking();
 
-    // Create a new instance right before the call to ensure up-to-date config
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
     let localPrice: number | null = null;
     let localQty: number | null = null;
     const priceMatch = text.match(/\$(\d+(\.\d{2})?)/);
@@ -263,33 +272,28 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       historyRef.current.push({ role: 'user', parts });
       const prompt = buildSystemPrompt(cellarSnapshot, JSON.stringify(stagedWine));
 
-      const response = await ai.models.generateContent({
+      const response = await callGeminiProxy({
         model: CONFIG.MODELS.TEXT,
         contents: historyRef.current,
-        config: {
-          systemInstruction: prompt,
-          tools: [{ functionDeclarations: [
-            { name: 'stageWine', parameters: { type: Type.OBJECT, properties: { producer: { type: Type.STRING }, vintage: { type: Type.NUMBER }, type: { type: Type.STRING } } } },
-            { name: 'commitWine', parameters: { type: Type.OBJECT, properties: { price: { type: Type.NUMBER }, quantity: { type: Type.NUMBER } }, required: ['price'] } }
-          ] }]
-        }
+        systemInstruction: prompt,
+        tools: [{ functionDeclarations: [
+          { name: 'stageWine', parameters: { type: "OBJECT", properties: { producer: { type: "STRING" }, vintage: { type: "NUMBER" }, type: { type: "STRING" } } } },
+          { name: 'commitWine', parameters: { type: "OBJECT", properties: { price: { type: "NUMBER" }, quantity: { type: "NUMBER" } }, required: ['price'] } }
+        ] }]
       });
 
-      const candidate = response.candidates?.[0];
-      // FIX: Use response.functionCalls property directly as per guidelines
       const toolCalls = response.functionCalls;
-
       let finalContent = response.text || "";
 
-      if (toolCalls && toolCalls.length > 0 && candidate?.content) {
+      if (toolCalls && toolCalls.length > 0 && response.candidateContent) {
         const toolResults = await handleToolCalls(toolCalls);
-        historyRef.current.push(candidate.content);
+        historyRef.current.push(response.candidateContent);
         historyRef.current.push({ role: 'user', parts: [{ text: `Tool Output: ${JSON.stringify(toolResults)}` }] });
-        
-        const finalRes = await ai.models.generateContent({
+
+        const finalRes = await callGeminiProxy({
           model: CONFIG.MODELS.TEXT,
           contents: historyRef.current,
-          config: { systemInstruction: prompt }
+          systemInstruction: prompt,
         });
         finalContent = finalRes.text || "Processed.";
       }

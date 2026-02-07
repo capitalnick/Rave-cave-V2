@@ -13,8 +13,7 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(e('GEMINI_API_KEY')),
-        'process.env.GEMINI_API_KEY': JSON.stringify(e('GEMINI_API_KEY')),
+        'process.env.GEMINI_PROXY_URL': JSON.stringify(e('GEMINI_PROXY_URL')),
         'process.env.FIREBASE_API_KEY': JSON.stringify(e('FIREBASE_API_KEY')),
         'process.env.FIREBASE_AUTH_DOMAIN': JSON.stringify(e('FIREBASE_AUTH_DOMAIN')),
         'process.env.FIREBASE_PROJECT_ID': JSON.stringify(e('FIREBASE_PROJECT_ID')),
