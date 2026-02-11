@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Search, Sparkles } from 'lucide-react';
+import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Search, Sparkles, Crosshair } from 'lucide-react';
 import { CellarFilters, WineType, TabId } from '@/types';
-import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton } from '@/components/rc';
+import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton, ScanFAB } from '@/components/rc';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -130,6 +130,16 @@ const Layout: React.FC<LayoutProps> = ({
           ))}
         </nav>
 
+        <div className="w-full px-6 mt-4 shrink-0">
+          <button
+            onClick={onScanPress}
+            className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] rounded-[var(--rc-radius-md)] font-[var(--rc-font-mono)] text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
+          >
+            <Crosshair size={16} />
+            SCAN
+          </button>
+        </div>
+
         {activeTab === 'cellar' && filters && filterOptions && (
           <div className="flex flex-col flex-1 w-full px-6 mt-6 overflow-hidden">
             <Divider weight="emphasised" />
@@ -169,8 +179,22 @@ const Layout: React.FC<LayoutProps> = ({
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--rc-surface-primary)] border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] z-50 flex items-center justify-around" role="tablist">
-        {navItems.map((item) => (
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--rc-surface-primary)] border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] z-50 grid grid-cols-5 items-end" role="tablist">
+        {navItems.slice(0, 2).map((item) => (
+          <TabItem
+            key={item.id}
+            icon={<item.icon className="w-full h-full" />}
+            iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
+            label={item.label}
+            state={activeTab === item.id ? 'active' : 'inactive'}
+            context="tabbar"
+            onClick={() => onTabChange(item.id)}
+          />
+        ))}
+        <div className="flex items-center justify-center pb-1">
+          <ScanFAB onClick={onScanPress} className="relative -top-3" />
+        </div>
+        {navItems.slice(2).map((item) => (
           <TabItem
             key={item.id}
             icon={<item.icon className="w-full h-full" />}
