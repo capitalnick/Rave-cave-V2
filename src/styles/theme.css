@@ -43,6 +43,10 @@
   --sidebar-border: var(--rc-border-subtle);
   --sidebar-ring: var(--rc-accent-pink);
 
+  /* Rail */
+  --rc-rail-width-collapsed: 64px;
+  --rc-rail-width-expanded: 240px;
+
   /* RAVE CAVE VARIABLES */
   --rc-accent-pink: #FF006E;
   --rc-accent-pink-hover: #FF2A85;

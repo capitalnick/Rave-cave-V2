@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Search, Sparkles, Crosshair } from 'lucide-react';
 import { CellarFilters, WineType, TabId } from '@/types';
 import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton, ScanFAB } from '@/components/rc';
+import { useRailExpanded } from '@/hooks/useRailExpanded';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -106,16 +107,26 @@ const Layout: React.FC<LayoutProps> = ({
   onScanPress
 }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const isRailExpanded = useRailExpanded();
+  const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
 
   return (
     <div className="flex h-screen bg-[var(--rc-surface-tertiary)] text-[var(--rc-ink-primary)] overflow-hidden">
-      {/* Sidebar - Desktop Only */}
-      <aside className="hidden md:flex w-72 border-r-[var(--rc-divider-emphasis-weight)] border-r-[var(--rc-ink-primary)] flex-col items-center bg-[var(--rc-surface-primary)] overflow-hidden">
-        <div className="py-10 flex flex-col items-center gap-2 shrink-0">
-          <WineIcon size={48} className="text-[var(--rc-accent-pink)]" />
-          <Heading scale="title" align="centre" className="mt-2">RAVE CAVE</Heading>
+      {/* Desktop Rail */}
+      <aside className={cn(
+        "hidden md:flex border-r-[var(--rc-divider-emphasis-weight)] border-r-[var(--rc-ink-primary)] flex-col items-center bg-[var(--rc-surface-primary)] overflow-hidden transition-[width] duration-200",
+        isRailExpanded ? "w-[var(--rc-rail-width-expanded)]" : "w-[var(--rc-rail-width-collapsed)]"
+      )}>
+        {/* Logo */}
+        <div className={cn(
+          "shrink-0 flex flex-col items-center gap-2",
+          isRailExpanded ? "py-10" : "py-6"
+        )}>
+          <WineIcon size={isRailExpanded ? 48 : 28} className="text-[var(--rc-accent-pink)]" />
+          {isRailExpanded && <Heading scale="title" align="centre" className="mt-2">RAVE CAVE</Heading>}
         </div>
 
+        {/* Nav Items */}
         <nav className="w-full shrink-0 space-y-1 px-0" role="tablist">
           {navItems.map((item) => (
             <TabItem
@@ -124,23 +135,35 @@ const Layout: React.FC<LayoutProps> = ({
               iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
               label={item.label}
               state={activeTab === item.id ? 'active' : 'inactive'}
-              context="rail-expanded"
+              context={railContext}
               onClick={() => onTabChange(item.id)}
             />
           ))}
         </nav>
 
-        <div className="w-full px-6 mt-4 shrink-0">
-          <button
-            onClick={onScanPress}
-            className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] rounded-[var(--rc-radius-md)] font-[var(--rc-font-mono)] text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
-          >
-            <Crosshair size={16} />
-            SCAN
-          </button>
+        {/* Scan Button */}
+        <div className={cn("w-full mt-4 shrink-0", isRailExpanded ? "px-6" : "px-3")}>
+          {isRailExpanded ? (
+            <button
+              onClick={onScanPress}
+              className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] rounded-[var(--rc-radius-md)] font-[var(--rc-font-mono)] text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
+            >
+              <Crosshair size={16} />
+              SCAN
+            </button>
+          ) : (
+            <button
+              onClick={onScanPress}
+              className="w-10 h-10 mx-auto flex items-center justify-center rounded-full bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
+              aria-label="Scan label"
+            >
+              <Crosshair size={18} />
+            </button>
+          )}
         </div>
 
-        {activeTab === 'cellar' && filters && filterOptions && (
+        {/* Filters — expanded rail + cellar tab only */}
+        {isRailExpanded && activeTab === 'cellar' && filters && filterOptions && (
           <div className="flex flex-col flex-1 w-full px-6 mt-6 overflow-hidden">
             <Divider weight="emphasised" />
             <div className="py-4 flex items-center justify-between shrink-0">
@@ -166,6 +189,7 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
         )}
 
+        {/* Settings */}
         <div className="w-full px-0 mt-auto shrink-0">
           <Divider weight="emphasised" />
           <TabItem
@@ -173,7 +197,7 @@ const Layout: React.FC<LayoutProps> = ({
             iconFilled={<Settings className="w-full h-full" />}
             label="SETTINGS"
             state="inactive"
-            context="rail-expanded"
+            context={railContext}
           />
         </div>
       </aside>
