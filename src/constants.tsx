@@ -3,6 +3,8 @@
  * Rave Cave Constants & Configuration
  */
 
+import type { Occasion, RankLabel } from './types';
+
 export const COLORS = {
   bg: '#FAFAF9',        // --rc-surface-primary
   paper: '#F5F0E8',     // --rc-surface-tertiary
@@ -115,3 +117,29 @@ RULES:
 
 // Fixed: Export SYSTEM_PROMPT to resolve missing export error in geminiService.ts
 export const SYSTEM_PROMPT = buildSystemPrompt("Inventory context unavailable.");
+
+// ── Phase 6: Recommend ──
+
+export const OCCASIONS: Occasion[] = [
+  { id: 'dinner',   title: 'Dinner Pairing', description: 'Perfect wines for your meal',     icon: '🍽️' },
+  { id: 'party',    title: 'Party Wines',     description: 'Crowd-pleasing selections',       icon: '🎉' },
+  { id: 'gift',     title: 'Gift Picking',    description: 'Thoughtful wine gifts',           icon: '🎁' },
+  { id: 'cheese',   title: 'Cheese Board',    description: 'Perfect cheese pairings',         icon: '🧀' },
+  { id: 'surprise', title: 'Surprise Me',     description: 'Let Rémy decide',                 icon: '✨' },
+];
+
+export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {
+  'best-match':   { text: 'BEST MATCH',       bgColor: 'var(--rc-accent-acid)',  textColor: 'var(--rc-ink-primary)' },
+  'also-great':   { text: 'ALSO GREAT',       bgColor: 'var(--rc-accent-pink)',  textColor: '#FFFFFF' },
+  'adventurous':  { text: 'ADVENTUROUS PICK', bgColor: 'var(--rc-accent-coral)', textColor: '#FFFFFF' },
+};
+
+export const REMYS_PICK_BADGE = { text: "RÉMY'S PICK", bgColor: 'var(--rc-accent-acid)', textColor: 'var(--rc-ink-primary)' };
+
+export const RECOMMEND_FOLLOWUP_CHIPS = [
+  'Why this wine?',
+  'Something bolder',
+  'Something lighter',
+  'Different region',
+  'What about white instead?',
+];

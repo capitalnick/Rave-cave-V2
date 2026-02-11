@@ -63,6 +63,83 @@ export interface CellarFilters {
   priceRange: string[];
 }
 
+// ── Occasion Types ──
+export type OccasionId = 'dinner' | 'party' | 'gift' | 'cheese' | 'surprise';
+
+export interface Occasion {
+  id: OccasionId;
+  title: string;
+  description: string;
+  icon: string; // emoji character
+}
+
+// ── Context Types (per-occasion form inputs) ──
+export interface DinnerContext {
+  meal: string;
+  guests: 2 | 4 | 6 | 8;
+  vibe: 'casual' | 'fancy';
+  cellarOnly: boolean;
+}
+
+export interface PartyContext {
+  guests: number;
+  vibe: 'casual' | 'cocktail' | 'celebration';
+  budgetPerBottle: 'any' | 'under-20' | '20-50' | '50-plus';
+  cellarOnly: boolean;
+}
+
+export interface GiftContext {
+  recipient: string;
+  theirTaste: string;
+  occasion: 'birthday' | 'thank-you' | 'holiday' | 'just-because';
+  budget: 'any' | 'under-30' | '30-75' | '75-plus';
+  cellarOnly: boolean;
+}
+
+export interface CheeseContext {
+  cheeses: string;
+  style: 'light-fresh' | 'bold-aged' | 'mixed';
+  cellarOnly: boolean;
+}
+
+export type OccasionContext = DinnerContext | PartyContext | GiftContext | CheeseContext | null;
+
+// ── Recommendation Types ──
+export type RankLabel = 'best-match' | 'also-great' | 'adventurous';
+
+export interface Recommendation {
+  wineId: string;
+  producer: string;
+  name: string;
+  vintage: number;
+  type: WineType;
+  rank: 1 | 2 | 3;
+  rankLabel: RankLabel;
+  rationale: string;
+  isFromCellar: boolean;
+  maturity: string;
+  rating: number | null;
+}
+
+export interface RecommendChatContext {
+  resultSetId: string;
+  occasionId: OccasionId;
+  occasionTitle: string;
+  contextInputs: OccasionContext;
+  recommendations: Recommendation[];
+}
+
+// ── Recent Query Type ──
+export interface RecentQuery {
+  id: string;
+  occasionId: OccasionId;
+  queryText: string;
+  resultCount: number;
+  resultSetId: string;
+  timestamp: number;
+  contextInputs: OccasionContext;
+}
+
 /**
  * SINGLE SOURCE OF TRUTH FOR FIELD MAPPING
  */
