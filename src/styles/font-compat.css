@@ -1,21 +1,21 @@
 /*
- * Font compatibility layer: map old font classes to new RC UI Set fonts.
- * Old fonts as fallbacks during transition period.
- * MIGRATION: Remove after Phase 4 cleanup.
+ * Font compatibility layer: map old Tailwind font classes to RC UI Set fonts.
+ * Needed while App.tsx still uses font-display / font-mono utility classes.
+ * MIGRATION: Remove when App.tsx is fully migrated to RC typography components.
  */
 
 body {
-  font-family: 'Instrument Sans', 'Inter', sans-serif;
+  font-family: 'Instrument Sans', sans-serif;
 }
 
 .font-display {
-  font-family: 'Satoshi', 'Bebas Neue', sans-serif;
+  font-family: 'Satoshi', sans-serif;
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 0.9;
 }
 
 .font-mono {
-  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  font-family: 'Space Mono', monospace;
   text-transform: uppercase;
 }
