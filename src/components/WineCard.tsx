@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Wine } from '../types';
-import { Wine as WineIcon, Plus, Minus, Star, Clock, AlertTriangle } from 'lucide-react';
-import { getWineColors, getMaturityStatus } from '../constants';
-import { getDirectImageUrl } from '../utils/imageUrl';
+import { Wine } from '@/types';
+import { Wine as WineIcon, Plus, Minus } from 'lucide-react';
+import { Card, Heading, MonoLabel, Chip, WineTypeIndicator } from '@/components/rc';
+import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
+import { toRCWineCardProps } from '@/lib/adapters';
+import { getDirectImageUrl } from '@/utils/imageUrl';
+import { cn } from '@/lib/utils';
+import type { WineType } from '@/components/rc/WineTypeIndicator';
 
 interface WineCardProps {
   wine: Wine;
@@ -19,11 +23,22 @@ const getPriceSymbol = (price: number) => {
   return '$$$$$';
 };
 
+/** Map RC wine type to Heading colour token */
+const wineTypeToHeadingColour = {
+  red: 'accent-pink',
+  white: 'accent-acid',
+  rosé: 'accent-coral',
+  sparkling: 'accent-acid',
+  dessert: 'accent-coral',
+  orange: 'accent-coral',
+} as const;
+
 const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) => {
-  const maturity = getMaturityStatus(wine.drinkFrom, wine.drinkUntil);
-  const colors = getWineColors(wine.type);
+  const rcProps = toRCWineCardProps(wine);
+  const indicatorType = (rcProps.type === 'rosé' ? 'rose' : rcProps.type) as WineType;
   const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
   const stampRotation = React.useMemo(() => Math.random() * 6 - 3, []);
+  const vintageColour = wineTypeToHeadingColour[rcProps.type];
 
   const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
   const qtyTimeoutRef = useRef<number | null>(null);
@@ -36,7 +51,7 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
     e.stopPropagation();
     setLocalQty(newQty);
     if (qtyTimeoutRef.current) window.clearTimeout(qtyTimeoutRef.current);
-    
+
     qtyTimeoutRef.current = window.setTimeout(async () => {
       if (onUpdate) {
         await onUpdate('quantity', newQty.toString());
@@ -45,81 +60,106 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
   };
 
   const numericPrice = typeof wine.price === 'number' ? wine.price : parseFloat(wine.price as unknown as string) || 0;
-  const isLightColor = wine.type === 'White' || wine.type === 'Sparkling' || wine.type === 'Dessert';
 
   return (
-    <div 
+    <Card
+      elevation="raised"
+      padding="standard"
       onClick={onClick}
-      className={`cursor-pointer card-hover border-0 ${isHero ? colors.glow : ''} overflow-hidden flex flex-col relative bg-white h-full`}
+      className={cn(
+        "w-full group h-full",
+        isHero && "ring-2 ring-[var(--rc-accent-pink)]"
+      )}
     >
-      <div className="h-[4px] sm:h-[8px]" style={{backgroundColor: colors.stripColor}}></div>
-      
+      {/* Wine Type Strip */}
+      <WineTypeIndicator
+        wineType={indicatorType}
+        format="strip"
+        className="group-hover:w-[var(--rc-card-strip-width-hover)] transition-all duration-200"
+      />
+
+      {/* FAVE Badge */}
       {isHero && (
-        <div className="absolute top-1 sm:top-3 right-1 sm:right-3 z-10 bg-black text-white px-2 sm:px-4 py-1 sm:py-2 text-[8px] sm:text-xs font-mono font-bold uppercase border-2 border-black"
-             style={{ transform: `rotate(${stampRotation}deg)`, boxShadow: '2px 2px 0 rgba(0,0,0,0.3)' }}>
-          {isHero && "FAVE"}
+        <div
+          className="absolute top-1 sm:top-3 right-1 sm:right-3 z-10 bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] px-2 sm:px-4 py-1 sm:py-2 font-[var(--rc-font-mono)] text-[8px] sm:text-xs font-bold uppercase border-2 border-[var(--rc-ink-primary)] rounded-[var(--rc-radius-sm)]"
+          style={{ transform: `rotate(${stampRotation}deg)`, boxShadow: '2px 2px 0 rgba(0,0,0,0.3)' }}
+        >
+          FAVE
         </div>
       )}
 
-      <div className="aspect-square bg-[#EBEBDF] relative overflow-hidden flex items-center justify-center border-b-2 sm:border-b-4 border-black">
+      {/* Image Zone */}
+      <div className="relative w-full aspect-square rounded-[var(--rc-card-image-radius)] overflow-hidden shrink-0">
         {displayImageUrl ? (
-          <img
+          <ImageWithFallback
             src={displayImageUrl}
             alt={wine.name}
-            className="w-full h-full object-cover contrast-110"
+            className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-             <WineIcon size={64} className="text-black opacity-10" />
+          <div className="w-full h-full flex items-center justify-center bg-[var(--rc-surface-secondary)]">
+            <WineIcon size={64} className="text-[var(--rc-ink-primary)] opacity-10" />
           </div>
         )}
       </div>
 
-      <div className={`${colors.bg} p-3 sm:p-6 flex flex-col flex-1 space-y-2 sm:space-y-4`}>
-        <div className="space-y-0.5 sm:space-y-1">
-          <p className="font-mono text-[7px] sm:text-[10px] uppercase tracking-widest text-[#878787] font-bold truncate">
-            {wine.name || ''}
-          </p>
-          <p className="font-mono text-[7px] sm:text-[10px] uppercase tracking-widest text-[#878787] font-bold truncate">
-            {wine.producer}
-          </p>
-          <h3 className="font-display text-xl sm:text-4xl leading-none uppercase tracking-tighter truncate text-black">
-            {wine.cepage}
-          </h3>
-          <p className={`font-display text-4xl sm:text-7xl leading-none ${isLightColor ? 'text-stroke-black' : ''}`} style={{ color: colors.stripColor }}>
-            {wine.vintage}
-          </p>
-          <p className="font-mono text-[8px] sm:text-xs font-bold opacity-25 tracking-widest">
-            {getPriceSymbol(numericPrice)}
-          </p>
-        </div>
+      {/* Data Zone */}
+      <div className="flex flex-col flex-1 mt-[var(--rc-card-gap-image-to-data)] min-w-0">
+        {/* Wine Name */}
+        <MonoLabel size="micro" weight="bold" colour="ghost" truncate className="mb-[var(--rc-card-gap-text-lines)]">
+          {wine.name || ''}
+        </MonoLabel>
 
-        <div className="mt-auto pt-3 sm:pt-6 border-t border-[#EBEBDF] flex justify-between items-center">
-          <div className={`border-2 border-black px-1.5 sm:px-2 py-0.5 sm:py-1 font-display text-xs sm:text-lg tracking-tight ${
-            maturity.includes('Drink Now') ? 'bg-[#CCFF00] text-black' : maturity.includes('Hold') ? 'bg-black text-[#CCFF00]' : 'bg-[#FF006E] text-white'
-          }`}>
-            {maturity.replace(/[🍷🟢⚠️]/g, '').trim().toUpperCase()}
-          </div>
-          
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0A0A0A] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 border-2 border-black">
-            <button 
+        {/* Producer */}
+        <MonoLabel size="label" colour="tertiary" uppercase={false} truncate className="mb-[var(--rc-card-gap-text-lines)]">
+          {wine.producer}
+        </MonoLabel>
+
+        {/* Cepage / Varietal */}
+        <Heading scale="heading" truncate maxLines={1} className="mb-[var(--rc-card-gap-text-lines)]">
+          {wine.cepage}
+        </Heading>
+
+        {/* Vintage */}
+        <Heading scale="vintage" colour={vintageColour} className="mb-[var(--rc-card-gap-text-lines)]">
+          {rcProps.vintage}
+        </Heading>
+
+        {/* Price Symbol */}
+        <MonoLabel size="micro" weight="bold" colour="ghost" className="opacity-40">
+          {getPriceSymbol(numericPrice)}
+        </MonoLabel>
+
+        {/* Footer: Maturity Chip + Qty Controls */}
+        <div className="mt-auto pt-[var(--rc-space-md)] border-t border-[var(--rc-border-subtle)] flex justify-between items-center">
+          <Chip
+            variant="Maturity"
+            state="Selected"
+            maturityValue={rcProps.maturity}
+            label={rcProps.maturity.replace('-', ' ')}
+          />
+
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] px-1.5 sm:px-2 py-0.5 sm:py-1 border-2 border-[var(--rc-ink-primary)] rounded-[var(--rc-radius-sm)]">
+            <button
               onClick={(e) => updateQuantity(Math.max(0, localQty - 1), e)}
-              className="p-0.5 hover:text-[#CCFF00] transition-colors"
+              className="p-0.5 hover:text-[var(--rc-accent-acid)] transition-colors"
             >
               <Minus size={10} className="sm:w-[14px] sm:h-[14px]" />
             </button>
-            <span className="font-display text-lg sm:text-2xl leading-none min-w-[1rem] text-center">{localQty}</span>
-            <button 
+            <span className="font-[var(--rc-font-display)] text-lg sm:text-2xl leading-none min-w-[1rem] text-center font-black">
+              {localQty}
+            </span>
+            <button
               onClick={(e) => updateQuantity(localQty + 1, e)}
-              className="p-0.5 hover:text-[#CCFF00] transition-colors"
+              className="p-0.5 hover:text-[var(--rc-accent-acid)] transition-colors"
             >
               <Plus size={10} className="sm:w-[14px] sm:h-[14px]" />
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 
