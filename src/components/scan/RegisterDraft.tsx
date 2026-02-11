@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RefreshCw, Plus, Minus } from 'lucide-react';
-import { Heading, MonoLabel, Body, Button, Input, Divider, Chip } from '@/components/rc';
+import { Heading, MonoLabel, Body, Button, Input, Divider, Chip, InlineMessage } from '@/components/rc';
 import ConfidenceIndicator from './ConfidenceIndicator';
 import MoreFieldsSection from './MoreFieldsSection';
 import CommitTransition from './CommitTransition';
@@ -14,6 +14,9 @@ interface RegisterDraftProps {
   isCommitting: boolean;
   commitStage?: CommitStage;
   onCommitAnimationComplete?: () => void;
+  imageQualityWarning?: string | null;
+  moreFieldsExpanded?: boolean;
+  onToggleMoreFields?: () => void;
 }
 
 const WINE_TYPES: WineType[] = ['Red', 'White', 'Rosé', 'Sparkling', 'Dessert', 'Fortified'];
@@ -36,6 +39,9 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
   isCommitting,
   commitStage = 'idle',
   onCommitAnimationComplete,
+  imageQualityWarning,
+  moreFieldsExpanded,
+  onToggleMoreFields,
 }) => {
   const { fields, extraction, image, source } = draft;
   const [priceInput, setPriceInput] = useState(fields.price ? String(fields.price) : '');
@@ -116,6 +122,13 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
         </div>
 
         <Divider weight="emphasised" className="mx-4" />
+
+        {/* Image quality warning */}
+        {imageQualityWarning && (
+          <div className="px-4 pt-3">
+            <InlineMessage tone="warning" message={imageQualityWarning} />
+          </div>
+        )}
 
         {/* Wine Type Selector */}
         <div className="px-4 pt-4 pb-2 space-y-2">
@@ -234,6 +247,8 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
           fields={fields}
           extraction={extraction}
           onFieldChange={handleFieldChange}
+          expanded={moreFieldsExpanded}
+          onToggleExpanded={onToggleMoreFields}
         />
 
         {/* Sticky Footer */}

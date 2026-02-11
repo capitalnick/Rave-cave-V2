@@ -1,22 +1,47 @@
 import React from 'react';
-import { RefreshCw, PenLine } from 'lucide-react';
+import { RefreshCw, PenLine, WifiOff, RotateCcw } from 'lucide-react';
 import { Heading, MonoLabel, Body, Button } from '@/components/rc';
+import type { ExtractionErrorCode } from '@/types';
 
 interface ExtractionProgressProps {
   previewUrl: string | null;
   error: string | null;
+  errorCode?: ExtractionErrorCode | null;
+  isOffline?: boolean;
   onRetake: () => void;
   onManualEntry: () => void;
+  onRetry?: () => void;
 }
 
 const SHIMMER_FIELDS = ['Producer', 'Wine Name', 'Vintage', 'Type', 'Region', 'Grape'];
 
+function getErrorDisplay(errorCode?: ExtractionErrorCode | null, isOffline?: boolean) {
+  if (isOffline) {
+    return { heading: "YOU'RE OFFLINE", showRetry: false, showRetake: false };
+  }
+  switch (errorCode) {
+    case 'PROXY_ERROR':
+      return { heading: 'SOMETHING WENT WRONG', showRetry: true, showRetake: false };
+    case 'TIMEOUT':
+      return { heading: 'TAKING TOO LONG', showRetry: true, showRetake: false };
+    case 'PARSE_ERROR':
+      return { heading: "COULDN'T READ THE LABEL", showRetry: false, showRetake: true };
+    default:
+      return { heading: "COULDN'T READ THE LABEL", showRetry: false, showRetake: true };
+  }
+}
+
 const ExtractionProgress: React.FC<ExtractionProgressProps> = ({
   previewUrl,
   error,
+  errorCode,
+  isOffline,
   onRetake,
   onManualEntry,
+  onRetry,
 }) => {
+  const errorDisplay = error ? getErrorDisplay(errorCode, isOffline) : null;
+
   return (
     <div className="flex flex-col items-center px-6 py-8 space-y-6 min-h-[60vh] sm:min-h-[50vh]">
       {/* Thumbnail */}
@@ -30,18 +55,27 @@ const ExtractionProgress: React.FC<ExtractionProgressProps> = ({
         </div>
       )}
 
-      {error ? (
+      {error && errorDisplay ? (
         /* Error State */
         <div className="text-center space-y-4 flex-1 flex flex-col items-center justify-center">
-          <Heading scale="heading">COULDN&apos;T READ THE LABEL</Heading>
+          {isOffline && <WifiOff size={32} className="text-[var(--rc-accent-coral)]" />}
+          <Heading scale="heading">{errorDisplay.heading}</Heading>
           <Body size="body" colour="ghost" className="max-w-xs">
             {error}
           </Body>
           <div className="flex gap-3 pt-2">
-            <Button variant="Secondary" onClick={onRetake}>
-              <RefreshCw size={16} className="mr-2" />
-              RETAKE
-            </Button>
+            {errorDisplay.showRetry && onRetry && (
+              <Button variant="Secondary" onClick={onRetry}>
+                <RotateCcw size={16} className="mr-2" />
+                RETRY
+              </Button>
+            )}
+            {errorDisplay.showRetake && (
+              <Button variant="Secondary" onClick={onRetake}>
+                <RefreshCw size={16} className="mr-2" />
+                RETAKE
+              </Button>
+            )}
             <Button variant="Primary" onClick={onManualEntry}>
               <PenLine size={16} className="mr-2" />
               ENTER MANUALLY

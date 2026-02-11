@@ -5,13 +5,16 @@ import ModeSelector from './ModeSelector';
 import ExtractionProgress from './ExtractionProgress';
 import RegisterDraft from './RegisterDraft';
 import DuplicateAlert from './DuplicateAlert';
-import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage } from '@/types';
+import SessionHeader from './SessionHeader';
+import DiscardConfirmation from './DiscardConfirmation';
+import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage, ExtractionErrorCode } from '@/types';
 import { compressImageForExtraction, compressImageForStorage, createPreviewUrl } from '@/utils/imageCompression';
-import { extractWineFromLabel } from '@/services/extractionService';
+import { extractWineFromLabel, ExtractionError } from '@/services/extractionService';
 import { findDuplicates } from '@/services/duplicateService';
 import { inventoryService } from '@/services/inventoryService';
 import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
 import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
+import { useScanSession } from '@/hooks/useScanSession';
 
 // ── State Machine ──
 
@@ -19,8 +22,10 @@ interface ScanState {
   stage: ScanStage;
   draft: WineDraft | null;
   error: string | null;
+  errorCode: ExtractionErrorCode | null;
   previewUrl: string | null;
   rawFile: File | null;
+  autoCapture: boolean;
 }
 
 type ScanAction =
@@ -28,9 +33,11 @@ type ScanAction =
   | { type: 'CLOSE' }
   | { type: 'CAPTURE'; file: File; previewUrl: string }
   | { type: 'EXTRACTION_SUCCESS'; fields: Partial<Wine>; extraction: ExtractionResult }
-  | { type: 'EXTRACTION_FAIL'; error: string }
+  | { type: 'EXTRACTION_FAIL'; error: string; errorCode?: ExtractionErrorCode }
   | { type: 'MANUAL_ENTRY' }
   | { type: 'RETAKE' }
+  | { type: 'SCAN_NEXT' }
+  | { type: 'RETRY' }
   | { type: 'UPDATE_DRAFT'; fields: Partial<Wine> }
   | { type: 'START_COMMIT' }
   | { type: 'COMMIT_SUCCESS' }
@@ -41,8 +48,10 @@ const initialState: ScanState = {
   stage: 'closed',
   draft: null,
   error: null,
+  errorCode: null,
   previewUrl: null,
   rawFile: null,
+  autoCapture: false,
 };
 
 function makeDraft(
@@ -72,14 +81,17 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         ...state,
         stage: 'extracting',
         error: null,
+        errorCode: null,
         previewUrl: action.previewUrl,
         rawFile: action.file,
+        autoCapture: false,
       };
     case 'EXTRACTION_SUCCESS':
       return {
         ...state,
         stage: 'draft',
         error: null,
+        errorCode: null,
         draft: makeDraft(
           'scan',
           action.fields,
@@ -88,16 +100,21 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         ),
       };
     case 'EXTRACTION_FAIL':
-      return { ...state, stage: 'extracting', error: action.error };
+      return { ...state, stage: 'extracting', error: action.error, errorCode: action.errorCode ?? null };
     case 'MANUAL_ENTRY':
       return {
         ...state,
         stage: 'draft',
         error: null,
+        errorCode: null,
         draft: makeDraft('manual', { quantity: 1, price: 0, format: '750ml' }, null, null),
       };
     case 'RETAKE':
-      return { ...state, stage: 'mode-select', error: null, draft: null, previewUrl: null, rawFile: null };
+      return { ...state, stage: 'mode-select', error: null, errorCode: null, draft: null, previewUrl: null, rawFile: null, autoCapture: false };
+    case 'SCAN_NEXT':
+      return { ...state, stage: 'mode-select', error: null, errorCode: null, draft: null, previewUrl: null, rawFile: null, autoCapture: true };
+    case 'RETRY':
+      return { ...state, stage: 'extracting', error: null, errorCode: null };
     case 'UPDATE_DRAFT':
       if (!state.draft) return state;
       return { ...state, draft: { ...state.draft, fields: { ...state.draft.fields, ...action.fields } } };
@@ -120,7 +137,7 @@ interface ScanRegisterOverlayProps {
   open: boolean;
   onClose: () => void;
   inventory: Wine[];
-  onWineCommitted?: (docId: string) => void;
+  onWineCommitted?: (docId: string | string[]) => void;
   onViewWine?: (wine: Wine) => void;
 }
 
@@ -135,17 +152,22 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   const [state, dispatch] = useReducer(reducer, initialState);
   const [duplicateCandidate, setDuplicateCandidate] = useState<DuplicateCandidate | null>(null);
   const [commitStage, setCommitStage] = useState<CommitStage>('idle');
+  const [moreFieldsExpanded, setMoreFieldsExpanded] = useState(false);
+  const [showDiscard, setShowDiscard] = useState(false);
   const lastCommittedDocId = useRef<string | null>(null);
   const lastCommittedName = useRef<string>('');
   const prevOpenRef = useRef(open);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
+  const session = useScanSession();
+
   // Open/close sync
   useEffect(() => {
     if (open && !prevOpenRef.current) {
       dispatch({ type: 'OPEN' });
       setDuplicateCandidate(null);
+      setMoreFieldsExpanded(false);
     } else if (!open && prevOpenRef.current) {
       if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
       dispatch({ type: 'CLOSE' });
@@ -157,14 +179,28 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   // Browser back button handling (WineModal pattern)
   useEffect(() => {
     if (!open) return;
-    const handlePopState = () => onCloseRef.current();
+    const handlePopState = () => {
+      if (session.isActive && (state.stage === 'draft' || state.stage === 'extracting')) {
+        setShowDiscard(true);
+        window.history.pushState({ scanOverlay: true }, '');
+      } else {
+        onCloseRef.current();
+      }
+    };
     window.history.pushState({ scanOverlay: true }, '');
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [open]);
+  }, [open, session.isActive, state.stage]);
 
-  // Handle image capture
+  // Handle image capture with online check
   const handleCapture = useCallback(async (file: File) => {
+    // Online check
+    if (!navigator.onLine) {
+      dispatch({ type: 'CAPTURE', file, previewUrl: createPreviewUrl(file) });
+      dispatch({ type: 'EXTRACTION_FAIL', error: 'No internet connection. Try entering details manually.', errorCode: 'PROXY_ERROR' });
+      return;
+    }
+
     const previewUrl = createPreviewUrl(file);
     dispatch({ type: 'CAPTURE', file, previewUrl });
 
@@ -173,9 +209,30 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       const { fields, extraction } = await extractWineFromLabel(base64);
       dispatch({ type: 'EXTRACTION_SUCCESS', fields, extraction });
     } catch (e: any) {
-      dispatch({ type: 'EXTRACTION_FAIL', error: e.message || 'Failed to read label' });
+      const errorCode = e instanceof ExtractionError ? e.code : 'UNKNOWN';
+      dispatch({ type: 'EXTRACTION_FAIL', error: e.message || 'Failed to read label', errorCode: errorCode as ExtractionErrorCode });
     }
   }, []);
+
+  // Retry extraction with same file
+  const handleRetry = useCallback(async () => {
+    if (!state.rawFile) return;
+    dispatch({ type: 'RETRY' });
+
+    if (!navigator.onLine) {
+      dispatch({ type: 'EXTRACTION_FAIL', error: 'No internet connection.', errorCode: 'PROXY_ERROR' });
+      return;
+    }
+
+    try {
+      const base64 = await compressImageForExtraction(state.rawFile);
+      const { fields, extraction } = await extractWineFromLabel(base64);
+      dispatch({ type: 'EXTRACTION_SUCCESS', fields, extraction });
+    } catch (e: any) {
+      const errorCode = e instanceof ExtractionError ? e.code : 'UNKNOWN';
+      dispatch({ type: 'EXTRACTION_FAIL', error: e.message || 'Failed to read label', errorCode: errorCode as ExtractionErrorCode });
+    }
+  }, [state.rawFile]);
 
   const handleManualEntry = useCallback(() => {
     dispatch({ type: 'MANUAL_ENTRY' });
@@ -190,6 +247,15 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   const handleUpdateFields = useCallback((fields: Partial<Wine>) => {
     dispatch({ type: 'UPDATE_DRAFT', fields });
   }, []);
+
+  const handleToggleMoreFields = useCallback(() => {
+    setMoreFieldsExpanded(prev => !prev);
+  }, []);
+
+  // Image quality warning
+  const imageQualityWarning = state.draft?.extraction?.imageQuality === 'low'
+    ? 'Image quality is low — some fields may need correction.'
+    : null;
 
   // ── Commit Flow ──
   const handleConfirm = useCallback(async () => {
@@ -242,6 +308,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       lastCommittedDocId.current = docId;
       lastCommittedName.current = `${draftFields.vintage || ''} ${draftFields.producer || 'Wine'}`.trim();
 
+      // Track in session if active
+      if (session.isActive) {
+        session.commitInSession(docId, draftFields.producer || '', draftFields.vintage || 0);
+      }
+
       dispatch({ type: 'COMMIT_SUCCESS' });
       setCommitStage('success');
 
@@ -261,7 +332,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       dispatch({ type: 'COMMIT_FAIL', error: e.message || 'Failed to save' });
       setCommitStage('error');
     }
-  }, [state.draft, state.rawFile, state.previewUrl, inventory, duplicateCandidate, onClose]);
+  }, [state.draft, state.rawFile, state.previewUrl, inventory, duplicateCandidate, onClose, session]);
 
   // Called when CommitTransition's success animation completes
   const handleCommitAnimationComplete = useCallback(() => {
@@ -269,20 +340,31 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     dispatch({ type: 'SHOW_SUCCESS_SCREEN' });
   }, []);
 
-  // "SCAN ANOTHER" on success screen
+  // "SCAN ANOTHER" on success screen — starts/continues multi-scan session
   const handleScanAnother = useCallback(() => {
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
-    dispatch({ type: 'RETAKE' });
+    if (!session.isActive) session.startSession();
+    dispatch({ type: 'SCAN_NEXT' });
     setCommitStage('idle');
-  }, [state.previewUrl]);
+  }, [state.previewUrl, session]);
 
   // "DONE" on success screen
   const handleDone = useCallback(() => {
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
-    const docId = lastCommittedDocId.current;
-    onClose();
-    if (docId) onWineCommitted?.(docId);
-  }, [state.previewUrl, onClose, onWineCommitted]);
+    if (session.isActive) {
+      const bottles = session.endSession();
+      const allDocIds = bottles.map(b => b.docId);
+      if (lastCommittedDocId.current && !allDocIds.includes(lastCommittedDocId.current)) {
+        allDocIds.push(lastCommittedDocId.current);
+      }
+      onClose();
+      if (allDocIds.length > 0) onWineCommitted?.(allDocIds);
+    } else {
+      const docId = lastCommittedDocId.current;
+      onClose();
+      if (docId) onWineCommitted?.(docId);
+    }
+  }, [state.previewUrl, onClose, onWineCommitted, session]);
 
   // "View existing bottle" from duplicate alert
   const handleViewExisting = useCallback(() => {
@@ -313,17 +395,34 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   // Handle "Keep as separate" from duplicate alert
   const handleKeepSeparate = useCallback(() => {
     setDuplicateCandidate(null);
-    // Re-trigger confirm, now with duplicateCandidate cleared the check will pass
     handleConfirm();
   }, [handleConfirm]);
 
   const handleClose = useCallback(() => {
+    if (session.isActive && state.stage === 'draft') {
+      setShowDiscard(true);
+      return;
+    }
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
     setDuplicateCandidate(null);
     onClose();
-  }, [onClose, state.previewUrl]);
+  }, [onClose, state.previewUrl, session.isActive, state.stage]);
+
+  // Discard confirmation handlers
+  const handleDiscardConfirm = useCallback(() => {
+    setShowDiscard(false);
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    // Discard current draft, reopen camera
+    dispatch({ type: 'SCAN_NEXT' });
+  }, [state.previewUrl]);
+
+  const handleDiscardKeep = useCallback(() => {
+    setShowDiscard(false);
+  }, []);
 
   if (!open) return null;
+
+  const isOffline = !navigator.onLine;
 
   return (
     <Dialog open onOpenChange={(v) => { if (!v) handleClose(); }}>
@@ -332,12 +431,21 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       >
         <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
 
+        {/* Session Header */}
+        {session.isActive && (
+          <SessionHeader
+            bottleNumber={session.bottleCount}
+            onDone={handleDone}
+          />
+        )}
+
         <AnimatePresence mode="wait">
           {state.stage === 'mode-select' && (
             <motion.div key="mode-select" {...stageMotion}>
               <ModeSelector
                 onCapture={handleCapture}
                 onManualEntry={handleManualEntry}
+                autoCapture={state.autoCapture}
               />
             </motion.div>
           )}
@@ -347,8 +455,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
               <ExtractionProgress
                 previewUrl={state.previewUrl}
                 error={state.error}
+                errorCode={state.errorCode}
+                isOffline={isOffline}
                 onRetake={handleRetake}
                 onManualEntry={handleManualEntry}
+                onRetry={handleRetry}
               />
             </motion.div>
           )}
@@ -363,6 +474,9 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 isCommitting={state.stage === 'committing'}
                 commitStage={commitStage}
                 onCommitAnimationComplete={handleCommitAnimationComplete}
+                imageQualityWarning={imageQualityWarning}
+                moreFieldsExpanded={moreFieldsExpanded}
+                onToggleMoreFields={handleToggleMoreFields}
               />
             </motion.div>
           )}
@@ -399,6 +513,16 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
             onAddToExisting={handleAddToExisting}
             onKeepSeparate={handleKeepSeparate}
             onViewExisting={handleViewExisting}
+          />
+        )}
+
+        {/* Discard Confirmation overlay */}
+        {showDiscard && (
+          <DiscardConfirmation
+            title={state.stage === 'draft' ? 'DISCARD THIS SCAN?' : 'END SESSION?'}
+            message={state.stage === 'draft' ? 'Your current scan will be lost.' : 'You can always scan more later.'}
+            onDiscard={handleDiscardConfirm}
+            onKeep={handleDiscardKeep}
           />
         )}
       </DialogContent>

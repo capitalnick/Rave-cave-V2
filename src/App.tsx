@@ -147,18 +147,21 @@ const App: React.FC = () => {
   };
 
   // ── Scan overlay callbacks ──
-  const handleWineCommitted = useCallback((docId: string) => {
+  const handleWineCommitted = useCallback((docId: string | string[]) => {
     setScanOpen(false);
     setActiveTab('cellar');
+    const ids = Array.isArray(docId) ? docId : [docId];
     // Delay to let cellar render, then scroll + highlight
     requestAnimationFrame(() => {
       setTimeout(() => {
-        const el = document.getElementById(`wine-card-${docId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('rc-highlight-pulse');
-          setTimeout(() => el.classList.remove('rc-highlight-pulse'), 2000);
-        }
+        ids.forEach((id, i) => {
+          const el = document.getElementById(`wine-card-${id}`);
+          if (el) {
+            if (i === 0) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('rc-highlight-pulse');
+            setTimeout(() => el.classList.remove('rc-highlight-pulse'), 2000);
+          }
+        });
       }, 300);
     });
   }, []);

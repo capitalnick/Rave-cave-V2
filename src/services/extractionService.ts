@@ -133,38 +133,56 @@ export async function extractWineFromLabel(
   base64: string,
   timeoutMs = 12000
 ): Promise<{ fields: Partial<Wine>; extraction: ExtractionResult }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const MAX_ATTEMPTS = 3;
+  const RETRY_DELAY = 2000;
+  let lastError: ExtractionError | null = null;
 
-  try {
-    const response = await callGeminiProxy(
-      {
-        model: CONFIG.MODELS.TEXT,
-        systemInstruction: SYSTEM_INSTRUCTION,
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { inlineData: { data: base64, mimeType: 'image/jpeg' } },
-              { text: 'Extract all wine information from this label image.' },
-            ],
-          },
-        ],
-      },
-      controller.signal
-    );
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    const text = response?.text;
-    if (!text) throw new ExtractionError('Empty response from Gemini', 'PARSE_ERROR');
+    try {
+      const response = await callGeminiProxy(
+        {
+          model: CONFIG.MODELS.TEXT,
+          systemInstruction: SYSTEM_INSTRUCTION,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { inlineData: { data: base64, mimeType: 'image/jpeg' } },
+                { text: 'Extract all wine information from this label image.' },
+              ],
+            },
+          ],
+        },
+        controller.signal
+      );
 
-    return parseResponse(text);
-  } catch (e: any) {
-    if (e.name === 'AbortError') {
-      throw new ExtractionError('Label extraction timed out', 'TIMEOUT');
+      const text = response?.text;
+      if (!text) throw new ExtractionError('Empty response from Gemini', 'PARSE_ERROR');
+
+      return parseResponse(text);
+    } catch (e: any) {
+      clearTimeout(timer);
+
+      if (e.name === 'AbortError') {
+        throw new ExtractionError('Label extraction timed out', 'TIMEOUT');
+      }
+
+      const err = e instanceof ExtractionError ? e : new ExtractionError(e.message || 'Extraction failed', 'UNKNOWN');
+      lastError = err;
+
+      // Only retry on PROXY_ERROR
+      if (err.code === 'PROXY_ERROR' && attempt < MAX_ATTEMPTS - 1) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY));
+        continue;
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
     }
-    if (e instanceof ExtractionError) throw e;
-    throw new ExtractionError(e.message || 'Extraction failed', 'UNKNOWN');
-  } finally {
-    clearTimeout(timer);
   }
+
+  throw lastError || new ExtractionError('Extraction failed', 'UNKNOWN');
 }

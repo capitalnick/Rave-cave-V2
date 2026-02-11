@@ -1,15 +1,23 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Camera, PenLine, ImageIcon } from 'lucide-react';
 import { Heading, MonoLabel, Body } from '@/components/rc';
 
 interface ModeSelectorProps {
   onCapture: (file: File) => void;
   onManualEntry: () => void;
+  autoCapture?: boolean;
 }
 
-const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry }) => {
+const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry, autoCapture }) => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-open camera for multi-scan session flow
+  useEffect(() => {
+    if (autoCapture) {
+      requestAnimationFrame(() => cameraInputRef.current?.click());
+    }
+  }, [autoCapture]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

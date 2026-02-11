@@ -248,6 +248,8 @@ export type ScanStage =
 
 export type CommitStage = 'idle' | 'saving' | 'success' | 'error';
 
+export type { ExtractionErrorCode } from '@/services/extractionService';
+
 /**
  * SINGLE SOURCE OF TRUTH FOR FIELD MAPPING
  */

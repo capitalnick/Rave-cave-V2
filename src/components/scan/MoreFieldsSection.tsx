@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { MonoLabel, Input } from '@/components/rc';
 import ConfidenceIndicator from './ConfidenceIndicator';
@@ -8,6 +8,8 @@ interface MoreFieldsSectionProps {
   fields: Partial<Wine>;
   extraction: ExtractionResult | null;
   onFieldChange: (key: string, value: string | number) => void;
+  expanded?: boolean;
+  onToggleExpanded?: () => void;
 }
 
 const MORE_FIELDS: { key: keyof Wine; label: string }[] = [
@@ -18,8 +20,16 @@ const MORE_FIELDS: { key: keyof Wine; label: string }[] = [
   { key: 'personalNote', label: 'Personal Notes' },
 ];
 
-const MoreFieldsSection: React.FC<MoreFieldsSectionProps> = ({ fields, extraction, onFieldChange }) => {
-  const [expanded, setExpanded] = useState(false);
+const MoreFieldsSection: React.FC<MoreFieldsSectionProps> = ({
+  fields,
+  extraction,
+  onFieldChange,
+  expanded: controlledExpanded,
+  onToggleExpanded,
+}) => {
+  const [internalExpanded, setInternalExpanded] = React.useState(false);
+  const expanded = controlledExpanded ?? internalExpanded;
+  const setExpanded = onToggleExpanded ?? (() => setInternalExpanded(prev => !prev));
 
   const getConfidence = (key: string): ExtractionConfidence | null => {
     return extraction?.fields[key]?.confidence ?? null;
@@ -28,7 +38,7 @@ const MoreFieldsSection: React.FC<MoreFieldsSectionProps> = ({ fields, extractio
   return (
     <div className="border-t border-[var(--rc-border-emphasis)]">
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setExpanded()}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--rc-surface-secondary)] transition-colors"
       >
         <MonoLabel size="micro" weight="bold" colour="ghost">

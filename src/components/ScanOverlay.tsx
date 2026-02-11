@@ -6,7 +6,7 @@ interface ScanOverlayProps {
   open: boolean;
   onClose: () => void;
   inventory: Wine[];
-  onWineCommitted?: (docId: string) => void;
+  onWineCommitted?: (docId: string | string[]) => void;
   onViewWine?: (wine: Wine) => void;
 }
 
