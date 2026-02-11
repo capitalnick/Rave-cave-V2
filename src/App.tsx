@@ -223,7 +223,24 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'pulse' && <PulseScreen inventory={inventory} />}
+      {activeTab === 'pulse' && (
+        <PulseScreen
+          inventory={inventory}
+          onRefreshInventory={() => {
+            // Firestore listener auto-syncs; this provides UX feedback
+            setIsSynced(false);
+            setTimeout(() => setIsSynced(true), 500);
+          }}
+          onNavigateToWine={(wineId) => {
+            const wine = inventory.find(w => w.id === wineId);
+            if (wine) {
+              setSelectedWine(wine);
+              setActiveTab('cellar');
+            }
+          }}
+          onScanPress={() => setScanOpen(true)}
+        />
+      )}
 
       {activeTab === 'recommend' && (
         <RecommendScreen
@@ -232,7 +249,7 @@ const App: React.FC = () => {
         />
       )}
 
-      <ScanOverlay open={scanOpen} onClose={() => setScanOpen(false)} />
+      <ScanOverlay open={scanOpen} onClose={() => setScanOpen(false)} inventory={inventory} />
 
       {selectedWine && (
         <WineModal wine={selectedWine} onClose={() => setSelectedWine(null)} onUpdate={(key, value) => handleUpdate(selectedWine, key, value)} />
