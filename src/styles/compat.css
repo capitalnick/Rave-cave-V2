@@ -1,0 +1,20 @@
+/*
+ * Backward compatibility: map old CSS variable names to new --rc-* tokens.
+ * This allows existing components to keep working while we migrate.
+ * MIGRATION: Remove after Phase 4 cleanup.
+ */
+
+:root {
+  --gallery-white: var(--rc-surface-primary);
+  --paper-beige: var(--rc-surface-tertiary);
+  --matte-cream: var(--rc-surface-secondary);
+  --sand: #F5E6D3;           /* No direct mapping - keep as-is */
+  --blush: #FFF5F7;          /* No direct mapping - keep as-is */
+  --blush-matte: #FFE5EC;    /* No direct mapping */
+  --ink-black: var(--rc-ink-primary);
+  --charcoal: var(--rc-ink-secondary);
+  --gray-medium: var(--rc-ink-tertiary);
+  --neon-pink: var(--rc-accent-pink);
+  --acid-green: var(--rc-accent-acid);
+  --coral: var(--rc-accent-coral);
+}
