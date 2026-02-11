@@ -8,12 +8,14 @@ interface DuplicateAlertProps {
   candidate: DuplicateCandidate;
   onAddToExisting: () => void;
   onKeepSeparate: () => void;
+  onViewExisting?: () => void;
 }
 
 const DuplicateAlert: React.FC<DuplicateAlertProps> = ({
   candidate,
   onAddToExisting,
   onKeepSeparate,
+  onViewExisting,
 }) => {
   const { existingWine, matchedFields, similarityScore } = candidate;
   const rcProps = toRCWineCardProps(existingWine);
@@ -50,6 +52,14 @@ const DuplicateAlert: React.FC<DuplicateAlertProps> = ({
           <Button variant="Secondary" onClick={onKeepSeparate} className="w-full">
             KEEP AS SEPARATE BOTTLE
           </Button>
+          {onViewExisting && (
+            <button
+              onClick={onViewExisting}
+              className="w-full text-center text-[var(--rc-ink-ghost)] hover:text-[var(--rc-accent-pink)] font-[var(--rc-font-mono)] text-xs uppercase tracking-wider py-2 transition-colors"
+            >
+              View existing bottle →
+            </button>
+          )}
         </div>
       </div>
     </div>

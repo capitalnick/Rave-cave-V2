@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Layout from './components/Layout';
 import ChatInterface from './components/ChatInterface';
 import PulseScreen from './components/PulseScreen';
@@ -146,6 +146,27 @@ const App: React.FC = () => {
     }
   };
 
+  // ── Scan overlay callbacks ──
+  const handleWineCommitted = useCallback((docId: string) => {
+    setScanOpen(false);
+    setActiveTab('cellar');
+    // Delay to let cellar render, then scroll + highlight
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const el = document.getElementById(`wine-card-${docId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('rc-highlight-pulse');
+          setTimeout(() => el.classList.remove('rc-highlight-pulse'), 2000);
+        }
+      }, 300);
+    });
+  }, []);
+
+  const handleViewWine = useCallback((wine: Wine) => {
+    setSelectedWine(wine);
+  }, []);
+
   return (
     <Layout
       activeTab={activeTab}
@@ -250,7 +271,13 @@ const App: React.FC = () => {
         />
       )}
 
-      <ScanOverlay open={scanOpen} onClose={() => setScanOpen(false)} inventory={inventory} />
+      <ScanOverlay
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        inventory={inventory}
+        onWineCommitted={handleWineCommitted}
+        onViewWine={handleViewWine}
+      />
 
       {selectedWine && (
         <WineModal wine={selectedWine} onClose={() => setSelectedWine(null)} onUpdate={(key, value) => handleUpdate(selectedWine, key, value)} />

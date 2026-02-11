@@ -243,7 +243,10 @@ export type ScanStage =
   | 'extracting'
   | 'draft'
   | 'committing'
-  | 'committed';
+  | 'committed'
+  | 'success-screen';
+
+export type CommitStage = 'idle' | 'saving' | 'success' | 'error';
 
 /**
  * SINGLE SOURCE OF TRUTH FOR FIELD MAPPING

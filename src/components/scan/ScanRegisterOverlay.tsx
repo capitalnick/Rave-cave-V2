@@ -5,13 +5,13 @@ import ModeSelector from './ModeSelector';
 import ExtractionProgress from './ExtractionProgress';
 import RegisterDraft from './RegisterDraft';
 import DuplicateAlert from './DuplicateAlert';
-import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate } from '@/types';
+import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage } from '@/types';
 import { compressImageForExtraction, compressImageForStorage, createPreviewUrl } from '@/utils/imageCompression';
 import { extractWineFromLabel } from '@/services/extractionService';
 import { findDuplicates } from '@/services/duplicateService';
 import { inventoryService } from '@/services/inventoryService';
 import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
-import { showToast } from '@/components/rc';
+import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
 
 // ── State Machine ──
 
@@ -34,7 +34,8 @@ type ScanAction =
   | { type: 'UPDATE_DRAFT'; fields: Partial<Wine> }
   | { type: 'START_COMMIT' }
   | { type: 'COMMIT_SUCCESS' }
-  | { type: 'COMMIT_FAIL'; error: string };
+  | { type: 'COMMIT_FAIL'; error: string }
+  | { type: 'SHOW_SUCCESS_SCREEN' };
 
 const initialState: ScanState = {
   stage: 'closed',
@@ -106,6 +107,8 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
       return { ...state, stage: 'committed' };
     case 'COMMIT_FAIL':
       return { ...state, stage: 'draft', error: action.error };
+    case 'SHOW_SUCCESS_SCREEN':
+      return { ...state, stage: 'success-screen' };
     default:
       return state;
   }
@@ -117,6 +120,8 @@ interface ScanRegisterOverlayProps {
   open: boolean;
   onClose: () => void;
   inventory: Wine[];
+  onWineCommitted?: (docId: string) => void;
+  onViewWine?: (wine: Wine) => void;
 }
 
 const stageMotion = {
@@ -126,9 +131,12 @@ const stageMotion = {
   transition: { duration: 0.2 },
 };
 
-const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory }) => {
+const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [duplicateCandidate, setDuplicateCandidate] = useState<DuplicateCandidate | null>(null);
+  const [commitStage, setCommitStage] = useState<CommitStage>('idle');
+  const lastCommittedDocId = useRef<string | null>(null);
+  const lastCommittedName = useRef<string>('');
   const prevOpenRef = useRef(open);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -195,8 +203,9 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       return;
     }
 
-    // 2. Proceed with commit
+    // 2. Proceed with commit — show saving animation
     dispatch({ type: 'START_COMMIT' });
+    setCommitStage('saving');
 
     try {
       const wineData = {
@@ -230,19 +239,18 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
           .catch((err) => console.error('Image upload failed (non-blocking):', err));
       }
 
+      lastCommittedDocId.current = docId;
+      lastCommittedName.current = `${draftFields.vintage || ''} ${draftFields.producer || 'Wine'}`.trim();
+
       dispatch({ type: 'COMMIT_SUCCESS' });
+      setCommitStage('success');
 
-      // 4. Close overlay
-      if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
-      onClose();
-
-      // 5. Show toast with undo
-      const wineName = `${draftFields.vintage || ''} ${draftFields.producer || 'Wine'}`.trim();
+      // 4. Show toast with undo (10s window)
       showToast({
         tone: 'success',
-        message: `${wineName} added to cellar`,
+        message: `${lastCommittedName.current} added to cellar`,
         actionLabel: 'UNDO',
-        duration: 8000,
+        duration: 10000,
         onAction: async () => {
           await inventoryService.deleteWine(docId);
           deleteLabelImage(docId).catch(() => {});
@@ -251,8 +259,39 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       });
     } catch (e: any) {
       dispatch({ type: 'COMMIT_FAIL', error: e.message || 'Failed to save' });
+      setCommitStage('error');
     }
   }, [state.draft, state.rawFile, state.previewUrl, inventory, duplicateCandidate, onClose]);
+
+  // Called when CommitTransition's success animation completes
+  const handleCommitAnimationComplete = useCallback(() => {
+    setCommitStage('idle');
+    dispatch({ type: 'SHOW_SUCCESS_SCREEN' });
+  }, []);
+
+  // "SCAN ANOTHER" on success screen
+  const handleScanAnother = useCallback(() => {
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    dispatch({ type: 'RETAKE' });
+    setCommitStage('idle');
+  }, [state.previewUrl]);
+
+  // "DONE" on success screen
+  const handleDone = useCallback(() => {
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    const docId = lastCommittedDocId.current;
+    onClose();
+    if (docId) onWineCommitted?.(docId);
+  }, [state.previewUrl, onClose, onWineCommitted]);
+
+  // "View existing bottle" from duplicate alert
+  const handleViewExisting = useCallback(() => {
+    if (!duplicateCandidate) return;
+    setDuplicateCandidate(null);
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    onClose();
+    onViewWine?.(duplicateCandidate.existingWine);
+  }, [duplicateCandidate, state.previewUrl, onClose, onViewWine]);
 
   // Handle "Add to existing" from duplicate alert
   const handleAddToExisting = useCallback(async () => {
@@ -314,7 +353,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
             </motion.div>
           )}
 
-          {(state.stage === 'draft' || state.stage === 'committing') && state.draft && (
+          {(state.stage === 'draft' || state.stage === 'committing' || state.stage === 'committed') && state.draft && (
             <motion.div key="draft" {...stageMotion}>
               <RegisterDraft
                 draft={state.draft}
@@ -322,7 +361,33 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 onConfirm={handleConfirm}
                 onRetake={handleRetake}
                 isCommitting={state.stage === 'committing'}
+                commitStage={commitStage}
+                onCommitAnimationComplete={handleCommitAnimationComplete}
               />
+            </motion.div>
+          )}
+
+          {state.stage === 'success-screen' && (
+            <motion.div key="success-screen" {...stageMotion}>
+              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[50vh] px-6 py-10 space-y-6">
+                <div className="w-16 h-16 rounded-full bg-[var(--rc-accent-acid)] flex items-center justify-center">
+                  <span className="text-[var(--rc-ink-primary)] text-3xl font-bold">✓</span>
+                </div>
+                <div className="text-center space-y-2">
+                  <Heading scale="heading">ADDED TO CELLAR</Heading>
+                  <MonoLabel size="caption" colour="ghost">
+                    {lastCommittedName.current}
+                  </MonoLabel>
+                </div>
+                <div className="flex flex-col gap-3 w-full max-w-xs">
+                  <Button variant="Primary" onClick={handleScanAnother} className="w-full">
+                    SCAN ANOTHER
+                  </Button>
+                  <Button variant="Secondary" onClick={handleDone} className="w-full">
+                    DONE
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -333,6 +398,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
             candidate={duplicateCandidate}
             onAddToExisting={handleAddToExisting}
             onKeepSeparate={handleKeepSeparate}
+            onViewExisting={handleViewExisting}
           />
         )}
       </DialogContent>

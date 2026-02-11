@@ -3,7 +3,8 @@ import { RefreshCw, Plus, Minus } from 'lucide-react';
 import { Heading, MonoLabel, Body, Button, Input, Divider, Chip } from '@/components/rc';
 import ConfidenceIndicator from './ConfidenceIndicator';
 import MoreFieldsSection from './MoreFieldsSection';
-import type { Wine, WineType, WineDraft, ExtractionConfidence } from '@/types';
+import CommitTransition from './CommitTransition';
+import type { Wine, WineType, WineDraft, ExtractionConfidence, CommitStage } from '@/types';
 
 interface RegisterDraftProps {
   draft: WineDraft;
@@ -11,6 +12,8 @@ interface RegisterDraftProps {
   onConfirm: () => void;
   onRetake: () => void;
   isCommitting: boolean;
+  commitStage?: CommitStage;
+  onCommitAnimationComplete?: () => void;
 }
 
 const WINE_TYPES: WineType[] = ['Red', 'White', 'Rosé', 'Sparkling', 'Dessert', 'Fortified'];
@@ -31,6 +34,8 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
   onConfirm,
   onRetake,
   isCommitting,
+  commitStage = 'idle',
+  onCommitAnimationComplete,
 }) => {
   const { fields, extraction, image, source } = draft;
   const [priceInput, setPriceInput] = useState(fields.price ? String(fields.price) : '');
@@ -233,14 +238,18 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
 
         {/* Sticky Footer */}
         <div className="sticky bottom-0 bg-[var(--rc-surface-primary)] border-t border-[var(--rc-border-emphasis)] p-4 mt-auto">
-          <Button
-            variant="Primary"
-            onClick={onConfirm}
-            disabled={!priceValid || isCommitting}
-            className="w-full"
-          >
-            {isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
-          </Button>
+          {commitStage !== 'idle' && commitStage !== undefined ? (
+            <CommitTransition stage={commitStage} onComplete={onCommitAnimationComplete ?? (() => {})} />
+          ) : (
+            <Button
+              variant="Primary"
+              onClick={onConfirm}
+              disabled={!priceValid || isCommitting}
+              className="w-full"
+            >
+              {isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
+            </Button>
+          )}
         </div>
       </div>
     </div>

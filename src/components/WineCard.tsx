@@ -66,6 +66,7 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
       elevation="raised"
       padding="standard"
       onClick={onClick}
+      id={`wine-card-${wine.id}`}
       className={cn(
         "w-full group h-full",
         isHero && "ring-2 ring-[var(--rc-accent-pink)]"

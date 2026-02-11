@@ -6,14 +6,22 @@ interface ScanOverlayProps {
   open: boolean;
   onClose: () => void;
   inventory: Wine[];
+  onWineCommitted?: (docId: string) => void;
+  onViewWine?: (wine: Wine) => void;
 }
 
 /**
  * Thin wrapper preserving the App.tsx import. Delegates to ScanRegisterOverlay.
  */
-const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory }) => {
+const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine }) => {
   return (
-    <ScanRegisterOverlay open={open} onClose={onClose} inventory={inventory} />
+    <ScanRegisterOverlay
+      open={open}
+      onClose={onClose}
+      inventory={inventory}
+      onWineCommitted={onWineCommitted}
+      onViewWine={onViewWine}
+    />
   );
 };
 
