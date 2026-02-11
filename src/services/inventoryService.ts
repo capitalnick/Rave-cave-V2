@@ -48,6 +48,16 @@ export const inventoryService = {
     }
   },
 
+  deleteWine: async (docId: string): Promise<boolean> => {
+    try {
+      await deleteDoc(doc(db, WINES_COLLECTION, docId));
+      return true;
+    } catch (e) {
+      console.error("Firestore Delete Failed", e);
+      return false;
+    }
+  },
+
   updateField: async (docId: string, field: string, value: any): Promise<boolean> => {
     const firestoreKey = FIRESTORE_FIELD_MAP[field] || field;
     try {

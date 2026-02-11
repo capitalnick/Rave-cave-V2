@@ -140,6 +140,111 @@ export interface RecentQuery {
   contextInputs: OccasionContext;
 }
 
+// ── Pulse Dashboard Types ──
+
+export interface DrinkingWindow {
+  wineId: string;
+  producer: string;
+  name: string;
+  vintage: number;
+  type: WineType;
+  drinkFrom: number;
+  drinkUntil: number;
+  maturity: MaturityStatus;
+  totalValue: number;
+  quantity: number;
+}
+
+export interface MaturityBreakdown {
+  drinkNow: number;
+  hold: number;
+  pastPeak: number;
+  unknown: number;
+  total: number;
+}
+
+export type StoryCardType =
+  | 'past-peak-alert'
+  | 'ready-to-drink'
+  | 'most-valuable'
+  | 'cellar-diversity'
+  | 'aging-potential';
+
+export interface StoryCard {
+  id: string;
+  type: StoryCardType;
+  icon: string;
+  headline: string;
+  subtext: string;
+  accentColor: string;
+  cta?: {
+    label: string;
+    action: 'navigate-cellar' | 'view-wine' | 'view-story' | 'view-drinking-window';
+    payload?: string;
+  };
+}
+
+export interface PulseStats {
+  totalBottles: number;
+  totalValue: number;
+  typeDistribution: Record<string, number>;
+  topProducers: { name: string; count: number; totalValue: number }[];
+  maturityBreakdown: MaturityBreakdown;
+  drinkingWindows: DrinkingWindow[];
+  storyCards: StoryCard[];
+  bottlesNeedingAttention: number;
+  readyToDrinkCount: number;
+  mostValuableWine: Wine | null;
+  averageBottleValue: number;
+  timelineRange: { min: number; max: number };
+}
+
+// ── Scan & Register Pipeline Types ──
+
+export type ExtractionConfidence = 'high' | 'medium' | 'low';
+
+export interface ExtractedField {
+  value: any;
+  confidence: ExtractionConfidence;
+}
+
+export interface ExtractionResult {
+  fields: Record<string, ExtractedField>;
+  status: 'complete' | 'partial' | 'failed';
+  imageQuality: 'high' | 'medium' | 'low' | null;
+}
+
+export interface DuplicateCandidate {
+  wineId: string;
+  similarityScore: number;
+  matchedFields: string[];
+  existingWine: Wine;
+}
+
+export type DraftSource = 'scan' | 'manual';
+
+export interface DraftImage {
+  localUri: string;
+  remoteUrl: string | null;
+}
+
+export interface WineDraft {
+  draftId: string;
+  source: DraftSource;
+  fields: Partial<Wine>;
+  extraction: ExtractionResult | null;
+  image: DraftImage | null;
+  createdAt: string;
+}
+
+export type ScanStage =
+  | 'closed'
+  | 'mode-select'
+  | 'extracting'
+  | 'draft'
+  | 'committing'
+  | 'committed';
+
 /**
  * SINGLE SOURCE OF TRUTH FOR FIELD MAPPING
  */
