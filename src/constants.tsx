@@ -4,13 +4,13 @@
  */
 
 export const COLORS = {
-  bg: '#FAFAF8',
-  paper: '#F5F0E8',
-  cream: '#EBEBDF',
-  ink: '#0A0A0A',
-  neonPink: '#FF006E',
-  acidGreen: '#CCFF00',
-  coral: '#FF6B9D',
+  bg: '#FAFAF9',        // --rc-surface-primary
+  paper: '#F5F0E8',     // --rc-surface-tertiary
+  cream: '#F3EFE4',     // --rc-surface-secondary (was #EBEBDF)
+  ink: '#0A0A0A',       // --rc-ink-primary
+  neonPink: '#FF006E',  // --rc-accent-pink
+  acidGreen: '#C7FF00', // --rc-accent-acid (was #CCFF00)
+  coral: '#FF6A4D',     // --rc-accent-coral (was #FF6B9D)
 };
 
 export const WINE_COLORS: Record<string, string> = {
@@ -39,34 +39,34 @@ export const getWineColors = (wineType: string) => {
   const type = wineType?.toLowerCase() || '';
   if (type.includes('rosé') || type.includes('rose')) {
     return {
-      bg: 'bg-[#FFF5F7]',
-      accent: 'bg-[#FF6B9D]',
+      bg: 'bg-[var(--rc-surface-primary)]',
+      accent: 'bg-[var(--rc-accent-coral)]',
       text: 'text-black',
-      border: 'border-[#FF6B9D]',
+      border: 'border-[var(--rc-accent-coral)]',
       glow: 'glow-coral',
-      stripColor: '#FF6B9D',
-      badgeHover: 'hover:bg-[#FF6B9D] hover:text-white'
+      stripColor: 'var(--rc-accent-coral)',
+      badgeHover: 'hover:bg-[var(--rc-accent-coral)] hover:text-white'
     };
   }
   if (type.includes('red') || type.includes('fortified')) {
     return {
-      bg: 'bg-[#FAFAF8]',
-      accent: 'bg-[#FF006E]',
+      bg: 'bg-[var(--rc-surface-primary)]',
+      accent: 'bg-[var(--rc-accent-pink)]',
       text: 'text-black',
-      border: 'border-black',
+      border: 'border-[var(--rc-border-emphasis)]',
       glow: 'glow-pink',
-      stripColor: '#FF006E',
-      badgeHover: 'hover:bg-[#CCFF00] hover:text-black'
+      stripColor: 'var(--rc-accent-pink)',
+      badgeHover: 'hover:bg-[var(--rc-accent-acid)] hover:text-black'
     };
   }
   return {
-    bg: 'bg-[#FAFAF8]',
-    accent: 'bg-[#CCFF00]',
+    bg: 'bg-[var(--rc-surface-primary)]',
+    accent: 'bg-[var(--rc-accent-acid)]',
     text: 'text-black',
-    border: 'border-black',
+    border: 'border-[var(--rc-border-emphasis)]',
     glow: 'glow-green',
-    stripColor: '#CCFF00',
-    badgeHover: 'hover:bg-[#FF006E] hover:text-white'
+    stripColor: 'var(--rc-accent-acid)',
+    badgeHover: 'hover:bg-[var(--rc-accent-pink)] hover:text-white'
   };
 };
 
