@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import OccasionGrid from './recommend/OccasionGrid';
+import OccasionContextForm from './recommend/OccasionContextForm';
 import type {
   OccasionId,
   OccasionContext,
@@ -121,11 +122,12 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
         />
       )}
 
-      {view === 'form' && (
-        <div className="flex items-center justify-center h-full text-[var(--rc-ink-ghost)]">
-          {/* OccasionContextForm — wired in PR 6.3 */}
-          <p>Form for {selectedOccasion}</p>
-        </div>
+      {view === 'form' && selectedOccasion && selectedOccasion !== 'surprise' && (
+        <OccasionContextForm
+          occasionId={selectedOccasion}
+          onSubmit={handleFormSubmit}
+          onBack={handleBack}
+        />
       )}
 
       {view === 'loading' && (
