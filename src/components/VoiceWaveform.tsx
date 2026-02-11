@@ -1,4 +1,5 @@
 import React from 'react';
+import { MonoLabel } from '@/components/rc';
 
 const VoiceWaveform: React.FC = () => {
   return (
@@ -16,15 +17,15 @@ const VoiceWaveform: React.FC = () => {
               key={i}
               className="w-[3px] h-full rounded-sm origin-center"
               style={{
-                backgroundColor: '#9d4edd',
+                backgroundColor: 'var(--rc-accent-pink)',
                 animation: `waveform-pulse 0.8s ease-in-out ${delay}s infinite`,
               }}
             />
           ))}
         </div>
-        <span className="font-mono text-[11px] text-gray-400 uppercase tracking-wider">
+        <MonoLabel size="micro" colour="ghost" as="span" className="w-auto">
           Listening…
-        </span>
+        </MonoLabel>
       </div>
     </>
   );
