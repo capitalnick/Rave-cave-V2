@@ -1,0 +1,48 @@
+/*
+ * RAVE CAVE custom utilities
+ * Migrated from index.html inline <style> block in Phase 4.
+ */
+
+/* Body base */
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Global scrollbar */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--rc-surface-secondary); }
+::-webkit-scrollbar-thumb { background: var(--rc-accent-acid); border: 2px solid var(--rc-ink-primary); }
+::-webkit-scrollbar-thumb:hover { background: var(--rc-ink-secondary); }
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 2px var(--rc-ink-primary), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Wine type glow variants */
+.glow-pink:hover { box-shadow: 0 0 0 2px var(--rc-accent-pink), 0 8px 24px rgba(255, 0, 110, 0.15); }
+.glow-green:hover { box-shadow: 0 0 0 2px var(--rc-accent-acid), 0 8px 24px rgba(199, 255, 0, 0.15); }
+.glow-coral:hover { box-shadow: 0 0 0 2px var(--rc-accent-coral), 0 8px 24px rgba(255, 106, 77, 0.15); }
+
+/* Sticker-style badges */
+.sticker-badge { transform: rotate(-2deg); transition: transform 0.2s ease; }
+.sticker-badge:hover { transform: rotate(2deg) scale(1.05); }
+
+/* Diagonal clip for hero sections */
+.clip-diagonal { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
+
+/* Text stroke utility */
+.text-stroke-black {
+  -webkit-text-stroke: 1px var(--rc-ink-primary);
+  paint-order: stroke fill;
+}
+
+/* Thin scrollbar for sidebar/chat */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--rc-ink-primary); border: none; }

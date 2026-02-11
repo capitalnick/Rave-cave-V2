@@ -9,46 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Bebas+Neue&display=swap" rel="stylesheet">
-    <!-- MIGRATION: CSS variables now in src/styles/theme.css and compat.css -->
-    <!-- MIGRATION: Fonts now in src/styles/fonts.css and font-compat.css -->
-    <style>
-        /* Body base styles — will be removed in Phase 4 when theme.css @layer base takes over */
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-
-        /* MIGRATION: Move to src/styles/utilities.css in Phase 4 */
-        ::-webkit-scrollbar { width: 12px; height: 12px; }
-        ::-webkit-scrollbar-track { background: var(--rc-surface-secondary); }
-        ::-webkit-scrollbar-thumb { background: var(--rc-accent-acid); border: 2px solid var(--rc-ink-primary); }
-        ::-webkit-scrollbar-thumb:hover { background: var(--rc-ink-secondary); }
-
-        .card-hover {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 0 0 2px var(--rc-ink-primary), 0 8px 24px rgba(0, 0, 0, 0.08);
-        }
-        .glow-pink:hover { box-shadow: 0 0 0 2px var(--rc-accent-pink), 0 8px 24px rgba(255, 0, 110, 0.15); }
-        .glow-green:hover { box-shadow: 0 0 0 2px var(--rc-accent-acid), 0 8px 24px rgba(199, 255, 0, 0.15); }
-        .glow-coral:hover { box-shadow: 0 0 0 2px var(--rc-accent-coral), 0 8px 24px rgba(255, 106, 77, 0.15); }
-
-        .sticker-badge { transform: rotate(-2deg); transition: transform 0.2s ease; }
-        .sticker-badge:hover { transform: rotate(2deg) scale(1.05); }
-
-        .clip-diagonal { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
-
-        .text-stroke-black {
-            -webkit-text-stroke: 1px var(--rc-ink-primary);
-            paint-order: stroke fill;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--rc-ink-primary); border: none; }
-    </style>
+    <!-- CSS now fully managed via src/styles/index.css -->
 <script type="importmap">
 {
   "imports": {
