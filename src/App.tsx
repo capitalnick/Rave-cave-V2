@@ -7,7 +7,7 @@ import ScanOverlay from './components/ScanOverlay';
 import WineCard from './components/WineCard';
 import WineModal from './components/WineModal';
 import { inventoryService } from './services/inventoryService';
-import { Wine, CellarFilters, TabId } from './types';
+import { Wine, CellarFilters, TabId, RecommendChatContext } from './types';
 import { Loader2 } from 'lucide-react';
 import { getMaturityStatus } from './constants';
 
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
+  const [recommendContext, setRecommendContext] = useState<RecommendChatContext | null>(null);
 
   // Filter State
   const [filters, setFilters] = useState<CellarFilters>({
@@ -154,7 +155,14 @@ const App: React.FC = () => {
       onClearFilters={clearFilters}
       onScanPress={() => setScanOpen(true)}
     >
-      {activeTab === 'remy' && <ChatInterface inventory={inventory} isSynced={isSynced} />}
+      {activeTab === 'remy' && (
+        <ChatInterface
+          inventory={inventory}
+          isSynced={isSynced}
+          recommendContext={recommendContext}
+          onRecommendContextConsumed={() => setRecommendContext(null)}
+        />
+      )}
 
       {activeTab === 'cellar' && (
         <div className="p-4 sm:p-10 h-full overflow-y-auto space-y-6 sm:space-y-10">
@@ -217,7 +225,12 @@ const App: React.FC = () => {
 
       {activeTab === 'pulse' && <PulseScreen inventory={inventory} />}
 
-      {activeTab === 'recommend' && <RecommendScreen inventory={inventory} />}
+      {activeTab === 'recommend' && (
+        <RecommendScreen
+          inventory={inventory}
+          onHandoffToRemy={(ctx) => { setRecommendContext(ctx); setActiveTab('remy'); }}
+        />
+      )}
 
       <ScanOverlay open={scanOpen} onClose={() => setScanOpen(false)} />
 

@@ -3,18 +3,28 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Camera, Mic, MicOff, Send, VolumeX } from 'lucide-react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import VoiceWaveform from './VoiceWaveform';
-import { Wine, Message } from '@/types';
+import FollowUpChips from './recommend/FollowUpChips';
+import { Wine, Message, RecommendChatContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
 import { cn } from '@/lib/utils';
 
+const CONTEXT_PREFIX = '[RECOMMEND_CONTEXT]';
+
 interface ChatInterfaceProps {
   inventory: Wine[];
   isSynced: boolean;
+  recommendContext?: RecommendChatContext | null;
+  onRecommendContextConsumed?: () => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  inventory,
+  isSynced,
+  recommendContext,
+  onRecommendContextConsumed,
+}) => {
   const cellarSnapshot = useMemo(() => inventoryService.getCellarSnapshot(inventory), [inventory]);
 
   const {
@@ -32,8 +42,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) =>
   const [input, setInput] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [imageIntent, setImageIntent] = useState<'label' | 'list'>('label');
+  const [showFollowUpChips, setShowFollowUpChips] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const contextConsumedRef = useRef(false);
+  // Track transcript length to detect new assistant messages after context injection
+  const transcriptLenAtInjection = useRef<number | null>(null);
 
   useEffect(() => {
     const greeting = getRandomGreeting();
@@ -42,13 +56,59 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) =>
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [transcript, isProcessing]);
+  }, [transcript, isProcessing, showFollowUpChips]);
+
+  // ── Recommend Context Injection ──
+  useEffect(() => {
+    if (!recommendContext || contextConsumedRef.current) return;
+    contextConsumedRef.current = true;
+
+    const wineList = recommendContext.recommendations
+      .map(r => `${r.rank}. ${r.vintage} ${r.producer} ${r.name} (${r.type}) — ${r.rationale}`)
+      .join('\n');
+
+    const contextMessage = `${CONTEXT_PREFIX}
+The user just used the Recommend feature for: ${recommendContext.occasionTitle}.
+Here are the recommendations that were shown:
+${wineList}
+
+Greet the user warmly referencing their ${recommendContext.occasionTitle.toLowerCase()} occasion. Say something like "I picked these based on your ${recommendContext.occasionTitle.toLowerCase()}. Want me to explain any of them in more detail, or should we look at alternatives?" Keep it brief and conversational.`;
+
+    transcriptLenAtInjection.current = transcript.length;
+    sendMessage(contextMessage);
+    onRecommendContextConsumed?.();
+  }, [recommendContext]);
+
+  // Show follow-up chips after Rémy responds to context injection
+  useEffect(() => {
+    if (transcriptLenAtInjection.current === null) return;
+    // Check if a new assistant message appeared after the injection
+    const newMessages = transcript.slice(transcriptLenAtInjection.current);
+    const hasAssistantReply = newMessages.some(m => m.role === 'assistant' && !m.content.startsWith(CONTEXT_PREFIX));
+    if (hasAssistantReply) {
+      setShowFollowUpChips(true);
+      transcriptLenAtInjection.current = null;
+    }
+  }, [transcript]);
+
+  // Reset context consumed ref when recommendContext changes to a new value
+  useEffect(() => {
+    if (recommendContext) {
+      contextConsumedRef.current = false;
+    }
+  }, [recommendContext?.resultSetId]);
 
   const handleSend = () => {
     if (input.trim()) {
       sendMessage(input.trim());
       setInput('');
+      setShowFollowUpChips(false);
     }
+  };
+
+  const handleChipClick = (question: string) => {
+    sendMessage(question);
+    setShowFollowUpChips(false);
   };
 
   const handleImageUpload = (file: File) => {
@@ -62,6 +122,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) =>
     };
     reader.readAsDataURL(file);
   };
+
+  // Filter out context injection messages from display
+  const visibleTranscript = transcript.filter(
+    msg => !msg.content.startsWith(CONTEXT_PREFIX)
+  );
 
   return (
     <div className="flex flex-col h-full bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] overflow-hidden relative">
@@ -97,7 +162,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) =>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        {transcript.map((msg) => (
+        {visibleTranscript.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={cn(
               "max-w-[80%] p-4 rounded-[var(--rc-radius-md)]",
@@ -115,6 +180,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ inventory, isSynced }) =>
           </MonoLabel>
         )}
       </div>
+
+      {/* Follow-up Chips */}
+      {showFollowUpChips && <FollowUpChips onChipClick={handleChipClick} />}
 
       {/* Input Area */}
       <div className="p-6 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)]">
