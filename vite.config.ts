@@ -1,6 +1,7 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
     const fileEnv = loadEnv(mode, '.', '');
@@ -11,7 +12,7 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
-      plugins: [react()],
+      plugins: [react(), tailwindcss()],
       define: {
         'process.env.GEMINI_PROXY_URL': JSON.stringify(e('GEMINI_PROXY_URL')),
         'process.env.FIREBASE_API_KEY': JSON.stringify(e('FIREBASE_API_KEY')),
