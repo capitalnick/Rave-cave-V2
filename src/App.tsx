@@ -217,7 +217,7 @@ const App: React.FC = () => {
 
       {activeTab === 'pulse' && <PulseScreen inventory={inventory} />}
 
-      {activeTab === 'recommend' && <RecommendScreen />}
+      {activeTab === 'recommend' && <RecommendScreen inventory={inventory} />}
 
       <ScanOverlay open={scanOpen} onClose={() => setScanOpen(false)} />
 
