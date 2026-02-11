@@ -19,6 +19,7 @@ interface LayoutProps {
   };
   onToggleFilter?: (category: keyof CellarFilters, value: any) => void;
   onClearFilters?: () => void;
+  onScanPress?: () => void;
 }
 
 const FilterSection: React.FC<{
@@ -101,7 +102,8 @@ const Layout: React.FC<LayoutProps> = ({
   filters,
   filterOptions,
   onToggleFilter,
-  onClearFilters
+  onClearFilters,
+  onScanPress
 }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 

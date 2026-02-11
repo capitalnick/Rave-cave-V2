@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Layout from './components/Layout';
 import ChatInterface from './components/ChatInterface';
-import Dashboard from './components/Dashboard';
+import PulseScreen from './components/PulseScreen';
+import RecommendScreen from './components/RecommendScreen';
+import ScanOverlay from './components/ScanOverlay';
 import WineCard from './components/WineCard';
 import WineModal from './components/WineModal';
 import { inventoryService } from './services/inventoryService';
@@ -16,6 +18,7 @@ const App: React.FC = () => {
   const [isSynced, setIsSynced] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
 
   // Filter State
   const [filters, setFilters] = useState<CellarFilters>({
@@ -142,13 +145,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout 
-      activeTab={activeTab} 
+    <Layout
+      activeTab={activeTab}
       onTabChange={setActiveTab}
       filters={filters}
       filterOptions={filterOptions}
       onToggleFilter={toggleFilter}
       onClearFilters={clearFilters}
+      onScanPress={() => setScanOpen(true)}
     >
       {activeTab === 'remy' && <ChatInterface inventory={inventory} isSynced={isSynced} />}
 
@@ -211,9 +215,11 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'pulse' && <Dashboard inventory={inventory} />}
+      {activeTab === 'pulse' && <PulseScreen inventory={inventory} />}
 
-      {activeTab === 'recommend' && <div />}
+      {activeTab === 'recommend' && <RecommendScreen />}
+
+      <ScanOverlay open={scanOpen} onClose={() => setScanOpen(false)} />
 
       {selectedWine && (
         <WineModal wine={selectedWine} onClose={() => setSelectedWine(null)} onUpdate={(key, value) => handleUpdate(selectedWine, key, value)} />
