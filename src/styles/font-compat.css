@@ -1,0 +1,21 @@
+/*
+ * Font compatibility layer: map old font classes to new RC UI Set fonts.
+ * Old fonts as fallbacks during transition period.
+ * MIGRATION: Remove after Phase 4 cleanup.
+ */
+
+body {
+  font-family: 'Instrument Sans', 'Inter', sans-serif;
+}
+
+.font-display {
+  font-family: 'Satoshi', 'Bebas Neue', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+
+.font-mono {
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+}

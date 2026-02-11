@@ -1,0 +1,10 @@
+/* RC UI Set Font Stack */
+
+/* Satoshi — Display/Headlines (from Fontshare) */
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@700,900&display=swap');
+
+/* Instrument Sans — Body/UI (from Google Fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap');
+
+/* Space Mono — Mono/Labels (from Google Fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
