@@ -7,7 +7,7 @@ import ScanOverlay from './components/ScanOverlay';
 import WineCard from './components/WineCard';
 import WineModal from './components/WineModal';
 import { inventoryService } from './services/inventoryService';
-import { Wine, CellarFilters, WineType, TabId } from './types';
+import { Wine, CellarFilters, TabId } from './types';
 import { Loader2 } from 'lucide-react';
 import { getMaturityStatus } from './constants';
 

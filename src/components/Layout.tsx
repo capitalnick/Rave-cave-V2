@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Search, Sparkles, Crosshair } from 'lucide-react';
-import { CellarFilters, WineType, TabId } from '@/types';
+import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Sparkles, Crosshair } from 'lucide-react';
+import { CellarFilters, TabId } from '@/types';
 import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton, ScanFAB } from '@/components/rc';
 import { useRailExpanded } from '@/hooks/useRailExpanded';
 import { cn } from '@/lib/utils';
@@ -203,7 +203,7 @@ const Layout: React.FC<LayoutProps> = ({
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--rc-surface-primary)] border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] z-50 grid grid-cols-5 items-end" role="tablist">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--rc-surface-primary)] border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] z-50 grid grid-cols-5 items-end pb-[env(safe-area-inset-bottom)]" role="tablist">
         {navItems.slice(0, 2).map((item) => (
           <TabItem
             key={item.id}
