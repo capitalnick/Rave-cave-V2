@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Search } from 'lucide-react';
-import { CellarFilters, WineType } from '@/types';
+import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Search, Sparkles } from 'lucide-react';
+import { CellarFilters, WineType, TabId } from '@/types';
 import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton } from '@/components/rc';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'chat' | 'inventory' | 'stats';
-  onTabChange: (tab: 'chat' | 'inventory' | 'stats') => void;
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
   filters?: CellarFilters;
   filterOptions?: {
     vintage: number[];
@@ -87,10 +87,11 @@ const FilterSection: React.FC<{
   );
 };
 
-const navItems = [
-  { id: 'chat' as const, label: 'RÉMY', icon: MessageSquare },
-  { id: 'inventory' as const, label: 'CELLAR', icon: Database },
-  { id: 'stats' as const, label: 'STATS', icon: LayoutDashboard },
+const navItems: { id: TabId; label: string; icon: typeof Database }[] = [
+  { id: 'cellar', label: 'CELLAR', icon: Database },
+  { id: 'pulse', label: 'PULSE', icon: LayoutDashboard },
+  { id: 'recommend', label: 'RECOMMEND', icon: Sparkles },
+  { id: 'remy', label: 'RÉMY', icon: MessageSquare },
 ];
 
 const Layout: React.FC<LayoutProps> = ({
@@ -127,7 +128,7 @@ const Layout: React.FC<LayoutProps> = ({
           ))}
         </nav>
 
-        {activeTab === 'inventory' && filters && filterOptions && (
+        {activeTab === 'cellar' && filters && filterOptions && (
           <div className="flex flex-col flex-1 w-full px-6 mt-6 overflow-hidden">
             <Divider weight="emphasised" />
             <div className="py-4 flex items-center justify-between shrink-0">
@@ -181,7 +182,7 @@ const Layout: React.FC<LayoutProps> = ({
       </nav>
 
       {/* Mobile Filter Toggle Button */}
-      {activeTab === 'inventory' && (
+      {activeTab === 'cellar' && (
         <button
           onClick={() => setMobileFiltersOpen(true)}
           className="md:hidden fixed bottom-20 right-4 w-12 h-12 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[4px_4px_0_rgba(0,0,0,1)] z-40 flex items-center justify-center rounded-[var(--rc-radius-md)]"
@@ -191,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* Mobile Filter Overlay */}
-      {mobileFiltersOpen && activeTab === 'inventory' && (
+      {mobileFiltersOpen && activeTab === 'cellar' && (
         <div className="md:hidden fixed inset-0 bg-[var(--rc-surface-tertiary)] z-[60] flex flex-col">
           <div className="p-6 border-b-[var(--rc-divider-emphasis-weight)] border-b-[var(--rc-ink-primary)] flex items-center justify-between bg-[var(--rc-surface-primary)]">
             <Heading scale="heading">Filters</Heading>

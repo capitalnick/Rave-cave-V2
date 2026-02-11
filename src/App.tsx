@@ -5,12 +5,12 @@ import Dashboard from './components/Dashboard';
 import WineCard from './components/WineCard';
 import WineModal from './components/WineModal';
 import { inventoryService } from './services/inventoryService';
-import { Wine, CellarFilters, WineType } from './types';
+import { Wine, CellarFilters, WineType, TabId } from './types';
 import { Loader2 } from 'lucide-react';
 import { getMaturityStatus } from './constants';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'chat' | 'inventory' | 'stats'>('inventory');
+  const [activeTab, setActiveTab] = useState<TabId>('cellar');
   const [inventory, setInventory] = useState<Wine[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSynced, setIsSynced] = useState(false);
@@ -150,9 +150,9 @@ const App: React.FC = () => {
       onToggleFilter={toggleFilter}
       onClearFilters={clearFilters}
     >
-      {activeTab === 'chat' && <ChatInterface inventory={inventory} isSynced={isSynced} />}
-      
-      {activeTab === 'inventory' && (
+      {activeTab === 'remy' && <ChatInterface inventory={inventory} isSynced={isSynced} />}
+
+      {activeTab === 'cellar' && (
         <div className="p-4 sm:p-10 h-full overflow-y-auto space-y-6 sm:space-y-10">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
             <div className="space-y-2 flex-1 w-full">
@@ -211,7 +211,9 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'stats' && <Dashboard inventory={inventory} />}
+      {activeTab === 'pulse' && <Dashboard inventory={inventory} />}
+
+      {activeTab === 'recommend' && <div />}
 
       {selectedWine && (
         <WineModal wine={selectedWine} onClose={() => setSelectedWine(null)} onUpdate={(key, value) => handleUpdate(selectedWine, key, value)} />
