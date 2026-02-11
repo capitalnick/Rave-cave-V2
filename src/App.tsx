@@ -10,6 +10,7 @@ import { inventoryService } from './services/inventoryService';
 import { Wine, CellarFilters, TabId, RecommendChatContext } from './types';
 import { Loader2 } from 'lucide-react';
 import { getMaturityStatus } from './constants';
+import { RCToaster } from './components/rc';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('cellar');
@@ -254,6 +255,8 @@ const App: React.FC = () => {
       {selectedWine && (
         <WineModal wine={selectedWine} onClose={() => setSelectedWine(null)} onUpdate={(key, value) => handleUpdate(selectedWine, key, value)} />
       )}
+
+      <RCToaster />
     </Layout>
   );
 };

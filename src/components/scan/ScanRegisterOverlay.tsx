@@ -1,12 +1,17 @@
-import React, { useReducer, useEffect, useRef, useCallback } from 'react';
+import React, { useReducer, useEffect, useRef, useCallback, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModeSelector from './ModeSelector';
 import ExtractionProgress from './ExtractionProgress';
 import RegisterDraft from './RegisterDraft';
-import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage } from '@/types';
-import { compressImageForExtraction, createPreviewUrl } from '@/utils/imageCompression';
+import DuplicateAlert from './DuplicateAlert';
+import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate } from '@/types';
+import { compressImageForExtraction, compressImageForStorage, createPreviewUrl } from '@/utils/imageCompression';
 import { extractWineFromLabel } from '@/services/extractionService';
+import { findDuplicates } from '@/services/duplicateService';
+import { inventoryService } from '@/services/inventoryService';
+import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
+import { showToast } from '@/components/rc';
 
 // ── State Machine ──
 
@@ -91,7 +96,6 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         draft: makeDraft('manual', { quantity: 1, price: 0, format: '750ml' }, null, null),
       };
     case 'RETAKE':
-      // Revoke old preview URL
       return { ...state, stage: 'mode-select', error: null, draft: null, previewUrl: null, rawFile: null };
     case 'UPDATE_DRAFT':
       if (!state.draft) return state;
@@ -124,6 +128,7 @@ const stageMotion = {
 
 const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [duplicateCandidate, setDuplicateCandidate] = useState<DuplicateCandidate | null>(null);
   const prevOpenRef = useRef(open);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -132,10 +137,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   useEffect(() => {
     if (open && !prevOpenRef.current) {
       dispatch({ type: 'OPEN' });
+      setDuplicateCandidate(null);
     } else if (!open && prevOpenRef.current) {
-      // Revoke preview URL on close
       if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
       dispatch({ type: 'CLOSE' });
+      setDuplicateCandidate(null);
     }
     prevOpenRef.current = open;
   }, [open]);
@@ -170,19 +176,111 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   const handleRetake = useCallback(() => {
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
     dispatch({ type: 'RETAKE' });
+    setDuplicateCandidate(null);
   }, [state.previewUrl]);
 
   const handleUpdateFields = useCallback((fields: Partial<Wine>) => {
     dispatch({ type: 'UPDATE_DRAFT', fields });
   }, []);
 
-  const handleConfirm = useCallback(() => {
-    // Commit flow will be wired in PR 8.4
+  // ── Commit Flow ──
+  const handleConfirm = useCallback(async () => {
+    if (!state.draft) return;
+    const draftFields = state.draft.fields;
+
+    // 1. Check for duplicates
+    const dupes = findDuplicates(draftFields, inventory);
+    if (dupes.length > 0 && !duplicateCandidate) {
+      setDuplicateCandidate(dupes[0]);
+      return;
+    }
+
+    // 2. Proceed with commit
     dispatch({ type: 'START_COMMIT' });
-  }, []);
+
+    try {
+      const wineData = {
+        producer: draftFields.producer || '',
+        name: draftFields.name || '',
+        vintage: draftFields.vintage || 0,
+        type: draftFields.type || 'Red',
+        cepage: draftFields.cepage || '',
+        region: draftFields.region || '',
+        country: draftFields.country || '',
+        quantity: draftFields.quantity || 1,
+        drinkFrom: draftFields.drinkFrom || 0,
+        drinkUntil: draftFields.drinkUntil || 0,
+        maturity: draftFields.maturity || 'Unknown',
+        tastingNotes: draftFields.tastingNotes || '',
+        price: draftFields.price || 0,
+        format: draftFields.format || '750ml',
+        appellation: draftFields.appellation || '',
+        personalNote: draftFields.personalNote || '',
+      } as Omit<Wine, 'id'>;
+
+      const docId = await inventoryService.addWine(wineData);
+      if (!docId) throw new Error('Failed to save to cellar');
+
+      // 3. Upload image in background (non-blocking)
+      if (state.rawFile) {
+        const rawFile = state.rawFile;
+        compressImageForStorage(rawFile)
+          .then((blob) => uploadLabelImage(blob, docId))
+          .then((url) => inventoryService.updateField(docId, 'imageUrl', url))
+          .catch((err) => console.error('Image upload failed (non-blocking):', err));
+      }
+
+      dispatch({ type: 'COMMIT_SUCCESS' });
+
+      // 4. Close overlay
+      if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+      onClose();
+
+      // 5. Show toast with undo
+      const wineName = `${draftFields.vintage || ''} ${draftFields.producer || 'Wine'}`.trim();
+      showToast({
+        tone: 'success',
+        message: `${wineName} added to cellar`,
+        actionLabel: 'UNDO',
+        duration: 8000,
+        onAction: async () => {
+          await inventoryService.deleteWine(docId);
+          deleteLabelImage(docId).catch(() => {});
+          showToast({ tone: 'neutral', message: 'Removed.' });
+        },
+      });
+    } catch (e: any) {
+      dispatch({ type: 'COMMIT_FAIL', error: e.message || 'Failed to save' });
+    }
+  }, [state.draft, state.rawFile, state.previewUrl, inventory, duplicateCandidate, onClose]);
+
+  // Handle "Add to existing" from duplicate alert
+  const handleAddToExisting = useCallback(async () => {
+    if (!duplicateCandidate) return;
+    const existing = duplicateCandidate.existingWine;
+    const newQty = (existing.quantity || 1) + 1;
+    await inventoryService.updateField(existing.id, 'quantity', newQty);
+
+    setDuplicateCandidate(null);
+    if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    onClose();
+
+    showToast({
+      tone: 'success',
+      message: `${existing.producer} quantity updated to ${newQty}`,
+    });
+  }, [duplicateCandidate, state.previewUrl, onClose]);
+
+  // Handle "Keep as separate" from duplicate alert
+  const handleKeepSeparate = useCallback(() => {
+    setDuplicateCandidate(null);
+    // Re-trigger confirm, now with duplicateCandidate cleared the check will pass
+    handleConfirm();
+  }, [handleConfirm]);
 
   const handleClose = useCallback(() => {
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+    setDuplicateCandidate(null);
     onClose();
   }, [onClose, state.previewUrl]);
 
@@ -191,7 +289,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   return (
     <Dialog open onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent
-        className="max-w-full sm:max-w-3xl w-full h-full sm:h-auto sm:max-h-[92vh] overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-none sm:rounded-[var(--rc-radius-lg)]"
+        className="max-w-full sm:max-w-3xl w-full h-full sm:h-auto sm:max-h-[92vh] overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-none sm:rounded-[var(--rc-radius-lg)] relative"
       >
         <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
 
@@ -228,6 +326,15 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Duplicate Alert overlay */}
+        {duplicateCandidate && (
+          <DuplicateAlert
+            candidate={duplicateCandidate}
+            onAddToExisting={handleAddToExisting}
+            onKeepSeparate={handleKeepSeparate}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
