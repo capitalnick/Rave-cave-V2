@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModeSelector from './ModeSelector';
 import ExtractionProgress from './ExtractionProgress';
+import RegisterDraft from './RegisterDraft';
 import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage } from '@/types';
 import { compressImageForExtraction, createPreviewUrl } from '@/utils/imageCompression';
 import { extractWineFromLabel } from '@/services/extractionService';
@@ -171,6 +172,15 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     dispatch({ type: 'RETAKE' });
   }, [state.previewUrl]);
 
+  const handleUpdateFields = useCallback((fields: Partial<Wine>) => {
+    dispatch({ type: 'UPDATE_DRAFT', fields });
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    // Commit flow will be wired in PR 8.4
+    dispatch({ type: 'START_COMMIT' });
+  }, []);
+
   const handleClose = useCallback(() => {
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
     onClose();
@@ -208,15 +218,13 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
 
           {(state.stage === 'draft' || state.stage === 'committing') && state.draft && (
             <motion.div key="draft" {...stageMotion}>
-              {/* RegisterDraft will be wired in PR 8.3 */}
-              <div className="p-8 text-center space-y-4">
-                <p className="font-[var(--rc-font-mono)] text-xs uppercase tracking-widest text-[var(--rc-ink-ghost)]">
-                  Draft stage — form coming in PR 8.3
-                </p>
-                <pre className="text-left text-xs bg-[var(--rc-surface-secondary)] p-4 rounded overflow-auto max-h-60">
-                  {JSON.stringify(state.draft.fields, null, 2)}
-                </pre>
-              </div>
+              <RegisterDraft
+                draft={state.draft}
+                onUpdateFields={handleUpdateFields}
+                onConfirm={handleConfirm}
+                onRetake={handleRetake}
+                isCommitting={state.stage === 'committing'}
+              />
             </motion.div>
           )}
         </AnimatePresence>
