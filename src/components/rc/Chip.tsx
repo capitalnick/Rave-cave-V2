@@ -79,11 +79,11 @@ export const Chip: React.FC<ChipProps> = ({
           />
         </div>
       )}
-      {isMaturity && isSelected && maturityValue && (() => {
+      {isMaturity && isSelected && maturityValue && maturityIcons[maturityValue] && (() => {
         const Icon = maturityIcons[maturityValue];
         return <Icon size={14} strokeWidth={2} className="shrink-0" />;
       })()}
-      <span className={cn("leading-none", isMaturity && isSelected && maturityValue && "hidden md:inline")}>{label}</span>
+      <span className={cn("leading-none", isMaturity && isSelected && maturityValue && maturityIcons[maturityValue] && "hidden md:inline")}>{label}</span>
     </div>
   );
 };
