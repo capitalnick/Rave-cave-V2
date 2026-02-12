@@ -27,7 +27,7 @@ const getPriceSymbol = (price: number) => {
 const wineTypeToHeadingColour = {
   red: 'accent-pink',
   white: 'accent-acid',
-  rosé: 'accent-coral',
+  rose: 'accent-coral',
   sparkling: 'accent-acid',
   dessert: 'accent-coral',
   orange: 'accent-coral',
@@ -35,7 +35,7 @@ const wineTypeToHeadingColour = {
 
 const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) => {
   const rcProps = toRCWineCardProps(wine);
-  const indicatorType = (rcProps.type === 'rosé' ? 'rose' : rcProps.type) as WineType;
+  const indicatorType = rcProps.type as WineType;
   const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
   const stampRotation = React.useMemo(() => Math.random() * 6 - 3, []);
   const vintageColour = wineTypeToHeadingColour[rcProps.type];

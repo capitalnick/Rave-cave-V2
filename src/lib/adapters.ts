@@ -4,12 +4,12 @@ import type { Wine } from '@/types';
  * Wine type mapping: existing PascalCase -> RC UI Set lowercase.
  * 'Fortified' has no RC equivalent; maps to 'red' (closest visual match).
  */
-type RCWineType = 'red' | 'white' | 'rosé' | 'sparkling' | 'dessert' | 'orange';
+type RCWineType = 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'orange';
 
 const WINE_TYPE_MAP: Record<string, RCWineType> = {
   'Red': 'red',
   'White': 'white',
-  'Rosé': 'rosé',
+  'Rosé': 'rose',
   'Sparkling': 'sparkling',
   'Dessert': 'dessert',
   'Fortified': 'red',

@@ -12,7 +12,7 @@ export interface WineCardProps {
     producer: string;
     varietal: string;
     vintage: string;
-    type: 'red' | 'white' | 'rosé' | 'sparkling' | 'dessert' | 'orange';
+    type: 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'orange';
     maturity: 'drink-now' | 'hold' | 'past-peak';
     image: string;
   };
@@ -23,14 +23,13 @@ export interface WineCardProps {
 
 export const RCWineCard = React.forwardRef<HTMLDivElement, WineCardProps>(
   ({ wine, onClick, disabled = false, className }, ref) => {
-    // Map 'rosé' to 'rose' for WineTypeIndicator compatibility
-    const indicatorType = (wine.type === 'rosé' ? 'rose' : wine.type) as WineType;
+    const indicatorType = wine.type as WineType;
 
     // Map wine type to Heading colour tokens
     const wineTypeToHeadingColour = {
       red: 'accent-pink',
       white: 'accent-acid',
-      rosé: 'accent-coral',
+      rose: 'accent-coral',
       sparkling: 'accent-acid',
       dessert: 'accent-coral',
       orange: 'accent-coral',
