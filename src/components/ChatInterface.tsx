@@ -4,11 +4,13 @@ import { Camera, Mic, MicOff, Send, VolumeX } from 'lucide-react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import VoiceWaveform from './VoiceWaveform';
 import FollowUpChips from './recommend/FollowUpChips';
+import { RemyMessage, UserMessage } from './remy';
 import { Wine, Message, RecommendChatContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
 import { cn } from '@/lib/utils';
+import type { RemyWineData } from '@/utils/remyParser';
 
 const CONTEXT_PREFIX = '[RECOMMEND_CONTEXT]';
 
@@ -123,6 +125,31 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
     reader.readAsDataURL(file);
   };
 
+  const handleWineCardAddToCellar = (wine: RemyWineData) => {
+    onAddToCellar?.({
+      producer: wine.producer,
+      name: wine.name,
+      vintage: wine.vintage,
+      type: wine.type as Wine['type'],
+      region: wine.region,
+    });
+  };
+
+  // Spacing between messages: Remy→User 24px, User→Remy 32px, same role 32px
+  const getMessageGap = (prev: Message | null, curr: Message): string => {
+    if (!prev) return '';
+    if (prev.role === 'assistant' && curr.role === 'user') return 'mt-6'; // 24px
+    return 'mt-8'; // 32px
+  };
+
+  // Synthetic greeting as a Message for RemyMessage
+  const syntheticGreeting: Message = useMemo(() => ({
+    id: 'greeting',
+    role: 'assistant' as const,
+    content: greeting,
+    timestamp: new Date(),
+  }), [greeting]);
+
   // Filter out context injection messages from display
   const visibleTranscript = transcript.filter(
     msg => !msg.content.startsWith(CONTEXT_PREFIX)
@@ -169,32 +196,31 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        {/* Greeting — synthetic first message, not part of Gemini transcript */}
-        {visibleTranscript.length === 0 && !isProcessing && (
-          <div className="flex justify-start">
-            <div className="max-w-[80%] p-4 rounded-[var(--rc-radius-md)] bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)]">
-              <Body size="caption" colour="on-accent" as="p" className="whitespace-pre-wrap w-auto">{greeting}</Body>
-            </div>
-          </div>
-        )}
-        {visibleTranscript.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={cn(
-              "max-w-[80%] p-4 rounded-[var(--rc-radius-md)]",
-              msg.role === 'user'
-                ? "bg-[var(--rc-surface-elevated,#3d3d3d)] text-[var(--rc-ink-on-accent)]"
-                : "bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)]"
-            )}>
-              <Body size="caption" colour="on-accent" as="p" className="whitespace-pre-wrap w-auto">{msg.content}</Body>
-            </div>
-          </div>
-        ))}
-        {isProcessing && (
-          <MonoLabel size="micro" colour="accent-acid" as="span" className="w-auto animate-pulse">
-            Rémy is thinking...
-          </MonoLabel>
-        )}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[var(--rc-surface-primary)] custom-scrollbar">
+        <div className="max-w-[720px] mx-auto px-6 py-8">
+          {/* Greeting — synthetic first message, not part of Gemini transcript */}
+          {visibleTranscript.length === 0 && !isProcessing && (
+            <RemyMessage message={syntheticGreeting} onAddToCellar={handleWineCardAddToCellar} />
+          )}
+          {visibleTranscript.map((msg, i) => {
+            const prev = i > 0 ? visibleTranscript[i - 1] : null;
+            const gap = getMessageGap(prev, msg);
+            return msg.role === 'user' ? (
+              <div key={msg.id} className={gap}>
+                <UserMessage message={msg} />
+              </div>
+            ) : (
+              <div key={msg.id} className={gap}>
+                <RemyMessage message={msg} onAddToCellar={handleWineCardAddToCellar} />
+              </div>
+            );
+          })}
+          {isProcessing && (
+            <MonoLabel size="micro" colour="accent-acid" as="span" className="w-auto animate-pulse mt-6 block">
+              Rémy is thinking...
+            </MonoLabel>
+          )}
+        </div>
       </div>
 
       {/* Follow-up Chips */}

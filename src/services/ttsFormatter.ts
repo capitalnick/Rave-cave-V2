@@ -23,6 +23,9 @@ const PLACEHOLDER = '\x00';
 export function formatForSpeech(text: string): string {
   let s = text;
 
+  // ── Strip fenced code blocks (wine JSON, etc.) ────────────────────
+  s = s.replace(/```[\s\S]*?```/g, '');
+
   // ── Bold → comma-wrapped emphasis ─────────────────────────────────
   // Must run BEFORE italic strip so **text** isn't caught by *text*
   // When ! or ? follows bold, skip trailing comma to preserve inflection
