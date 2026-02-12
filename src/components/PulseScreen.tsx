@@ -41,6 +41,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
   const [pullDistance, setPullDistance] = useState(0);
+  const savedScrollTop = useRef(0);
 
   const stats = useMemo(() => computePulseStats(inventory), [inventory]);
 
@@ -64,6 +65,19 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
     lastRefreshedAt.current = Date.now();
     setIsRefreshing(false);
   }, [inventory]);
+
+  // Reset pull-to-refresh state when switching views
+  useEffect(() => {
+    setPullDistance(0);
+    touchStartY.current = 0;
+  }, [pulseView]);
+
+  // Restore scroll position when returning to dashboard
+  useEffect(() => {
+    if (pulseView === 'dashboard' && scrollRef.current && savedScrollTop.current > 0) {
+      scrollRef.current.scrollTop = savedScrollTop.current;
+    }
+  }, [pulseView]);
 
   const handleRefresh = useCallback(() => {
     if (onRefreshInventory && !isRefreshing) {
@@ -95,11 +109,18 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
     touchStartY.current = 0;
   }, [pullDistance, handleRefresh]);
 
+  const navigateAway = useCallback((view: PulseView) => {
+    if (scrollRef.current) {
+      savedScrollTop.current = scrollRef.current.scrollTop;
+    }
+    setPulseView(view);
+  }, []);
+
   const handleCardTap = useCallback((card: StoryCard) => {
     if (!card.cta) return;
     switch (card.cta.action) {
       case 'view-drinking-window':
-        setPulseView('drinking-window');
+        navigateAway('drinking-window');
         break;
       case 'view-wine':
         if (card.cta.payload && onNavigateToWine) {
@@ -108,7 +129,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
         break;
       case 'view-story':
         setSelectedStoryId(card.cta.payload || card.id);
-        setPulseView('story');
+        navigateAway('story');
         break;
       case 'navigate-cellar':
         if (card.cta.payload && onNavigateToWine) {
@@ -116,7 +137,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
         }
         break;
     }
-  }, [onNavigateToWine]);
+  }, [onNavigateToWine, navigateAway]);
 
   const handleBack = useCallback(() => {
     setPulseView('dashboard');
@@ -171,7 +192,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
                   windows={stats.drinkingWindows.filter(w => w.maturity === 'Hold')}
                   range={stats.timelineRange}
                   onWineTap={(id) => onNavigateToWine?.(id)}
-                  onSeeAll={() => setPulseView('drinking-window')}
+                  onSeeAll={() => navigateAway('drinking-window')}
                 />
               )}
             </motion.div>
@@ -198,13 +219,10 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
             ) : (
               stats.drinkingWindows.map((w) => (
                 <div key={w.wineId} className="flex items-center gap-2">
-                  <div className="w-[140px] sm:w-[200px] flex-shrink-0 overflow-hidden">
-                    <span
-                      className="block font-[var(--rc-font-body)] text-[12px] sm:text-[13px] text-[var(--rc-ink-primary)] truncate cursor-pointer hover:text-[var(--rc-accent-pink)]"
-                      onClick={() => onNavigateToWine?.(w.wineId)}
-                    >
+                  <div className="w-[140px] sm:w-[200px] flex-shrink-0 overflow-hidden cursor-pointer hover:text-[var(--rc-accent-pink)]" onClick={() => onNavigateToWine?.(w.wineId)}>
+                    <Body size="caption" as="span" truncate>
                       {w.vintage} {w.producer} — {w.name}
-                    </span>
+                    </Body>
                   </div>
                   <div className="flex-1 relative">
                     <DrinkingWindowBar
@@ -213,9 +231,9 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
                       onTap={() => onNavigateToWine?.(w.wineId)}
                     />
                   </div>
-                  <span className="font-[var(--rc-font-mono)] text-[10px] text-[var(--rc-ink-ghost)] w-[80px] text-right flex-shrink-0">
+                  <MonoLabel size="micro" colour="ghost" className="w-[80px] text-right flex-shrink-0">
                     {w.drinkFrom}–{w.drinkUntil}
-                  </span>
+                  </MonoLabel>
                 </div>
               ))
             )}
@@ -272,6 +290,8 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
           totalBottles={stats.totalBottles}
           totalValue={stats.totalValue}
           bottlesNeedingAttention={stats.bottlesNeedingAttention}
+          readyToDrinkCount={stats.readyToDrinkCount}
+          averageBottleValue={stats.averageBottleValue}
         />
 
         {/* Charts — masonry on desktop, single-column mobile */}
@@ -285,7 +305,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
           windows={stats.drinkingWindows}
           range={stats.timelineRange}
           onWineTap={(id) => onNavigateToWine?.(id)}
-          onSeeAll={() => setPulseView('drinking-window')}
+          onSeeAll={() => navigateAway('drinking-window')}
         />
 
         {/* Top Producers */}

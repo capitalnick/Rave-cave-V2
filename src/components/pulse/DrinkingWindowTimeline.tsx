@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { DrinkingWindow } from '@/types';
-import { Card, Heading, Chip, MonoLabel, InlineMessage } from '@/components/rc';
+import { Card, Heading, Chip, Body, MonoLabel, InlineMessage } from '@/components/rc';
 import DrinkingWindowBar from './DrinkingWindowBar';
 
 interface DrinkingWindowTimelineProps {
@@ -26,6 +26,19 @@ function useResponsiveCount(): number {
   return count;
 }
 
+function useResponsiveLabelWidth(): number {
+  const [width, setWidth] = React.useState(100);
+  React.useEffect(() => {
+    const update = () => {
+      setWidth(window.innerWidth >= 640 ? 160 : 100);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return width;
+}
+
 const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
   windows,
   range,
@@ -33,6 +46,7 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
   onSeeAll,
 }) => {
   const visibleCount = useResponsiveCount();
+  const labelWidth = useResponsiveLabelWidth();
   const visibleWindows = useMemo(
     () => windows.slice(0, visibleCount),
     [windows, visibleCount]
@@ -67,9 +81,9 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
         {windows.length > visibleCount && (
           <button
             onClick={onSeeAll}
-            className="font-[var(--rc-font-mono)] text-[11px] uppercase tracking-wider text-[var(--rc-ink-primary)] underline underline-offset-2 hover:text-[var(--rc-accent-pink)] transition-colors"
+            className="underline underline-offset-2 hover:text-[var(--rc-accent-pink)] transition-colors"
           >
-            See all →
+            <MonoLabel size="label">See all →</MonoLabel>
           </button>
         )}
       </div>
@@ -77,14 +91,11 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
       {/* Timeline area */}
       <div className="relative">
         {/* Year axis */}
-        <div className="flex justify-between mb-2 pl-[100px] sm:pl-[160px]">
+        <div className="flex justify-between mb-2" style={{ paddingLeft: labelWidth }}>
           {years.map(y => (
-            <span
-              key={y}
-              className="font-[var(--rc-font-mono)] text-[9px] text-[var(--rc-ink-ghost)] flex-1 text-center"
-            >
+            <MonoLabel key={y} size="micro" colour="ghost" className="flex-1 text-center">
               {y}
-            </span>
+            </MonoLabel>
           ))}
         </div>
 
@@ -93,13 +104,10 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
           {visibleWindows.map((w) => (
             <div key={w.wineId} className="flex items-center gap-2">
               {/* Label */}
-              <div className="w-[100px] sm:w-[160px] flex-shrink-0 overflow-hidden">
-                <span
-                  className="block font-[var(--rc-font-body)] text-[12px] sm:text-[13px] text-[var(--rc-ink-primary)] truncate cursor-pointer hover:text-[var(--rc-accent-pink)]"
-                  onClick={() => onWineTap(w.wineId)}
-                >
+              <div className="flex-shrink-0 overflow-hidden cursor-pointer hover:text-[var(--rc-accent-pink)]" style={{ width: labelWidth }} onClick={() => onWineTap(w.wineId)}>
+                <Body size="caption" as="span" truncate>
                   {w.vintage} {w.producer}
-                </span>
+                </Body>
               </div>
               {/* Bar area */}
               <div className="flex-1 relative">
@@ -117,11 +125,11 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
         {totalSpan > 0 && (
           <div
             className="absolute top-0 bottom-0 pointer-events-none"
-            style={{ left: `calc(100px + (100% - 100px) * ${currentYearPct / 100})` }}
+            style={{ left: `calc(${labelWidth}px + (100% - ${labelWidth}px) * ${currentYearPct / 100})` }}
           >
             <div className="h-full border-l-2 border-dashed border-[var(--rc-accent-pink)] opacity-60" />
-            <div className="absolute -top-5 -translate-x-1/2 bg-[var(--rc-accent-pink)] text-white font-[var(--rc-font-mono)] text-[8px] px-1.5 py-0.5 rounded-full">
-              {currentYear}
+            <div className="absolute -top-5 -translate-x-1/2 bg-[var(--rc-accent-pink)] text-white px-1.5 py-0.5 rounded-full">
+              <MonoLabel size="micro" colour="on-accent">{currentYear}</MonoLabel>
             </div>
           </div>
         )}

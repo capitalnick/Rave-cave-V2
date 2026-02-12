@@ -8,9 +8,9 @@ interface DrinkingWindowBarProps {
 }
 
 const MATURITY_COLORS: Record<string, string> = {
-  'Drink Now': 'var(--rc-accent-acid)',
-  'Hold': 'var(--rc-accent-coral)',
-  'Past Peak': 'var(--rc-ink-ghost)',
+  'Drink Now': 'var(--rc-maturity-drink-now)',
+  'Hold': 'var(--rc-maturity-hold)',
+  'Past Peak': 'var(--rc-maturity-past-peak)',
 };
 
 const DrinkingWindowBar: React.FC<DrinkingWindowBarProps> = ({ window: w, range, onTap }) => {

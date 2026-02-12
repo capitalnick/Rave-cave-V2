@@ -48,8 +48,7 @@ export function computeDrinkingWindows(inventory: Wine[]): DrinkingWindow[] {
       totalValue: (Number(w.price) || 0) * (Number(w.quantity) || 0),
       quantity: Number(w.quantity) || 0,
     }))
-    .sort((a, b) => b.totalValue - a.totalValue)
-    .slice(0, 8);
+    .sort((a, b) => b.totalValue - a.totalValue);
 }
 
 export function generateStoryCards(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Heading, Body, InlineMessage } from '@/components/rc';
+import { Card, Heading, Body, MonoLabel, InlineMessage } from '@/components/rc';
 
 interface TopProducersProps {
   producers: { name: string; count: number; totalValue: number }[];
@@ -32,9 +32,9 @@ const TopProducers: React.FC<TopProducersProps> = ({ producers }) => {
               <Body size="caption" weight="medium" className="truncate max-w-[70%]">
                 {p.name}
               </Body>
-              <span className="font-[var(--rc-font-mono)] text-[11px] text-[var(--rc-ink-ghost)]">
+              <MonoLabel size="label" colour="ghost">
                 {p.count}
-              </span>
+              </MonoLabel>
             </div>
             <div className="h-3 bg-[var(--rc-surface-secondary)] rounded-full overflow-hidden">
               <div

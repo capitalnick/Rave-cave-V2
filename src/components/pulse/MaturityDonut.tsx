@@ -1,16 +1,16 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { MaturityBreakdown } from '@/types';
-import { Card, Heading, Chip, InlineMessage } from '@/components/rc';
+import { Card, Heading, Chip, MonoLabel, InlineMessage } from '@/components/rc';
 
 interface MaturityDonutProps {
   breakdown: MaturityBreakdown;
 }
 
 const MATURITY_COLORS = {
-  drinkNow: 'var(--rc-accent-acid)',
-  hold: 'var(--rc-accent-coral)',
-  pastPeak: 'var(--rc-ink-ghost)',
+  drinkNow: 'var(--rc-maturity-drink-now)',
+  hold: 'var(--rc-maturity-hold)',
+  pastPeak: 'var(--rc-maturity-past-peak)',
 };
 
 const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown }) => {
@@ -52,14 +52,12 @@ const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown }) => {
             {/* Center overlay */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <span
-                  className="block font-[var(--rc-font-display)] font-black text-[36px] sm:text-[48px] leading-none text-[var(--rc-ink-primary)]"
-                >
+                <Heading scale="title" as="span" className="block">
                   {breakdown.total}
-                </span>
-                <span className="block font-[var(--rc-font-mono)] text-[9px] uppercase tracking-widest text-[var(--rc-ink-ghost)] mt-1">
+                </Heading>
+                <MonoLabel size="micro" colour="ghost" className="block mt-1">
                   bottles
-                </span>
+                </MonoLabel>
               </div>
             </div>
           </div>

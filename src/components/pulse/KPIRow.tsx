@@ -5,9 +5,11 @@ interface KPIRowProps {
   totalBottles: number;
   totalValue: number;
   bottlesNeedingAttention: number;
+  readyToDrinkCount: number;
+  averageBottleValue: number;
 }
 
-const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedingAttention }) => {
+const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedingAttention, readyToDrinkCount, averageBottleValue }) => {
   const hasAttention = bottlesNeedingAttention > 0;
 
   return (
@@ -20,13 +22,18 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
         <Heading
           scale="hero"
           as="span"
-          className="text-[64px]! sm:text-[96px]! block"
+          className="block"
         >
           {totalBottles}
         </Heading>
         <MonoLabel size="micro" colour="ghost" className="mt-2">
           REGISTERED
         </MonoLabel>
+        {readyToDrinkCount > 0 && (
+          <MonoLabel size="micro" colour="accent-acid" className="mt-1">
+            {readyToDrinkCount} READY NOW
+          </MonoLabel>
+        )}
       </Card>
 
       {/* Value */}
@@ -42,13 +49,18 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
           scale="hero"
           colour="on-accent"
           as="span"
-          className="text-[64px]! sm:text-[96px]! block"
+          className="block"
         >
           ${totalValue.toLocaleString()}
         </Heading>
         <MonoLabel size="micro" colour="on-accent" className="mt-2 opacity-70">
           ESTIMATED
         </MonoLabel>
+        {averageBottleValue > 0 && (
+          <MonoLabel size="micro" colour="on-accent" className="mt-1 opacity-70">
+            ${Math.round(averageBottleValue)} AVG/BOTTLE
+          </MonoLabel>
+        )}
       </Card>
 
       {/* Attention */}
@@ -63,7 +75,7 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
           scale="hero"
           as="span"
           colour={hasAttention ? 'accent-coral' : 'accent-acid'}
-          className="text-[64px]! sm:text-[96px]! block"
+          className="block"
         >
           {hasAttention ? bottlesNeedingAttention : '0'}
         </Heading>
