@@ -17,6 +17,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
 }, ref) => {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressedRef = useRef(false);
+  const firedRef = useRef(false);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -26,6 +27,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
   }, []);
 
   const handlePointerDown = useCallback(() => {
+    firedRef.current = false;
     longPressedRef.current = false;
     timerRef.current = setTimeout(() => {
       longPressedRef.current = true;
@@ -37,6 +39,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     clearTimer();
     if (!longPressedRef.current) {
+      firedRef.current = true;
       onClick?.(e as unknown as React.MouseEvent<HTMLButtonElement>);
     }
   }, [clearTimer, onClick]);
@@ -44,6 +47,12 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
   const handlePointerLeave = useCallback(() => {
     clearTimer();
   }, [clearTimer]);
+
+  // Native click fallback for browsers where pointerUp doesn't fire reliably (e.g. Android Chrome)
+  const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    if (firedRef.current || longPressedRef.current) return;
+    onClick?.(e);
+  }, [onClick]);
 
   return (
     <button
@@ -58,7 +67,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
       onPointerLeave={handlePointerLeave}
       onPointerCancel={handlePointerLeave}
       {...props}
-      onClick={undefined}
+      onClick={handleClick}
     >
       <Crosshair className="w-7 h-7" />
     </button>
