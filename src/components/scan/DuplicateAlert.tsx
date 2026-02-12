@@ -26,7 +26,7 @@ const DuplicateAlert: React.FC<DuplicateAlertProps> = ({
         {/* Header */}
         <div className="text-center space-y-1">
           <Heading scale="heading">POSSIBLE DUPLICATE</Heading>
-          <MonoLabel size="caption" colour="ghost">
+          <MonoLabel size="micro" colour="ghost">
             {Math.round(similarityScore * 100)}% match — {matchedFields.join(', ')}
           </MonoLabel>
         </div>

@@ -72,7 +72,7 @@ const CaptureReview: React.FC<CaptureReviewProps> = ({ file, previewUrl, onAccep
         {analysing && (
           <div className="flex items-center justify-center gap-2">
             <Loader2 size={18} className="animate-spin text-[var(--rc-ink-ghost)]" />
-            <MonoLabel size="caption" colour="ghost">
+            <MonoLabel size="micro" colour="ghost">
               Checking image quality...
             </MonoLabel>
           </div>

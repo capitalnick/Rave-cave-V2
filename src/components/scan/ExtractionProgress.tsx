@@ -87,7 +87,7 @@ const ExtractionProgress: React.FC<ExtractionProgressProps> = ({
         <div className="w-full max-w-sm space-y-5 flex-1">
           <div className="text-center space-y-1">
             <Heading scale="heading">READING LABEL</Heading>
-            <MonoLabel size="caption" colour="ghost">Extracting wine details...</MonoLabel>
+            <MonoLabel size="micro" colour="ghost">Extracting wine details...</MonoLabel>
           </div>
 
           {/* Progress bar */}

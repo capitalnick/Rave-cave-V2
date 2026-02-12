@@ -534,7 +534,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 </div>
                 <div className="text-center space-y-2">
                   <Heading scale="heading">ADDED TO CELLAR</Heading>
-                  <MonoLabel size="caption" colour="ghost">
+                  <MonoLabel size="micro" colour="ghost">
                     {lastCommittedName.current}
                   </MonoLabel>
                 </div>

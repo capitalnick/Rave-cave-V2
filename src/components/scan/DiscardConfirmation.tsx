@@ -19,7 +19,7 @@ const DiscardConfirmation: React.FC<DiscardConfirmationProps> = ({
       <div className="w-full sm:max-w-sm bg-[var(--rc-surface-primary)] rounded-t-[var(--rc-radius-lg)] sm:rounded-[var(--rc-radius-lg)] p-6 space-y-5 shadow-[var(--rc-shadow-elevated)]">
         <div className="text-center space-y-2">
           <Heading scale="heading">{title}</Heading>
-          <MonoLabel size="caption" colour="ghost">{message}</MonoLabel>
+          <MonoLabel size="micro" colour="ghost">{message}</MonoLabel>
         </div>
         <div className="space-y-2">
           <Button variant="Primary" onClick={onDiscard} className="w-full">
