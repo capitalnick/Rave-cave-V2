@@ -51,10 +51,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Track transcript length to detect new assistant messages after context injection
   const transcriptLenAtInjection = useRef<number | null>(null);
 
-  useEffect(() => {
-    const greeting = getRandomGreeting();
-    // Injects greeting without triggering state machine
-  }, []);
+  // Stable greeting — computed once on mount, displayed as synthetic first message
+  const [greeting] = useState(() => getRandomGreeting());
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -172,6 +170,14 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+        {/* Greeting — synthetic first message, not part of Gemini transcript */}
+        {visibleTranscript.length === 0 && !isProcessing && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] p-4 rounded-[var(--rc-radius-md)] bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)]">
+              <Body size="caption" colour="on-accent" as="p" className="whitespace-pre-wrap w-auto">{greeting}</Body>
+            </div>
+          </div>
+        )}
         {visibleTranscript.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={cn(

@@ -21,3 +21,517 @@
 - Background Dark: #1a1a1a
 - Neon Pink: #FF006E
 - Acid Green: #CCFF00
+
+
+RAVE CAVE — Creative Brief
+Project Overview
+
+RAVE CAVE is a personal wine cellar web app that reimagines how wine collections are viewed, explored and understood. It blends the ritual and reverence of a traditional cellar with the energy of contemporary culture, technology and underground design language.
+
+This phase of the project focuses on elevating the brand and interface from a raw, neon-forward aesthetic into a more mature, gallery-grade experience — one that feels curated, intentional and collectible. The goal is not to tone RAVE CAVE down, but to give it discipline: neon as a statement, not a default.
+
+The product should feel less like a nightclub UI and more like an exhibition catalogue for a private collection — bold, confident, editorial and culturally fluent.
+
+Target Audience
+
+Primary audience
+
+Wine-literate enthusiasts and collectors
+
+Digitally confident, design-aware users
+
+People who enjoy systems, curation and personal archives
+
+Likely to value craft, provenance and storytelling as much as data
+
+They may not be sommeliers, but they care deeply about:
+
+What they own
+
+Why they own it
+
+How it’s organised
+
+How it feels to interact with their collection
+
+Secondary audience
+
+Design-curious users who don’t identify as “wine nerds” but are drawn in by the interface and tone
+
+Users who might be intimidated by traditional wine software and are looking for something more human and expressive
+
+Brand Strategy
+Brand Mission
+
+To transform wine collection management into a curated, expressive and culturally relevant experience — where data, taste and identity intersect.
+
+RAVE CAVE exists to make owning wine feel intentional, personal and visually powerful, not transactional or clinical.
+
+Audience Mindset
+
+The audience is:
+
+Proud of their collection, even if it’s modest
+
+Curious, not dogmatic
+
+Comfortable with contradiction (luxury + grit, data + emotion)
+
+Slightly bored by traditional wine tools that feel corporate, beige or elitist
+
+They want:
+
+Control without rigidity
+
+Information without intimidation
+
+Beauty without pretence
+
+They don’t want to be told what to like — they want tools that respect their taste.
+
+Customer Value Proposition
+
+RAVE CAVE turns your wine collection into a curated artefact — something you explore, reflect on and enjoy, not just track.
+
+It replaces spreadsheet thinking with gallery thinking: every bottle has context, presence and meaning.
+
+Simplified Value Proposition
+
+“Your wine collection, curated like an exhibition.”
+
+Brand Values (max 3)
+
+Intentionality
+Everything has a reason — colour, layout, hierarchy, motion. Nothing is decorative for its own sake.
+
+Confidence Without Elitism
+The brand is bold and self-assured, but never patronising or exclusionary.
+
+Craft Over Clutter
+Precision, restraint and editorial judgement beat excess, novelty and noise.
+
+Brand Visual Identity
+
+RAVE CAVE’s visual identity sits at the intersection of:
+
+Gallery posters
+
+Exhibition signage
+
+Underground club culture
+
+Editorial design
+
+Key principles
+
+Neutral, paper-like surfaces (white, warm beige, blush)
+
+Black used as a typographic anchor
+
+Neon deployed surgically as a signal, not a fill
+
+Structured grids with asymmetry used deliberately
+
+Cards and modals treated as collectible artefacts, not UI containers
+
+Colour philosophy
+
+Neon = emphasis, categorisation, moments of attitude
+
+Neutrals = space, calm, readability, maturity
+
+Contrast is controlled, not constant
+
+Wine differentiation
+Colour is functional and expressive, never ornamental:
+
+Reds: confidence, depth, intensity
+
+Whites: freshness, clarity, precision
+
+Rosé: softness, warmth, restraint
+
+The system should always feel cohesive, even as colour accents shift.
+
+Brand Verbal Identity
+
+The voice of RAVE CAVE is:
+
+Confident
+
+Editorial
+
+Slightly irreverent
+
+Calmly opinionated
+
+It speaks like a curator, not a salesperson.
+
+Tone characteristics
+
+Clear, not chatty
+
+Knowing, but not smug
+
+Precise, not verbose
+
+Contemporary, not trendy
+
+Copy should:
+
+Favour short, declarative statements
+
+Avoid wine clichés and flowery language
+
+Treat wine as culture, not luxury theatre
+
+Let hierarchy and layout do as much work as words
+
+What it avoids
+
+SaaS buzzwords
+
+Over-explaining
+
+Gamification language
+
+Forced playfulness
+
+RAVE CAVE doesn’t beg for attention — it assumes it.
+
+RAVE CAVE
+Creative Do / Don’t Checklist
+Visual Design
+
+DO
+
+Use neon as an accent, signal or highlight — never as a default fill
+
+Anchor layouts with neutral, paper-like backgrounds (white, warm beige, blush)
+
+Treat cards and modals like collectible artefacts or gallery posters
+
+Apply strict internal grids with intentional asymmetry
+
+Let typography carry hierarchy before colour does
+
+Keep border weights, shadows and elevations consistent and limited
+
+Design every screen as if it could be printed as a poster
+
+DON’T
+
+Flood entire surfaces with neon
+
+Stack multiple neon colours in the same component
+
+Use glow, blur or lighting effects as decoration
+
+Rotate elements randomly or without purpose
+
+Add visual noise “because it looks fun”
+
+Treat cards as generic SaaS containers
+
+Colour Usage
+
+DO
+
+Use colour to differentiate wine types clearly and consistently
+
+Apply colour in:
+
+edge bars
+
+stamps and badges
+
+underlines
+
+ribbons
+
+hover outlines
+
+Keep one dominant accent per surface
+
+Let black and neutral tones do most of the work
+
+DON’T
+
+Use colour purely for decoration
+
+Mix multiple accent colours in one small area
+
+Apply neon as a background for large text blocks
+
+Change colour rules screen by screen
+
+Typography
+
+DO
+
+Use big, confident type for names and vintages
+
+Build a clear typographic ladder and stick to it
+
+Pair expressive display type with restrained UI fonts
+
+Allow breathing room — white space is part of the design
+
+Treat typography as editorial, not functional-only
+
+DON’T
+
+Shrink important information to “fit more in”
+
+Over-style type with shadows, glows or outlines
+
+Mix too many font families or weights
+
+Treat labels, data and content as visually equal
+
+Motion & Interaction
+
+DO
+
+Use motion to signal:
+
+focus
+
+hierarchy
+
+affordance
+
+Keep motion subtle:
+
+lift
+
+outline change
+
+micro-movement in badges
+
+Make hover states feel deliberate and restrained
+
+DON’T
+
+Animate everything
+
+Use arcade-style lighting or pulsing effects
+
+Add motion without a functional reason
+
+Let animation distract from content
+
+Layout & System Discipline
+
+DO
+
+Design with systems first, expression second
+
+Repeat patterns so the interface feels curated, not improvised
+
+Separate viewing mode from editing mode clearly
+
+Treat filters as curatorial tools, not utilities
+
+DON’T
+
+Break the system to “make one screen special”
+
+Add new patterns without removing old ones
+
+Overload sidebars or modals with controls
+
+Let utility overwhelm aesthetic intent
+
+Verbal Tone & Copy
+
+DO
+
+Write with confidence and restraint
+
+Use short, declarative language
+
+Sound like a curator, not a marketer
+
+Trust the user’s intelligence
+
+Let silence and layout do some of the talking
+
+DON’T
+
+Use SaaS clichés or feature-led language
+
+Over-explain wine concepts
+
+Sound playful for the sake of it
+
+Talk down to the user or “teach” unnecessarily
+
+Overall Principle Check
+
+Before shipping anything, ask:
+
+Does this feel curated or cluttered?
+
+Is the neon doing a job, or just showing off?
+
+Would this still feel strong in black and white?
+
+Does this feel like an exhibition piece, not an app screen?
+
+Is this confident enough to not explain itself?
+
+
+Core Neutrals (Foundation)
+
+These colours carry 70–80% of the UI.
+
+Paper White
+
+#FFFCEB
+Warm, exhibition-catalogue white. Softer and more tactile than pure white.
+
+Use for:
+
+Primary backgrounds
+
+Card surfaces
+
+Modal backgrounds
+
+Gallery Beige
+
+#F3EFE4
+A subtle, warm neutral that adds depth without reading “cream”.
+
+Use for:
+
+Secondary surfaces
+
+Framing areas
+
+Subtle section separation
+
+Charcoal Black
+
+#121212
+Deep but not crushed. Holds typography with authority.
+
+Use for:
+
+Primary text
+
+Headings
+
+Dividers
+
+Anchors
+
+Soft Ink
+
+#2A2A2A
+A more breathable black for long-form reading.
+
+Use for:
+
+Body copy
+
+Metadata
+
+Secondary text
+
+Accent Neons (Controlled Impact)
+
+These are never full-surface fills.
+
+Rave Pink
+
+#FF006E
+The emotional signature of RAVE CAVE.
+
+Use for:
+
+Red wine edge bars
+
+Key highlights
+
+Active states
+
+Accent underlines
+
+Acid Green
+
+#C7FF00
+Sharp, contemporary, data-forward.
+
+Use for:
+
+Ratings
+
+Counts
+
+System feedback
+
+White wine accents
+
+Electric Coral
+
+#FF6A4D
+A warmer, human counterpoint to the sharper neons.
+
+Use for:
+
+Rosé accents
+
+Secondary highlights
+
+Rare emphasis moments
+
+Wine-Type Surface Colours
+
+Used sparingly to differentiate categories without chaos.
+
+Blush Paper (Rosé)
+
+#F6D9D3
+
+Use for:
+
+Rosé card backgrounds
+
+Rosé modal surfaces
+
+Cool Stone (Optional Neutral Variant)
+
+#ECEFF1
+
+Use for:
+
+Dense data areas
+
+Tables
+
+Filter panels when beige feels too warm
+
+UI Utility & System Colours
+Divider Grey
+
+#D8D4C8
+
+Use for:
+
+Rules
+
+Hairline dividers
+
+Grid separators
+
+Muted Shadow
+
+rgba(0, 0, 0, 0.08)
+
+Use for:
+
+Elevation (max 2–3 levels)
+
+Never glow

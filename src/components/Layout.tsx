@@ -200,8 +200,9 @@ const Layout: React.FC<LayoutProps> = ({
             icon={<Settings className="w-full h-full" />}
             iconFilled={<Settings className="w-full h-full" />}
             label="SETTINGS"
-            state="inactive"
+            state={activeTab === ('settings' as any) ? 'active' : 'inactive'}
             context={railContext}
+            onClick={() => onTabChange('settings' as any)}
           />
         </div>
       </aside>

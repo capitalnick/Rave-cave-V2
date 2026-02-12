@@ -26,7 +26,7 @@ export const InlineLoader = React.forwardRef<HTMLDivElement, InlineLoaderProps>(
             key={i}
             className={cn(
               "w-1.5 h-1.5 rounded-full motion-reduce:animate-pulse",
-              isOnPink ? "bg-white" : "bg-[var(--rc-loader-dot)]"
+              isOnPink ? "bg-[var(--rc-ink-on-accent)]" : "bg-[var(--rc-loader-dot)]"
             )}
             style={{ 
               animation: 'rc-dot-scale 1s infinite ease-in-out',

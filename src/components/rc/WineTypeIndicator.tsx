@@ -49,14 +49,14 @@ export const WineTypeIndicator = React.forwardRef<HTMLDivElement, WineTypeIndica
           {...props}
         >
           {isSparkling && (
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-white/50">
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[var(--rc-ink-on-accent)] opacity-50">
               <Sparkles className="w-2 h-2" />
             </div>
           )}
           {isDessert && (
             <div 
               className="absolute inset-0" 
-              style={{ backgroundColor: 'rgba(217, 169, 56, 0.15)' }}
+              style={{ backgroundColor: 'var(--rc-dessert-overlay)' }}
             />
           )}
         </div>
@@ -82,7 +82,7 @@ export const WineTypeIndicator = React.forwardRef<HTMLDivElement, WineTypeIndica
               {isDessert && (
                 <div 
                   className="absolute inset-0" 
-                  style={{ backgroundColor: 'rgba(217, 169, 56, 0.15)' }}
+                  style={{ backgroundColor: 'var(--rc-dessert-overlay)' }}
                 />
               )}
             </div>
@@ -109,7 +109,7 @@ export const WineTypeIndicator = React.forwardRef<HTMLDivElement, WineTypeIndica
         {isDessert && (
           <div 
             className="absolute inset-0 pointer-events-none" 
-            style={{ backgroundColor: 'rgba(217, 169, 56, 0.15)' }}
+            style={{ backgroundColor: 'var(--rc-dessert-overlay)' }}
           />
         )}
         <div className="relative flex items-center gap-1">

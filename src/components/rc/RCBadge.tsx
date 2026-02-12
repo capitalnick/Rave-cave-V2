@@ -24,7 +24,7 @@ export const Badge: React.FC<BadgeProps> = ({
   // Phase 1.1: Tone colour map using RAVE CAVE tokens
   const toneStyles = {
     Neutral: "bg-[var(--rc-badge-neutral-bg)] text-[var(--rc-badge-neutral-text)]",
-    Accent: "bg-[rgba(255,0,110,0.1)] text-[var(--rc-accent-pink)]",
+    Accent: "bg-[var(--rc-accent-pink-10)] text-[var(--rc-accent-pink)]",
     Success: "bg-[var(--rc-badge-success-bg)] text-[var(--rc-badge-success-text)]",
     Warning: "bg-[var(--rc-badge-warning-bg)] text-[var(--rc-badge-warning-text)]",
     Error: "bg-[var(--rc-badge-error-bg)] text-[var(--rc-badge-error-text)]",

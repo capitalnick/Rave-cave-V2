@@ -50,7 +50,7 @@ export const Chip: React.FC<ChipProps> = ({
   const variantStyles = cn(
     "text-[12px] font-bold",
     !isMaturity && "border",
-    !isSelected && !isDisabled && "bg-white border-[var(--rc-border-subtle)] text-[var(--rc-ink-primary)] hover:bg-[var(--rc-surface-secondary)]",
+    !isSelected && !isDisabled && "bg-[var(--rc-surface-elevated)] border-[var(--rc-border-subtle)] text-[var(--rc-ink-primary)] hover:bg-[var(--rc-surface-secondary)]",
     isSelected && !isMaturity && "bg-[var(--rc-selection-bg)] border-[var(--rc-selection-border)] text-[var(--rc-selection-text)]",
     isMaturity && isSelected && maturitySelectedStyles,
     isDisabled && "bg-[var(--rc-disabled-bg)] border-[var(--rc-disabled-border)] text-[var(--rc-disabled-text)] cursor-not-allowed"

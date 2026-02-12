@@ -15,14 +15,6 @@ export const COLORS = {
   coral: '#FF6A4D',     // --rc-accent-coral (was #FF6B9D)
 };
 
-export const WINE_COLORS: Record<string, string> = {
-  'Red': '#8b2635',
-  'White': '#f4e4c1',
-  'Rosé': '#f7a8b8',
-  'Sparkling': '#ffd700',
-  'Dessert': '#d4a574',
-  'Fortified': '#6b4226'
-};
 
 export const CONFIG = {
   MODELS: {
@@ -107,7 +99,6 @@ ${stagedWineJson ? `STAGED WINE (Awaiting Price/Quantity): ${stagedWineJson}` : 
 TOOLS:
 - stageWine: Staging extracted label data.
 - commitWine: Finalizing the add (requires price).
-- queryInventory: Filtering the cellar.
 
 RULES:
 - If a meal is mentioned, suggest wines from the inventory immediately.
@@ -130,8 +121,8 @@ export const OCCASIONS: Occasion[] = [
 
 export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {
   'best-match':   { text: 'BEST MATCH',       bgColor: 'var(--rc-accent-acid)',  textColor: 'var(--rc-ink-primary)' },
-  'also-great':   { text: 'ALSO GREAT',       bgColor: 'var(--rc-accent-pink)',  textColor: '#FFFFFF' },
-  'adventurous':  { text: 'ADVENTUROUS PICK', bgColor: 'var(--rc-accent-coral)', textColor: '#FFFFFF' },
+  'also-great':   { text: 'ALSO GREAT',       bgColor: 'var(--rc-accent-pink)',  textColor: 'var(--rc-ink-on-accent)' },
+  'adventurous':  { text: 'ADVENTUROUS PICK', bgColor: 'var(--rc-accent-coral)', textColor: 'var(--rc-ink-on-accent)' },
 };
 
 export const REMYS_PICK_BADGE = { text: "RÉMY'S PICK", bgColor: 'var(--rc-accent-acid)', textColor: 'var(--rc-ink-primary)' };

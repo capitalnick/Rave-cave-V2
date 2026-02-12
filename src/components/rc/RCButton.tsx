@@ -40,25 +40,25 @@ export const Button: React.FC<ButtonProps> = ({
   // Variant classes
   const variantClasses = {
     Primary: "bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] shadow-sm hover:bg-[var(--rc-accent-pink-hover)] active:bg-[var(--rc-accent-pink-pressed)]",
-    Secondary: "bg-[var(--rc-surface-secondary)] text-[var(--rc-ink-primary)] border border-[var(--rc-border-subtle)] hover:bg-[#EBE7D8] active:bg-[#E2DECE]",
+    Secondary: "bg-[var(--rc-surface-secondary)] text-[var(--rc-ink-primary)] border border-[var(--rc-border-subtle)] hover:bg-[var(--rc-button-secondary-hover)] active:bg-[var(--rc-button-secondary-pressed)]",
     Tertiary: cn(
       "text-[var(--rc-ink-primary)]",
       isMobile ? "underline decoration-1 underline-offset-4" : "hover:underline"
     ),
-    Destructive: "bg-[var(--rc-accent-coral)] text-[var(--rc-ink-on-accent)] shadow-sm hover:bg-[var(--rc-accent-coral-dark)] active:bg-[#CC553D]"
+    Destructive: "bg-[var(--rc-accent-coral)] text-[var(--rc-ink-on-accent)] shadow-sm hover:bg-[var(--rc-accent-coral-dark)] active:bg-[var(--rc-button-destructive-pressed)]"
   };
 
   // State overrides
   const stateOverrides = forceState ? {
     Default: "",
-    Hover: variantType === 'Primary' ? "bg-[var(--rc-accent-pink-hover)]" : 
-           variantType === 'Secondary' ? "bg-[#EBE7D8]" : 
-           variantType === 'Tertiary' ? "underline" : 
+    Hover: variantType === 'Primary' ? "bg-[var(--rc-accent-pink-hover)]" :
+           variantType === 'Secondary' ? "bg-[var(--rc-button-secondary-hover)]" :
+           variantType === 'Tertiary' ? "underline" :
            "bg-[var(--rc-accent-coral-dark)]",
-    Pressed: variantType === 'Primary' ? "bg-[var(--rc-accent-pink-pressed)]" : 
-             variantType === 'Secondary' ? "bg-[#E2DECE]" : 
-             variantType === 'Tertiary' ? "underline opacity-70" : 
-             "bg-[#CC553D]",
+    Pressed: variantType === 'Primary' ? "bg-[var(--rc-accent-pink-pressed)]" :
+             variantType === 'Secondary' ? "bg-[var(--rc-button-secondary-pressed)]" :
+             variantType === 'Tertiary' ? "underline opacity-70" :
+             "bg-[var(--rc-button-destructive-pressed)]",
     Focus: "ring-2 ring-[var(--rc-focus-ring-pink)] ring-offset-2",
     Disabled: "opacity-40 cursor-not-allowed"
   }[forceState] : "";

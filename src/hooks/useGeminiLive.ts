@@ -210,7 +210,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   }, [stopSpeaking]);
 
   const handleToolCalls = useCallback(async (calls: any[]) => {
-    const results = [];
+    const results: { result: string }[] = [];
     for (const call of calls) {
       if (call.name === 'stageWine') {
         const args = call.args;

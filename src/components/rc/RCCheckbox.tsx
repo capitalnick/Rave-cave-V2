@@ -31,7 +31,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
             "border-[1.5px] rounded-[var(--rc-control-radius)] flex items-center justify-center transition-colors duration-150",
             // Phase 1.2 sizing
             isDesktop ? "w-[var(--rc-control-size-desktop)] h-[var(--rc-control-size-desktop)]" : "w-[var(--rc-control-size-mobile)] h-[var(--rc-control-size-mobile)]",
-            variant === 'Unchecked' && "bg-white border-[var(--rc-control-border)]",
+            variant === 'Unchecked' && "bg-[var(--rc-surface-elevated)] border-[var(--rc-control-border)]",
             (isChecked || isIndeterminate) && "bg-[var(--rc-control-checked-fill)] border-[var(--rc-control-checked-fill)]",
             isDisabled && "bg-[var(--rc-control-disabled-bg)] border-[var(--rc-control-disabled-border)]"
           )}

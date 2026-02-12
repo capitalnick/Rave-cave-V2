@@ -27,8 +27,8 @@ export const Radio: React.FC<RadioProps> = ({
         className={cn(
           "rounded-full border-[1.5px] flex items-center justify-center transition-all duration-150",
           isDesktop ? "w-[var(--rc-control-size-desktop)] h-[var(--rc-control-size-desktop)]" : "w-[var(--rc-control-size-mobile)] h-[var(--rc-control-size-mobile)]",
-          !isSelected && "bg-white border-[var(--rc-control-border)]",
-          isSelected && "bg-white border-[var(--rc-accent-pink)]",
+          !isSelected && "bg-[var(--rc-surface-elevated)] border-[var(--rc-control-border)]",
+          isSelected && "bg-[var(--rc-surface-elevated)] border-[var(--rc-accent-pink)]",
           isDisabled && "bg-[var(--rc-control-disabled-bg)] border-[var(--rc-control-disabled-border)]"
         )}
       >

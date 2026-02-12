@@ -18,7 +18,7 @@ export const Switch: React.FC<SwitchProps> = ({
 }) => {
   const [isOnInternal, setIsOnInternal] = React.useState(variant === 'On');
   const isDisabled = variant === 'Disabled';
-  const isOn = isDisabled ? variant === 'On' : isOnInternal;
+  const isOn = isDisabled ? false : isOnInternal;
 
   const handleToggle = () => {
     if (isDisabled) return;

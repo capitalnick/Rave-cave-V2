@@ -49,7 +49,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
     <button
       ref={ref}
       className={cn(
-        "flex items-center justify-center w-[56px] h-[56px] rounded-full bg-[var(--rc-accent-pink)] text-white shadow-[0_4px_12px_rgba(255,0,110,0.3)] transition-transform active:scale-90",
+        "flex items-center justify-center w-[56px] h-[56px] rounded-full bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] shadow-[0_4px_12px_var(--rc-accent-pink-10)] transition-transform active:scale-90",
         className
       )}
       aria-label="Scan label"
