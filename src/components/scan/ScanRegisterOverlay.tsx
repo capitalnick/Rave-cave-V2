@@ -2,6 +2,7 @@ import React, { useReducer, useEffect, useRef, useCallback, useState } from 'rea
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModeSelector from './ModeSelector';
+import CaptureReview from './CaptureReview';
 import ExtractionProgress from './ExtractionProgress';
 import RegisterDraft from './RegisterDraft';
 import DuplicateAlert from './DuplicateAlert';
@@ -10,6 +11,7 @@ import DiscardConfirmation from './DiscardConfirmation';
 import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage, ExtractionErrorCode } from '@/types';
 import { compressImageForExtraction, compressImageForStorage, createPreviewUrl } from '@/utils/imageCompression';
 import { extractWineFromLabel, ExtractionError } from '@/services/extractionService';
+import { analyseImageQuality } from '@/utils/imageQuality';
 import { findDuplicates } from '@/services/duplicateService';
 import { inventoryService } from '@/services/inventoryService';
 import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
@@ -34,6 +36,8 @@ type ScanAction =
   | { type: 'OPEN' }
   | { type: 'CLOSE' }
   | { type: 'CAPTURE'; file: File; previewUrl: string }
+  | { type: 'GALLERY_CAPTURE'; file: File; previewUrl: string }
+  | { type: 'REVIEW_ACCEPT' }
   | { type: 'EXTRACTION_SUCCESS'; fields: Partial<Wine>; extraction: ExtractionResult }
   | { type: 'EXTRACTION_FAIL'; error: string; errorCode?: ExtractionErrorCode }
   | { type: 'MANUAL_ENTRY' }
@@ -82,6 +86,16 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
     case 'CAPTURE':
       return {
         ...state,
+        stage: 'reviewing',
+        error: null,
+        errorCode: null,
+        previewUrl: action.previewUrl,
+        rawFile: action.file,
+        autoCapture: false,
+      };
+    case 'GALLERY_CAPTURE':
+      return {
+        ...state,
         stage: 'extracting',
         error: null,
         errorCode: null,
@@ -89,6 +103,8 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         rawFile: action.file,
         autoCapture: false,
       };
+    case 'REVIEW_ACCEPT':
+      return { ...state, stage: 'extracting', error: null, errorCode: null };
     case 'EXTRACTION_SUCCESS':
       return {
         ...state,
@@ -191,7 +207,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   useEffect(() => {
     if (!open) return;
     const handlePopState = () => {
-      if (session.isActive && (state.stage === 'draft' || state.stage === 'extracting')) {
+      if (session.isActive && (state.stage === 'draft' || state.stage === 'extracting' || state.stage === 'reviewing')) {
         setShowDiscard(true);
         window.history.pushState({ scanOverlay: true }, '');
       } else {
@@ -203,17 +219,12 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     return () => window.removeEventListener('popstate', handlePopState);
   }, [open, session.isActive, state.stage]);
 
-  // Handle image capture with online check
-  const handleCapture = useCallback(async (file: File) => {
-    // Online check
+  // ── Extraction helper ──
+  const runExtraction = useCallback(async (file: File) => {
     if (!navigator.onLine) {
-      dispatch({ type: 'CAPTURE', file, previewUrl: createPreviewUrl(file) });
       dispatch({ type: 'EXTRACTION_FAIL', error: 'No internet connection. Try entering details manually.', errorCode: 'PROXY_ERROR' });
       return;
     }
-
-    const previewUrl = createPreviewUrl(file);
-    dispatch({ type: 'CAPTURE', file, previewUrl });
 
     try {
       const base64 = await compressImageForExtraction(file);
@@ -225,25 +236,35 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     }
   }, []);
 
+  // Camera capture → reviewing stage (quality gate)
+  const handleCameraCapture = useCallback((file: File) => {
+    const previewUrl = createPreviewUrl(file);
+    dispatch({ type: 'CAPTURE', file, previewUrl });
+  }, []);
+
+  // Gallery capture → straight to extraction (no quality gate UX)
+  const handleGalleryCapture = useCallback((file: File) => {
+    const previewUrl = createPreviewUrl(file);
+    dispatch({ type: 'GALLERY_CAPTURE', file, previewUrl });
+    runExtraction(file);
+
+    // Silent quality analysis for dev telemetry
+    analyseImageQuality(file).catch(() => {});
+  }, [runExtraction]);
+
+  // Review accepted → proceed to extraction
+  const handleReviewAccept = useCallback(() => {
+    if (!state.rawFile) return;
+    dispatch({ type: 'REVIEW_ACCEPT' });
+    runExtraction(state.rawFile);
+  }, [state.rawFile, runExtraction]);
+
   // Retry extraction with same file
   const handleRetry = useCallback(async () => {
     if (!state.rawFile) return;
     dispatch({ type: 'RETRY' });
-
-    if (!navigator.onLine) {
-      dispatch({ type: 'EXTRACTION_FAIL', error: 'No internet connection.', errorCode: 'PROXY_ERROR' });
-      return;
-    }
-
-    try {
-      const base64 = await compressImageForExtraction(state.rawFile);
-      const { fields, extraction } = await extractWineFromLabel(base64);
-      dispatch({ type: 'EXTRACTION_SUCCESS', fields, extraction });
-    } catch (e: any) {
-      const errorCode = e instanceof ExtractionError ? e.code : 'UNKNOWN';
-      dispatch({ type: 'EXTRACTION_FAIL', error: e.message || 'Failed to read label', errorCode: errorCode as ExtractionErrorCode });
-    }
-  }, [state.rawFile]);
+    runExtraction(state.rawFile);
+  }, [state.rawFile, runExtraction]);
 
   const handleManualEntry = useCallback(() => {
     dispatch({ type: 'MANUAL_ENTRY' });
@@ -455,9 +476,21 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
           {state.stage === 'mode-select' && (
             <motion.div key="mode-select" {...stageMotion}>
               <ModeSelector
-                onCapture={handleCapture}
+                onCameraCapture={handleCameraCapture}
+                onGalleryCapture={handleGalleryCapture}
                 onManualEntry={handleManualEntry}
                 autoCapture={state.autoCapture}
+              />
+            </motion.div>
+          )}
+
+          {state.stage === 'reviewing' && state.rawFile && state.previewUrl && (
+            <motion.div key="reviewing" {...stageMotion}>
+              <CaptureReview
+                file={state.rawFile}
+                previewUrl={state.previewUrl}
+                onAccept={handleReviewAccept}
+                onRetake={handleRetake}
               />
             </motion.div>
           )}

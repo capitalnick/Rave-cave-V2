@@ -262,6 +262,7 @@ export interface WineDraft {
 export type ScanStage =
   | 'closed'
   | 'mode-select'
+  | 'reviewing'
   | 'extracting'
   | 'draft'
   | 'committing'

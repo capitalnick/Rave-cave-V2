@@ -4,12 +4,13 @@ import { Heading, MonoLabel, Body } from '@/components/rc';
 import { hapticLight } from '@/utils/haptics';
 
 interface ModeSelectorProps {
-  onCapture: (file: File) => void;
+  onCameraCapture: (file: File) => void;
+  onGalleryCapture: (file: File) => void;
   onManualEntry: () => void;
   autoCapture?: boolean;
 }
 
-const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry, autoCapture }) => {
+const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryCapture, onManualEntry, autoCapture }) => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -20,13 +21,21 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry, a
     }
   }, [autoCapture]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       hapticLight();
-      onCapture(file);
+      onCameraCapture(file);
     }
-    // Reset so the same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      hapticLight();
+      onGalleryCapture(file);
+    }
     e.target.value = '';
   };
 
@@ -91,7 +100,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry, a
         type="file"
         accept="image/*"
         capture="environment"
-        onChange={handleFileChange}
+        onChange={handleCameraChange}
         className="hidden"
         aria-label="Take photo of wine label"
       />
@@ -99,7 +108,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry, a
         ref={galleryInputRef}
         type="file"
         accept="image/*"
-        onChange={handleFileChange}
+        onChange={handleGalleryChange}
         className="hidden"
         aria-label="Choose photo from gallery"
       />
