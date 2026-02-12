@@ -201,7 +201,7 @@ export async function getRecommendations(
     contents: [{ role: 'user', parts: [{ text: 'Please recommend wines based on the context above.' }] }],
   });
 
-  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
 
   return parseRecommendations(text, inventory);
@@ -226,7 +226,7 @@ export async function getSurpriseMe(
     contents: [{ role: 'user', parts: [{ text: 'Surprise me with a wine pick!' }] }],
   });
 
-  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
 
   const results = parseRecommendations(text, inventory);
