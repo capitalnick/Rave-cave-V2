@@ -289,9 +289,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   // ── Recommend / Chat handoff ──
+  // At >=1440px, pinned Remy panel is visible — skip navigation, just set context.
+  // AppShell watches recommendContext and auto-opens the pinned panel.
   const handleHandoffToRemy = useCallback((ctx: RecommendChatContext) => {
     setRecommendContext(ctx);
-    navigate({ to: '/remy' });
+    const isPinned = window.matchMedia('(min-width: 1440px)').matches;
+    if (!isPinned) {
+      navigate({ to: '/remy' });
+    }
   }, [navigate]);
 
   const handleAddToCellarFromRecommend = useCallback((rec: Recommendation) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   createRouter,
   createRootRoute,
@@ -11,17 +11,21 @@ import {
 import Layout from '@/components/Layout';
 import ScanOverlay from '@/components/ScanOverlay';
 import WineModal from '@/components/WineModal';
+import PinnedRemyPanel from '@/components/PinnedRemyPanel';
 import { RCToaster } from '@/components/rc';
 import { InventoryProvider, useInventory } from '@/context/InventoryContext';
 import { SurfaceProvider } from '@/context/SurfaceContext';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { usePinnedRemy } from '@/hooks/usePinnedRemy';
 import CellarPage from '@/pages/CellarPage';
 import PulsePage from '@/pages/PulsePage';
 import RecommendPage from '@/pages/RecommendPage';
 import RemyPage from '@/pages/RemyPage';
 import SettingsPage from '@/pages/SettingsPage';
 import type { NavId } from '@/types';
+
+const LS_KEY = 'rc_remy_pinned_open';
 
 // ── Derive active tab from the current URL pathname ──
 const TAB_FROM_PATH: Record<string, NavId> = {
@@ -46,10 +50,53 @@ function AppShell() {
   const scrollWrapperRef = useScrollPreservation();
   useKeyboardShortcuts(navigate);
 
+  const isPinned = usePinnedRemy();
+
+  // Pinned Remy panel state (local to AppShell, persisted in localStorage)
+  const [remyPanelOpen, setRemyPanelOpen] = useState(() => {
+    try { return localStorage.getItem(LS_KEY) !== 'false'; } catch { return true; }
+  });
+
+  const toggleRemyPanel = useCallback(() => {
+    setRemyPanelOpen(prev => {
+      const next = !prev;
+      try { localStorage.setItem(LS_KEY, String(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  const closeRemyPanel = useCallback(() => {
+    setRemyPanelOpen(false);
+    try { localStorage.setItem(LS_KEY, 'false'); } catch {}
+  }, []);
+
+  const openRemyPanel = useCallback(() => {
+    setRemyPanelOpen(true);
+    try { localStorage.setItem(LS_KEY, 'true'); } catch {}
+  }, []);
+
+  const pinnedRemyVisible = isPinned && activeTab !== 'remy' && remyPanelOpen;
+
+  // Auto-open pinned panel when recommend handoff sets context
+  useEffect(() => {
+    if (isPinned && ctx.recommendContext) {
+      openRemyPanel();
+    }
+  }, [isPinned, ctx.recommendContext, openRemyPanel]);
+
+  // Tab change handler — Remy nav toggles panel at >=1440px
+  const handleTabChange = useCallback((tab: NavId) => {
+    if (tab === 'remy' && isPinned) {
+      toggleRemyPanel();
+    } else {
+      navigate({ to: `/${tab}` });
+    }
+  }, [isPinned, toggleRemyPanel, navigate]);
+
   return (
     <Layout
       activeTab={activeTab}
-      onTabChange={(tab: NavId) => navigate({ to: `/${tab}` })}
+      onTabChange={handleTabChange}
       filters={ctx.filters}
       filterOptions={ctx.filterOptions}
       onToggleFilter={ctx.toggleFilter}
@@ -58,6 +105,9 @@ function AppShell() {
       onScanLongPress={() => ctx.openScan()}
       scanFABRef={ctx.scanFABRef}
       scrollWrapperRef={scrollWrapperRef}
+      pinnedRightOffset={pinnedRemyVisible ? 400 : 0}
+      isPinnedRemy={isPinned}
+      remyPanelOpen={remyPanelOpen}
     >
       <Outlet />
 
@@ -79,6 +129,10 @@ function AppShell() {
       )}
 
       <RCToaster />
+
+      {pinnedRemyVisible && (
+        <PinnedRemyPanel open={remyPanelOpen} onClose={closeRemyPanel} />
+      )}
     </Layout>
   );
 }

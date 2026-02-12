@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X } from 'lucide-react';
+import { X, PanelRightClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useSurfaceManager } from '@/context/SurfaceContext';
@@ -44,19 +44,20 @@ export const RightPanel: React.FC<RightPanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // Register with surface manager + escape handler
+  // Register with surface manager + escape handler (skip escape for pinned)
   useEffect(() => {
     if (!open) return;
     surfaceManager.registerPanel(id);
-    const removeEscape = surfaceManager.pushEscapeHandler(onClose);
+    const removeEscape = pinned ? undefined : surfaceManager.pushEscapeHandler(onClose);
     return () => {
       surfaceManager.unregisterPanel(id);
-      removeEscape();
+      removeEscape?.();
     };
-  }, [open, id, surfaceManager, onClose]);
+  }, [open, id, pinned, surfaceManager, onClose]);
 
-  // Focus trap: capture focus on open, restore on close
+  // Focus trap: capture focus on open, restore on close (skip for pinned)
   useEffect(() => {
+    if (pinned) return;
     if (open) {
       previousFocusRef.current = document.activeElement as HTMLElement;
       // Delay to let animation start
@@ -65,7 +66,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
       previousFocusRef.current.focus();
       previousFocusRef.current = null;
     }
-  }, [open]);
+  }, [open, pinned]);
 
   // Tab trap within panel
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -119,7 +120,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
           {/* Panel */}
           <motion.aside
             ref={panelRef}
-            role="dialog"
+            role={pinned ? 'complementary' : 'dialog'}
             aria-label={title}
             aria-modal={!pinned}
             tabIndex={-1}
@@ -136,13 +137,13 @@ export const RightPanel: React.FC<RightPanelProps> = ({
             style={{ width: panelWidth }}
             {...motionProps}
           >
-            {/* Close button */}
+            {/* Close / Minimize button */}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 z-10 p-1.5 rounded-[var(--rc-radius-sm)] text-[var(--rc-ink-tertiary)] hover:text-[var(--rc-ink-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors"
-              aria-label="Close panel"
+              aria-label={pinned ? 'Minimize panel' : 'Close panel'}
             >
-              <X size={18} />
+              {pinned ? <PanelRightClose size={18} /> : <X size={18} />}
             </button>
 
             {/* Scrollable content */}

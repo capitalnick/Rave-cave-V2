@@ -24,6 +24,12 @@ interface LayoutProps {
   onScanLongPress?: () => void;
   scanFABRef?: React.Ref<HTMLButtonElement>;
   scrollWrapperRef?: React.RefObject<HTMLDivElement | null>;
+  /** Reserve space on right for pinned panel (px). 0 = no offset. */
+  pinnedRightOffset?: number;
+  /** Whether the pinned Remy breakpoint is active */
+  isPinnedRemy?: boolean;
+  /** Whether the pinned Remy panel is currently open */
+  remyPanelOpen?: boolean;
 }
 
 const FilterSection: React.FC<{
@@ -111,6 +117,9 @@ const Layout: React.FC<LayoutProps> = ({
   onScanLongPress,
   scanFABRef,
   scrollWrapperRef,
+  pinnedRightOffset = 0,
+  isPinnedRemy = false,
+  remyPanelOpen = false,
 }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const isRailExpanded = useRailExpanded();
@@ -134,17 +143,23 @@ const Layout: React.FC<LayoutProps> = ({
 
         {/* Nav Items */}
         <nav className="w-full shrink-0 space-y-1 px-0" role="tablist">
-          {navItems.map((item) => (
-            <TabItem
-              key={item.id}
-              icon={<item.icon className="w-full h-full" />}
-              iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
-              label={item.label}
-              state={activeTab === item.id ? 'active' : 'inactive'}
-              context={railContext}
-              onClick={() => onTabChange(item.id)}
-            />
-          ))}
+          {navItems.map((item) => {
+            // In pinned mode, Remy active state reflects panel open/closed
+            const isActive = item.id === 'remy' && isPinnedRemy
+              ? remyPanelOpen
+              : activeTab === item.id;
+            return (
+              <TabItem
+                key={item.id}
+                icon={<item.icon className="w-full h-full" />}
+                iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
+                label={item.label}
+                state={isActive ? 'active' : 'inactive'}
+                context={railContext}
+                onClick={() => onTabChange(item.id)}
+              />
+            );
+          })}
         </nav>
 
         {/* Scan Button */}
@@ -291,7 +306,11 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       )}
 
-      <main ref={scrollWrapperRef} className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0">
+      <main
+        ref={scrollWrapperRef}
+        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
+        style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
+      >
         {children}
       </main>
     </div>
