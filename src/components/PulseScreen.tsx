@@ -228,6 +228,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   // Main dashboard view
   return (
     <div
+      data-scroll-container
       ref={scrollRef}
       className="h-full overflow-y-auto"
       onTouchStart={handleTouchStart}

@@ -58,7 +58,7 @@ const CellarPage: React.FC = () => {
   const { sentinelRef, isPastHero } = useScrollSentinel();
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div data-scroll-container className="h-full overflow-y-auto">
       <CondensedHeader
         isPastHero={isPastHero}
         search={search}

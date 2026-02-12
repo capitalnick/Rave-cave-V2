@@ -14,22 +14,25 @@ import WineModal from '@/components/WineModal';
 import { RCToaster } from '@/components/rc';
 import { InventoryProvider, useInventory } from '@/context/InventoryContext';
 import { SurfaceProvider } from '@/context/SurfaceContext';
+import { useScrollPreservation } from '@/hooks/useScrollPreservation';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import CellarPage from '@/pages/CellarPage';
 import PulsePage from '@/pages/PulsePage';
 import RecommendPage from '@/pages/RecommendPage';
 import RemyPage from '@/pages/RemyPage';
 import SettingsPage from '@/pages/SettingsPage';
-import type { TabId } from '@/types';
+import type { NavId } from '@/types';
 
 // ── Derive active tab from the current URL pathname ──
-const TAB_FROM_PATH: Record<string, TabId> = {
+const TAB_FROM_PATH: Record<string, NavId> = {
   cellar: 'cellar',
   pulse: 'pulse',
   recommend: 'recommend',
   remy: 'remy',
+  settings: 'settings',
 };
 
-function useActiveTab(): TabId {
+function useActiveTab(): NavId {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const segment = pathname.split('/').filter(Boolean)[0] || 'cellar';
   return TAB_FROM_PATH[segment] || 'cellar';
@@ -40,11 +43,13 @@ function AppShell() {
   const ctx = useInventory();
   const activeTab = useActiveTab();
   const navigate = useNavigate();
+  const scrollWrapperRef = useScrollPreservation();
+  useKeyboardShortcuts(navigate);
 
   return (
     <Layout
       activeTab={activeTab}
-      onTabChange={(tab: TabId) => navigate({ to: `/${tab}` })}
+      onTabChange={(tab: NavId) => navigate({ to: `/${tab}` })}
       filters={ctx.filters}
       filterOptions={ctx.filterOptions}
       onToggleFilter={ctx.toggleFilter}
@@ -52,6 +57,7 @@ function AppShell() {
       onScanPress={() => ctx.openScan()}
       onScanLongPress={() => ctx.openScan()}
       scanFABRef={ctx.scanFABRef}
+      scrollWrapperRef={scrollWrapperRef}
     >
       <Outlet />
 

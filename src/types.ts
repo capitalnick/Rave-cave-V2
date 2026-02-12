@@ -1,4 +1,5 @@
 export type TabId = 'cellar' | 'pulse' | 'recommend' | 'remy';
+export type NavId = TabId | 'settings';
 
 export type WineType = 'Red' | 'White' | 'Rosé' | 'Sparkling' | 'Dessert' | 'Fortified';
 export type MaturityStatus = 'Hold' | 'Drink Now' | 'Past Peak';

@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Sparkles, Crosshair } from 'lucide-react';
-import { CellarFilters, TabId } from '@/types';
+import { CellarFilters, NavId, TabId } from '@/types';
 import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton, ScanFAB } from '@/components/rc';
 import { useRailExpanded } from '@/hooks/useRailExpanded';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: TabId;
-  onTabChange: (tab: TabId) => void;
+  activeTab: NavId;
+  onTabChange: (tab: NavId) => void;
   filters?: CellarFilters;
   filterOptions?: {
     vintage: number[];
@@ -23,6 +23,7 @@ interface LayoutProps {
   onScanPress?: () => void;
   onScanLongPress?: () => void;
   scanFABRef?: React.Ref<HTMLButtonElement>;
+  scrollWrapperRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const FilterSection: React.FC<{
@@ -109,6 +110,7 @@ const Layout: React.FC<LayoutProps> = ({
   onScanPress,
   onScanLongPress,
   scanFABRef,
+  scrollWrapperRef,
 }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const isRailExpanded = useRailExpanded();
@@ -200,9 +202,9 @@ const Layout: React.FC<LayoutProps> = ({
             icon={<Settings className="w-full h-full" />}
             iconFilled={<Settings className="w-full h-full" />}
             label="SETTINGS"
-            state={activeTab === ('settings' as any) ? 'active' : 'inactive'}
+            state={activeTab === 'settings' ? 'active' : 'inactive'}
             context={railContext}
-            onClick={() => onTabChange('settings' as any)}
+            onClick={() => onTabChange('settings')}
           />
         </div>
       </aside>
@@ -289,7 +291,7 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       )}
 
-      <main className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0">
+      <main ref={scrollWrapperRef} className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0">
         {children}
       </main>
     </div>
