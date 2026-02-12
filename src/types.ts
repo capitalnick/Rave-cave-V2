@@ -31,6 +31,27 @@ export interface Wine {
   processingStatus?: 'pending' | 'complete' | 'error';
 }
 
+export type SortField =
+  | 'maturity'
+  | 'vintage-desc'
+  | 'vintage-asc'
+  | 'rating'
+  | 'price-desc'
+  | 'price-asc'
+  | 'producer'
+  | 'country';
+
+export const SORT_OPTIONS: { value: SortField; label: string; group: 'decision' | 'organisational' }[] = [
+  { value: 'maturity',     label: 'Maturity (Drink Now First)', group: 'decision' },
+  { value: 'vintage-asc',  label: 'Vintage (Oldest First)',     group: 'decision' },
+  { value: 'vintage-desc', label: 'Vintage (Newest First)',     group: 'decision' },
+  { value: 'rating',       label: 'Rating (Highest First)',     group: 'decision' },
+  { value: 'price-desc',   label: 'Price (Highest First)',      group: 'decision' },
+  { value: 'price-asc',    label: 'Price (Lowest First)',       group: 'decision' },
+  { value: 'producer',     label: 'Producer A\u2013Z',          group: 'organisational' },
+  { value: 'country',      label: 'Country A\u2013Z',           group: 'organisational' },
+];
+
 export type IngestionState = 'IDLE' | 'STAGED' | 'NEEDS_PRICE' | 'READY_TO_COMMIT' | 'COMMITTED';
 
 export interface StagedWine extends Partial<Omit<Wine, 'id'>> {

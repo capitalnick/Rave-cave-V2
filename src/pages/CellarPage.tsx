@@ -4,6 +4,8 @@ import WineCard from '@/components/WineCard';
 import { useInventory } from '@/context/InventoryContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
 import { Input } from '@/components/rc';
+import { SortMenu } from '@/components/SortMenu';
+import type { SortField } from '@/types';
 
 /* ── Condensed sticky header ─────────────────────────── */
 const CondensedHeader: React.FC<{
@@ -12,7 +14,9 @@ const CondensedHeader: React.FC<{
   setSearch: (v: string) => void;
   totalBottles: number;
   totalLabels: number;
-}> = ({ isPastHero, search, setSearch, totalBottles, totalLabels }) => (
+  sortField: SortField;
+  setSortField: (f: SortField) => void;
+}> = ({ isPastHero, search, setSearch, totalBottles, totalLabels, sortField, setSortField }) => (
   <div
     className="sticky top-0 z-[var(--rc-z-sticky)] flex items-center gap-4 px-4 sm:px-10 bg-[var(--rc-surface-elevated)] border-b border-[var(--rc-border-subtle)] transition-opacity duration-150 motion-reduce:transition-none"
     style={{
@@ -30,11 +34,12 @@ const CondensedHeader: React.FC<{
         onChange={(e) => setSearch(e.target.value)}
       />
     </div>
-    <div className="flex gap-4 items-baseline font-mono text-xs uppercase tracking-widest text-[var(--rc-ink-ghost)] ml-auto flex-shrink-0">
-      <span>
+    <div className="flex gap-4 items-center font-mono text-xs uppercase tracking-widest text-[var(--rc-ink-ghost)] ml-auto flex-shrink-0">
+      <SortMenu value={sortField} onChange={setSortField} compact />
+      <span className="flex items-baseline gap-1">
         <span className="text-[var(--rc-accent-pink)] font-display text-lg">{totalBottles}</span> bottles
       </span>
-      <span>
+      <span className="flex items-baseline gap-1">
         <span className="text-[var(--rc-accent-acid)] font-display text-lg text-stroke-black">{totalLabels}</span> labels
       </span>
     </div>
@@ -53,6 +58,8 @@ const CellarPage: React.FC = () => {
     clearFilters,
     setSelectedWine,
     handleUpdate,
+    sortField,
+    setSortField,
   } = useInventory();
 
   const { sentinelRef, isPastHero } = useScrollSentinel();
@@ -65,6 +72,8 @@ const CellarPage: React.FC = () => {
         setSearch={setSearch}
         totalBottles={totalBottlesFiltered}
         totalLabels={filteredInventory.length}
+        sortField={sortField}
+        setSortField={setSortField}
       />
 
       {/* Hero section */}
@@ -87,13 +96,14 @@ const CellarPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 sm:gap-8 font-display text-2xl sm:text-4xl leading-none tracking-tight flex-shrink-0">
+          <div className="flex gap-4 sm:gap-8 items-end flex-shrink-0">
+            <SortMenu value={sortField} onChange={setSortField} />
             <div className="flex flex-col items-end">
-              <span className="text-[var(--rc-accent-pink)] text-4xl sm:text-6xl">{totalBottlesFiltered}</span>
+              <span className="text-[var(--rc-accent-pink)] text-4xl sm:text-6xl font-display leading-none tracking-tight">{totalBottlesFiltered}</span>
               <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-[var(--rc-ink-primary)]">Bottles</span>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-[var(--rc-accent-acid)] text-4xl sm:text-6xl text-stroke-black">{filteredInventory.length}</span>
+              <span className="text-[var(--rc-accent-acid)] text-4xl sm:text-6xl font-display leading-none tracking-tight text-stroke-black">{filteredInventory.length}</span>
               <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-[var(--rc-ink-primary)]">Labels</span>
             </div>
           </div>

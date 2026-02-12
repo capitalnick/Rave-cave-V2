@@ -25,8 +25,15 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
   return (
     <label className={cn("inline-flex items-center gap-3 cursor-pointer select-none", isDisabled && "cursor-not-allowed")}>
+      <input
+        type="checkbox"
+        checked={isChecked}
+        disabled={isDisabled}
+        className="sr-only"
+        {...props}
+      />
       <div className="relative">
-        <div 
+        <div
           className={cn(
             "border-[1.5px] rounded-[var(--rc-control-radius)] flex items-center justify-center transition-colors duration-150",
             // Phase 1.2 sizing

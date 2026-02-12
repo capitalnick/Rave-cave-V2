@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { useNavigate } from '@tanstack/react-router';
 import { inventoryService } from '@/services/inventoryService';
 import { getMaturityStatus } from '@/constants';
-import type { Wine, CellarFilters, RecommendChatContext, Recommendation } from '@/types';
+import type { Wine, CellarFilters, RecommendChatContext, Recommendation, SortField } from '@/types';
 
 // ── Filter options derived from inventory ──
 interface FilterOptions {
@@ -21,7 +21,7 @@ interface InventoryContextValue {
   loading: boolean;
   isSynced: boolean;
 
-  // Search + filters
+  // Search + filters + sort
   search: string;
   setSearch: (s: string) => void;
   filters: CellarFilters;
@@ -31,6 +31,8 @@ interface InventoryContextValue {
   clearFilters: () => void;
   totalBottlesFiltered: number;
   heroWineIds: string[];
+  sortField: SortField;
+  setSortField: (f: SortField) => void;
 
   // Wine CRUD
   handleUpdate: (wine: Wine, key: string, value: string) => Promise<void>;
@@ -80,6 +82,14 @@ const EMPTY_FILTERS: CellarFilters = {
 
 const NUMERIC_WINE_FIELDS = new Set(['vintage', 'quantity', 'drinkFrom', 'drinkUntil', 'vivinoRating', 'price']);
 
+function maturityRank(wine: Wine): number {
+  const status = getMaturityStatus(wine.drinkFrom, wine.drinkUntil);
+  if (status.includes('Past Peak')) return 0;   // urgent first
+  if (status.includes('Drink Now')) return 1;
+  if (status.includes('Hold')) return 2;
+  return 3; // unknown last
+}
+
 export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
 
@@ -88,9 +98,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [loading, setLoading] = useState(true);
   const [isSynced, setIsSynced] = useState(false);
 
-  // ── Search + filter state ──
+  // ── Search + filter + sort state ──
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<CellarFilters>(EMPTY_FILTERS);
+  const [sortField, setSortField] = useState<SortField>('maturity');
 
   // ── Wine detail ──
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
@@ -153,6 +164,33 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   }, [inventory, search, filters]);
 
+  const sortedInventory = useMemo(() => {
+    const sorted = [...filteredInventory];
+    sorted.sort((a, b) => {
+      switch (sortField) {
+        case 'maturity':
+          return maturityRank(a) - maturityRank(b);
+        case 'vintage-desc':
+          return (b.vintage || 0) - (a.vintage || 0);
+        case 'vintage-asc':
+          return (a.vintage || 0) - (b.vintage || 0);
+        case 'rating':
+          return (b.vivinoRating || 0) - (a.vivinoRating || 0);
+        case 'price-desc':
+          return (b.price || 0) - (a.price || 0);
+        case 'price-asc':
+          return (a.price || 0) - (b.price || 0);
+        case 'producer':
+          return a.producer.localeCompare(b.producer);
+        case 'country':
+          return a.country.localeCompare(b.country);
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [filteredInventory, sortField]);
+
   const filterOptions = useMemo<FilterOptions>(() => {
     const grapes = new Set<string>();
     const vintages = new Set<number>();
@@ -193,16 +231,17 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const clearFilters = useCallback(() => {
     setFilters(EMPTY_FILTERS);
     setSearch('');
+    setSortField('maturity');
   }, []);
 
   const totalBottlesFiltered = useMemo(
-    () => filteredInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0),
-    [filteredInventory],
+    () => sortedInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0),
+    [sortedInventory],
   );
 
   const heroWineIds = useMemo(
-    () => [...filteredInventory].sort((a, b) => (b.vivinoRating || 0) - (a.vivinoRating || 0)).slice(0, 2).map(w => w.id),
-    [filteredInventory],
+    () => [...sortedInventory].sort((a, b) => (b.vivinoRating || 0) - (a.vivinoRating || 0)).slice(0, 2).map(w => w.id),
+    [sortedInventory],
   );
 
   // ── Wine update handler ──
@@ -284,11 +323,13 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSearch,
     filters,
     filterOptions,
-    filteredInventory,
+    filteredInventory: sortedInventory,
     toggleFilter,
     clearFilters,
     totalBottlesFiltered,
     heroWineIds,
+    sortField,
+    setSortField,
     handleUpdate,
     scanOpen,
     prefillData,
@@ -307,7 +348,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     triggerRefreshFeedback,
   }), [
     inventory, loading, isSynced, search, filters, filterOptions,
-    filteredInventory, toggleFilter, clearFilters, totalBottlesFiltered,
+    sortedInventory, sortField, toggleFilter, clearFilters, totalBottlesFiltered,
     heroWineIds, handleUpdate, scanOpen, prefillData, openScan, closeScan,
     handleWineCommitted, handleViewWine, selectedWine, recommendContext,
     handleHandoffToRemy, handleAddToCellarFromRecommend, handleAddToCellarFromChat,
