@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Layout from './components/Layout';
 import ChatInterface from './components/ChatInterface';
 import PulseScreen from './components/PulseScreen';
@@ -8,6 +8,7 @@ import WineCard from './components/WineCard';
 import WineModal from './components/WineModal';
 import { inventoryService } from './services/inventoryService';
 import { Wine, CellarFilters, TabId, RecommendChatContext } from './types';
+import type { Recommendation } from './types';
 import { Loader2 } from 'lucide-react';
 import { getMaturityStatus } from './constants';
 import { RCToaster } from './components/rc';
@@ -20,7 +21,9 @@ const App: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
+  const [prefillData, setPrefillData] = useState<Partial<Wine> | null>(null);
   const [recommendContext, setRecommendContext] = useState<RecommendChatContext | null>(null);
+  const scanFABRef = useRef<HTMLButtonElement>(null);
 
   // Filter State
   const [filters, setFilters] = useState<CellarFilters>({
@@ -170,6 +173,30 @@ const App: React.FC = () => {
     setSelectedWine(wine);
   }, []);
 
+  // "Add to cellar" from Recommend cards
+  const handleAddToCellarFromRecommend = useCallback((rec: Recommendation) => {
+    setPrefillData({
+      producer: rec.producer,
+      name: rec.name,
+      vintage: rec.vintage,
+      type: rec.type,
+    });
+    setScanOpen(true);
+  }, []);
+
+  // "Add to cellar" from Chat staged wine
+  const handleAddToCellarFromChat = useCallback((wine: Partial<Wine>) => {
+    setPrefillData(wine);
+    setScanOpen(true);
+  }, []);
+
+  // Focus return to ScanFAB on overlay close
+  const handleScanClose = useCallback(() => {
+    setScanOpen(false);
+    setPrefillData(null);
+    requestAnimationFrame(() => scanFABRef.current?.focus());
+  }, []);
+
   return (
     <Layout
       activeTab={activeTab}
@@ -179,6 +206,8 @@ const App: React.FC = () => {
       onToggleFilter={toggleFilter}
       onClearFilters={clearFilters}
       onScanPress={() => setScanOpen(true)}
+      onScanLongPress={() => setScanOpen(true)}
+      scanFABRef={scanFABRef}
     >
       {activeTab === 'remy' && (
         <ChatInterface
@@ -186,6 +215,7 @@ const App: React.FC = () => {
           isSynced={isSynced}
           recommendContext={recommendContext}
           onRecommendContextConsumed={() => setRecommendContext(null)}
+          onAddToCellar={handleAddToCellarFromChat}
         />
       )}
 
@@ -271,15 +301,17 @@ const App: React.FC = () => {
         <RecommendScreen
           inventory={inventory}
           onHandoffToRemy={(ctx) => { setRecommendContext(ctx); setActiveTab('remy'); }}
+          onAddToCellar={handleAddToCellarFromRecommend}
         />
       )}
 
       <ScanOverlay
         open={scanOpen}
-        onClose={() => setScanOpen(false)}
+        onClose={handleScanClose}
         inventory={inventory}
         onWineCommitted={handleWineCommitted}
         onViewWine={handleViewWine}
+        prefillData={prefillData}
       />
 
       {selectedWine && (

@@ -17,6 +17,7 @@ interface ChatInterfaceProps {
   isSynced: boolean;
   recommendContext?: RecommendChatContext | null;
   onRecommendContextConsumed?: () => void;
+  onAddToCellar?: (wine: Partial<Wine>) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -24,6 +25,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isSynced,
   recommendContext,
   onRecommendContextConsumed,
+  onAddToCellar,
 }) => {
   const cellarSnapshot = useMemo(() => inventoryService.getCellarSnapshot(inventory), [inventory]);
 
@@ -141,8 +143,16 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
               {isRecording ? 'Listening...' : 'Text Ready'}
             </MonoLabel>
             {stagedWine && (
-              <span className="bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] px-2 py-0.5 rounded-[var(--rc-radius-sm)] font-[var(--rc-font-mono)] text-[9px] font-bold animate-pulse">
-                WINE STAGED: {stagedWine.producer}
+              <span className="flex items-center gap-2">
+                <span className="bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] px-2 py-0.5 rounded-[var(--rc-radius-sm)] font-[var(--rc-font-mono)] text-[9px] font-bold animate-pulse">
+                  WINE STAGED: {stagedWine.producer}
+                </span>
+                <button
+                  onClick={() => onAddToCellar?.(stagedWine)}
+                  className="text-[var(--rc-accent-pink)] font-[var(--rc-font-mono)] text-[9px] font-bold uppercase tracking-wider underline underline-offset-2"
+                >
+                  ADD TO CELLAR →
+                </button>
               </span>
             )}
           </div>

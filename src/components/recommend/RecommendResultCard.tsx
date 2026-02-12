@@ -9,6 +9,7 @@ interface RecommendResultCardProps {
   isSurprise?: boolean;
   isSingleResult?: boolean;
   index: number;
+  onAddToCellar?: (recommendation: Recommendation) => void;
 }
 
 const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
@@ -16,6 +17,7 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
   isSurprise = false,
   isSingleResult = false,
   index,
+  onAddToCellar,
 }) => {
   const badge = isSurprise || isSingleResult
     ? REMYS_PICK_BADGE
@@ -114,7 +116,10 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
       )}
       {!recommendation.isFromCellar && (
         <div className="px-4 pb-4">
-          <button className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider">
+          <button
+            onClick={() => onAddToCellar?.(recommendation)}
+            className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
+          >
             Add to cellar →
           </button>
         </div>

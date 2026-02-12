@@ -34,9 +34,10 @@ export type RecommendView = 'grid' | 'form' | 'loading' | 'results';
 interface RecommendScreenProps {
   inventory: Wine[];
   onHandoffToRemy?: (context: RecommendChatContext) => void;
+  onAddToCellar?: (recommendation: Recommendation) => void;
 }
 
-const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffToRemy }) => {
+const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffToRemy, onAddToCellar }) => {
   const [view, setView] = useState<RecommendView>('grid');
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
@@ -246,6 +247,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
           isSurprise={isSurprise}
           surpriseRerollCount={surpriseRerollCount}
           onSurpriseReroll={handleSurpriseReroll}
+          onAddToCellar={onAddToCellar}
         />
       )}
     </div>

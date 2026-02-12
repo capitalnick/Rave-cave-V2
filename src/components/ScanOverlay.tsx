@@ -8,12 +8,13 @@ interface ScanOverlayProps {
   inventory: Wine[];
   onWineCommitted?: (docId: string | string[]) => void;
   onViewWine?: (wine: Wine) => void;
+  prefillData?: Partial<Wine> | null;
 }
 
 /**
  * Thin wrapper preserving the App.tsx import. Delegates to ScanRegisterOverlay.
  */
-const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine }) => {
+const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData }) => {
   return (
     <ScanRegisterOverlay
       open={open}
@@ -21,6 +22,7 @@ const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onW
       inventory={inventory}
       onWineCommitted={onWineCommitted}
       onViewWine={onViewWine}
+      prefillData={prefillData}
     />
   );
 };

@@ -21,6 +21,8 @@ interface LayoutProps {
   onToggleFilter?: (category: keyof CellarFilters, value: any) => void;
   onClearFilters?: () => void;
   onScanPress?: () => void;
+  onScanLongPress?: () => void;
+  scanFABRef?: React.Ref<HTMLButtonElement>;
 }
 
 const FilterSection: React.FC<{
@@ -104,7 +106,9 @@ const Layout: React.FC<LayoutProps> = ({
   filterOptions,
   onToggleFilter,
   onClearFilters,
-  onScanPress
+  onScanPress,
+  onScanLongPress,
+  scanFABRef,
 }) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const isRailExpanded = useRailExpanded();
@@ -216,7 +220,7 @@ const Layout: React.FC<LayoutProps> = ({
           />
         ))}
         <div className="flex items-center justify-center pb-1">
-          <ScanFAB onClick={onScanPress} className="relative -top-3" />
+          <ScanFAB ref={scanFABRef} onClick={onScanPress} onLongPress={onScanLongPress} className="relative -top-3" />
         </div>
         {navItems.slice(2).map((item) => (
           <TabItem

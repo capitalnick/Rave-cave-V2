@@ -15,6 +15,8 @@ import { inventoryService } from '@/services/inventoryService';
 import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
 import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
 import { useScanSession } from '@/hooks/useScanSession';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { hapticHeavy } from '@/utils/haptics';
 
 // ── State Machine ──
 
@@ -42,7 +44,8 @@ type ScanAction =
   | { type: 'START_COMMIT' }
   | { type: 'COMMIT_SUCCESS' }
   | { type: 'COMMIT_FAIL'; error: string }
-  | { type: 'SHOW_SUCCESS_SCREEN' };
+  | { type: 'SHOW_SUCCESS_SCREEN' }
+  | { type: 'PREFILL_OPEN'; fields: Partial<Wine> };
 
 const initialState: ScanState = {
   stage: 'closed',
@@ -126,6 +129,12 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
       return { ...state, stage: 'draft', error: action.error };
     case 'SHOW_SUCCESS_SCREEN':
       return { ...state, stage: 'success-screen' };
+    case 'PREFILL_OPEN':
+      return {
+        ...initialState,
+        stage: 'draft',
+        draft: makeDraft('manual', { quantity: 1, price: 0, format: '750ml', ...action.fields }, null, null),
+      };
     default:
       return state;
   }
@@ -139,16 +148,14 @@ interface ScanRegisterOverlayProps {
   inventory: Wine[];
   onWineCommitted?: (docId: string | string[]) => void;
   onViewWine?: (wine: Wine) => void;
+  prefillData?: Partial<Wine> | null;
 }
 
-const stageMotion = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -16 },
-  transition: { duration: 0.2 },
-};
-
-const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine }) => {
+const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData }) => {
+  const reducedMotion = useReducedMotion();
+  const stageMotion = reducedMotion
+    ? { initial: {}, animate: {}, exit: {}, transition: { duration: 0 } }
+    : { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -16 }, transition: { duration: 0.2 } };
   const [state, dispatch] = useReducer(reducer, initialState);
   const [duplicateCandidate, setDuplicateCandidate] = useState<DuplicateCandidate | null>(null);
   const [commitStage, setCommitStage] = useState<CommitStage>('idle');
@@ -165,7 +172,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   // Open/close sync
   useEffect(() => {
     if (open && !prevOpenRef.current) {
-      dispatch({ type: 'OPEN' });
+      if (prefillData) {
+        dispatch({ type: 'PREFILL_OPEN', fields: prefillData });
+      } else {
+        dispatch({ type: 'OPEN' });
+      }
       setDuplicateCandidate(null);
       setMoreFieldsExpanded(false);
     } else if (!open && prevOpenRef.current) {
@@ -174,7 +185,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       setDuplicateCandidate(null);
     }
     prevOpenRef.current = open;
-  }, [open]);
+  }, [open, prefillData]);
 
   // Browser back button handling (WineModal pattern)
   useEffect(() => {
@@ -323,6 +334,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
         actionLabel: 'UNDO',
         duration: 10000,
         onAction: async () => {
+          hapticHeavy();
           await inventoryService.deleteWine(docId);
           deleteLabelImage(docId).catch(() => {});
           showToast({ tone: 'neutral', message: 'Removed.' });

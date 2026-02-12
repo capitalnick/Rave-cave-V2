@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Spinner } from '@/components/rc/loading/Spinner';
 import { MonoLabel } from '@/components/rc';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { hapticMedium } from '@/utils/haptics';
 import type { CommitStage } from '@/types';
 
 interface CommitTransitionProps {
@@ -12,19 +14,18 @@ const PARTICLE_COUNT = 7;
 
 const CommitTransition: React.FC<CommitTransitionProps> = ({ stage, onComplete }) => {
   const completeFired = useRef(false);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (stage !== 'success' || completeFired.current) return;
     completeFired.current = true;
 
-    // Haptic on success
-    navigator.vibrate?.(50);
+    if (!reducedMotion) hapticMedium();
 
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const delay = prefersReduced ? 200 : 800;
+    const delay = reducedMotion ? 200 : 800;
     const timer = setTimeout(onComplete, delay);
     return () => clearTimeout(timer);
-  }, [stage, onComplete]);
+  }, [stage, onComplete, reducedMotion]);
 
   // Reset ref when stage goes back to idle
   useEffect(() => {
@@ -32,8 +33,6 @@ const CommitTransition: React.FC<CommitTransitionProps> = ({ stage, onComplete }
   }, [stage]);
 
   if (stage === 'idle') return null;
-
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-4">
@@ -49,7 +48,7 @@ const CommitTransition: React.FC<CommitTransitionProps> = ({ stage, onComplete }
           {/* Checkmark */}
           <span className="text-[var(--rc-accent-acid)] text-2xl font-bold">✓</span>
           {/* Particles */}
-          {!prefersReduced && Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
+          {!reducedMotion && Array.from({ length: PARTICLE_COUNT }).map((_, i) => (
             <span
               key={i}
               className="commit-particle"

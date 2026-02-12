@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Camera, PenLine, ImageIcon } from 'lucide-react';
 import { Heading, MonoLabel, Body } from '@/components/rc';
+import { hapticLight } from '@/utils/haptics';
 
 interface ModeSelectorProps {
   onCapture: (file: File) => void;
@@ -21,7 +22,10 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCapture, onManualEntry, a
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onCapture(file);
+    if (file) {
+      hapticLight();
+      onCapture(file);
+    }
     // Reset so the same file can be re-selected
     e.target.value = '';
   };

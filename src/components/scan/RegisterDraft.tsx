@@ -181,6 +181,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
                   }
                   placeholder={placeholder}
                   className={isEmpty ? 'border-[var(--rc-accent-coral)]' : ''}
+                  autoFocus={key === 'producer'}
                 />
               </div>
             );

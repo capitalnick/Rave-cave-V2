@@ -19,6 +19,7 @@ interface RecommendResultsProps {
   isSurprise: boolean;
   surpriseRerollCount: number;
   onSurpriseReroll: () => void;
+  onAddToCellar?: (recommendation: Recommendation) => void;
 }
 
 const RecommendResults: React.FC<RecommendResultsProps> = ({
@@ -34,6 +35,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   isSurprise,
   surpriseRerollCount,
   onSurpriseReroll,
+  onAddToCellar,
 }) => {
   const occasion = OCCASIONS.find(o => o.id === occasionId);
   const occasionTitle = occasion?.title || 'Recommendation';
@@ -105,6 +107,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
             isSurprise={isSurprise}
             isSingleResult={recommendations.length === 1}
             index={i}
+            onAddToCellar={onAddToCellar}
           />
         ))}
       </div>

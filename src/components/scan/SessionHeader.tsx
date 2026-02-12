@@ -1,5 +1,6 @@
 import React from 'react';
-import { MonoLabel, Chip } from '@/components/rc';
+import { MonoLabel } from '@/components/rc';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SessionHeaderProps {
   bottleNumber: number;
@@ -7,10 +8,17 @@ interface SessionHeaderProps {
 }
 
 const SessionHeader: React.FC<SessionHeaderProps> = ({ bottleNumber, onDone }) => {
+  const reducedMotion = useReducedMotion();
+
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-secondary)]">
       <MonoLabel size="label" weight="bold" colour="primary" as="span" className="w-auto">
-        Bottle {bottleNumber}
+        <span
+          key={bottleNumber}
+          className={reducedMotion ? '' : 'inline-block animate-[slideInUp_200ms_ease-out]'}
+        >
+          Bottle {bottleNumber}
+        </span>
       </MonoLabel>
       <button
         onClick={onDone}
@@ -18,6 +26,12 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({ bottleNumber, onDone }) =
       >
         DONE
       </button>
+      <style>{`
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
