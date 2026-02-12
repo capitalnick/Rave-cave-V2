@@ -1,9 +1,16 @@
 import React from 'react';
+import { Wine, Hourglass, TrendingDown, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ChipType = 'Filter' | 'Toggle' | 'WineType' | 'Maturity';
 export type ChipState = 'Default' | 'Selected' | 'Disabled';
 export type MaturityValue = 'drink-now' | 'hold' | 'past-peak';
+
+const maturityIcons: Record<MaturityValue, LucideIcon> = {
+  'drink-now': Wine,
+  'hold': Hourglass,
+  'past-peak': TrendingDown,
+};
 
 export interface ChipProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: ChipType;
@@ -28,12 +35,15 @@ export const Chip: React.FC<ChipProps> = ({
   const hasIndicator = variant === 'WineType' || isMaturity;
 
   // Phase 1.3: Font and transform
-  const baseStyles = "inline-flex items-center justify-center transition-all duration-150 ease-out select-none rounded-full cursor-pointer uppercase tracking-wider font-['Space_Mono',monospace]";
+  const baseStyles = cn(
+    "inline-flex items-center justify-center transition-all duration-150 ease-out select-none rounded-full cursor-pointer uppercase tracking-wider font-['Space_Mono',monospace]",
+    isMaturity && isSelected && maturityValue && "gap-1.5"
+  );
   
-  // Phase 1.3: Maturity height
+  // Phase 1.3: Maturity height — compact icon-only on mobile
   const sizingStyles = cn(
-    "px-4 py-1.5 h-auto",
-    isMaturity ? "min-h-[24px]" : "min-h-[32px]"
+    "h-auto",
+    isMaturity ? "px-2 md:px-4 py-1.5 min-h-[24px]" : "px-4 py-1.5 min-h-[32px]"
   );
   
   // Phase 1.3: Maturity selected colours
@@ -63,13 +73,17 @@ export const Chip: React.FC<ChipProps> = ({
     >
       {hasIndicator && !isMaturity && (
         <div className="mr-2 flex items-center justify-center w-2 h-2 rounded-full overflow-hidden">
-          <div 
+          <div
             className={cn("w-full h-full rounded-full", isDisabled ? "bg-[var(--rc-disabled-border)]" : "")}
             style={!isDisabled ? { backgroundColor: indicatorColor || 'var(--rc-accent-pink)' } : {}}
           />
         </div>
       )}
-      <span className="leading-none">{label}</span>
+      {isMaturity && isSelected && maturityValue && (() => {
+        const Icon = maturityIcons[maturityValue];
+        return <Icon size={14} strokeWidth={2} className="shrink-0" />;
+      })()}
+      <span className={cn("leading-none", isMaturity && isSelected && maturityValue && "hidden md:inline")}>{label}</span>
     </div>
   );
 };
