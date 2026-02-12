@@ -18,7 +18,7 @@
   --accent-foreground: var(--rc-ink-primary);      /* was #030213 */
 
   --destructive: var(--rc-accent-coral);           /* was #d4183d → now #FF6A4D */
-  --destructive-foreground: #FFFFFF;
+  --destructive-foreground: var(--rc-ink-on-accent);
 
   --border: var(--rc-border-subtle);               /* was rgba(0,0,0,0.1) → now #E5E0D5 */
   --input: var(--rc-border-subtle);                /* was rgba(0,0,0,0.1) → now #E5E0D5 */
@@ -74,6 +74,15 @@
   --rc-focus-ring-pink: #FF006E;
   --rc-focus-ring-coral: #FF6A4D;
   --rc-focus-ring-white: #FFFFFF;
+
+  /* Accent transparency tokens */
+  --rc-accent-pink-10: rgba(255, 0, 110, 0.1);
+  --rc-dessert-overlay: rgba(217, 169, 56, 0.15);
+
+  /* Button state tokens */
+  --rc-button-secondary-hover: #EBE7D8;
+  --rc-button-secondary-pressed: #E2DECE;
+  --rc-button-destructive-pressed: #CC553D;
 
   /* RAVE CAVE TYPOGRAPHY */
   --rc-font-display: 'Satoshi', sans-serif;
@@ -324,6 +333,9 @@
   --rc-toast-bar-width:           3px;
   --rc-toast-stack-gap:           var(--rc-space-md);
   --rc-toast-z:                   60;
+
+  /* Z-index layers */
+  --rc-z-sticky:                  40;
 
   --rc-toast-neutral-bar:         var(--rc-ink-tertiary);
   --rc-toast-neutral-icon:        var(--rc-ink-tertiary);
