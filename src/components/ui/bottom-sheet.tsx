@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Drawer } from 'vaul';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -82,6 +82,16 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     onOpenChange(nextOpen);
   }, [onOpenChange]);
 
+  // Swipe-down on overlay (the inactive scrim above the sheet) dismisses
+  const overlayTouchY = useRef(0);
+  const handleOverlayTouchStart = useCallback((e: React.TouchEvent) => {
+    overlayTouchY.current = e.touches[0].clientY;
+  }, []);
+  const handleOverlayTouchEnd = useCallback((e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientY - overlayTouchY.current;
+    if (delta > 30 && dismissible) onOpenChange(false);
+  }, [dismissible, onOpenChange]);
+
   return (
     <Drawer.Root
       open={open}
@@ -98,6 +108,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
         <Drawer.Overlay
           className="fixed inset-0 z-[60] bg-black/40 transition-opacity"
           style={reducedMotion ? { transition: 'none' } : undefined}
+          onTouchStart={handleOverlayTouchStart}
+          onTouchEnd={handleOverlayTouchEnd}
         />
         <Drawer.Content
           className={cn(
