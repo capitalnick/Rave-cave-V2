@@ -94,25 +94,27 @@ function AppShell() {
   }, [isPinned, toggleRemyPanel, navigate]);
 
   return (
-    <Layout
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-      filters={ctx.filters}
-      facetOptions={ctx.facetOptions}
-      filteredCount={ctx.filteredInventory.length}
-      onToggleFacet={ctx.toggleFacet}
-      onClearFilters={ctx.clearFilters}
-      mobileFiltersOpen={ctx.mobileFiltersOpen}
-      onMobileFiltersOpenChange={ctx.setMobileFiltersOpen}
-      onScanPress={() => ctx.openScan()}
-      onScanLongPress={() => ctx.openScan()}
-      scanFABRef={ctx.scanFABRef}
-      scrollWrapperRef={scrollWrapperRef}
-      pinnedRightOffset={pinnedRemyVisible ? 400 : 0}
-      isPinnedRemy={isPinned}
-      remyPanelOpen={remyPanelOpen}
-    >
-      <Outlet />
+    <>
+      <Layout
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        filters={ctx.filters}
+        facetOptions={ctx.facetOptions}
+        filteredCount={ctx.filteredInventory.length}
+        onToggleFacet={ctx.toggleFacet}
+        onClearFilters={ctx.clearFilters}
+        mobileFiltersOpen={ctx.mobileFiltersOpen}
+        onMobileFiltersOpenChange={ctx.setMobileFiltersOpen}
+        onScanPress={() => ctx.openScan()}
+        onScanLongPress={() => ctx.openScan()}
+        scanFABRef={ctx.scanFABRef}
+        scrollWrapperRef={scrollWrapperRef}
+        pinnedRightOffset={pinnedRemyVisible ? 400 : 0}
+        isPinnedRemy={isPinned}
+        remyPanelOpen={remyPanelOpen}
+      >
+        <Outlet />
+      </Layout>
 
       <ScanOverlay
         open={ctx.scanOpen}
@@ -136,7 +138,7 @@ function AppShell() {
       {pinnedRemyVisible && (
         <PinnedRemyPanel open={remyPanelOpen} onClose={closeRemyPanel} />
       )}
-    </Layout>
+    </>
   );
 }
 
