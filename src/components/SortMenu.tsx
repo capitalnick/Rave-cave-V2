@@ -76,7 +76,7 @@ const SortMenuSheet: React.FC<SortMenuSheetProps> = ({ open, onOpenChange, value
   const orgOptions = SORT_OPTIONS.filter(o => o.group === 'organisational');
 
   return (
-    <BottomSheet open={open} onOpenChange={onOpenChange} snapPoint="half" snapPoints={['half']} id="sort-menu" title="Sort wines" dismissible>
+    <BottomSheet open={open} onOpenChange={onOpenChange} snapPoint="full" snapPoints={['full']} id="sort-menu" title="Sort wines" dismissible>
       <div className="py-2">
         <MonoLabel size="micro" colour="ghost" className="px-3 pt-2 pb-1">Decision</MonoLabel>
         {decisionOptions.map(opt => (
