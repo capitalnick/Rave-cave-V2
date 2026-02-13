@@ -134,6 +134,11 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
       vintage: wine.vintage,
       type: wine.type as Wine['type'],
       region: wine.region,
+      country: wine.country,
+      cepage: wine.cepage,
+      tastingNotes: wine.tastingNotes || wine.note || '',
+      drinkFrom: wine.drinkFrom,
+      drinkUntil: wine.drinkUntil,
     });
   };
 

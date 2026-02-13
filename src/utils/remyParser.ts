@@ -13,8 +13,13 @@ export interface RemyWineData {
   name: string;
   vintage?: number;
   region?: string;
+  country?: string;
   type?: string;
+  cepage?: string;
   rating?: number;
+  tastingNotes?: string;
+  drinkFrom?: number;
+  drinkUntil?: number;
   note?: string;
 }
 

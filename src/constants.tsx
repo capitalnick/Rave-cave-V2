@@ -109,9 +109,10 @@ RESPONSE FORMAT:
 - Use **markdown**: headings (#), bold (**text**), italic, bullet lists.
 - When recommending specific wines, embed them in a fenced code block with language tag \`wine\`:
   \`\`\`wine
-  [{"producer":"...","name":"...","vintage":2015,"region":"...","type":"Red","rating":4.8,"note":"..."}]
+  [{"producer":"...","name":"...","vintage":2015,"region":"Burgundy","country":"France","type":"Red","cepage":"Pinot Noir","rating":4.8,"tastingNotes":"Dark cherry, earth, silky tannins","drinkFrom":2024,"drinkUntil":2035,"note":"Perfect match for your dinner"}]
   \`\`\`
-- Wine JSON fields: producer (required), name (required), vintage, region, type, rating (0-5), note.
+- Wine JSON fields: producer (required), name (required), vintage, region, country, type, cepage, rating (0-5), tastingNotes (concise 5-10 word flavour profile), drinkFrom (year), drinkUntil (year), note (recommendation rationale).
+- ALWAYS include tastingNotes and drinkFrom/drinkUntil estimates based on your sommelier expertise.
 - Place wine blocks after explanatory text, not inline.
 - Do NOT use wine blocks for casual wine mentions — only explicit recommendations.`;
 }
