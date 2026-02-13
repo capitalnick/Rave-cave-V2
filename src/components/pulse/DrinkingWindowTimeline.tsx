@@ -27,18 +27,6 @@ function useResponsiveCount(): number {
   return count;
 }
 
-function useResponsiveLabelWidth(): number {
-  const [width, setWidth] = React.useState(100);
-  React.useEffect(() => {
-    const update = () => {
-      setWidth(window.innerWidth >= 640 ? 160 : 100);
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-  return width;
-}
 
 const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
   windows,
@@ -48,7 +36,6 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
   onChipClick,
 }) => {
   const visibleCount = useResponsiveCount();
-  const labelWidth = useResponsiveLabelWidth();
   const visibleWindows = useMemo(
     () => windows.slice(0, visibleCount),
     [windows, visibleCount]
@@ -92,8 +79,8 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
 
       {/* Timeline area */}
       <div className="relative">
-        {/* Year axis */}
-        <div className="flex justify-between mb-2" style={{ paddingLeft: labelWidth }}>
+        {/* Year axis — always across the top, full width */}
+        <div className="flex justify-between mb-3">
           {years.map(y => (
             <MonoLabel key={y} size="micro" colour="ghost" className="flex-1 text-center">
               {y >= 2000 ? `'${String(y).slice(-2)}` : y}
@@ -101,18 +88,19 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
           ))}
         </div>
 
-        {/* Wine rows */}
-        <div className="space-y-1">
+        {/* Wine rows — label above bar */}
+        <div className="space-y-2">
           {visibleWindows.map((w) => (
-            <div key={w.wineId} className="flex items-center gap-2">
-              {/* Label */}
-              <div className="flex-shrink-0 overflow-hidden cursor-pointer hover:text-[var(--rc-accent-pink)]" style={{ width: labelWidth }} onClick={() => onWineTap(w.wineId)}>
+            <div key={w.wineId}>
+              <div
+                className="overflow-hidden cursor-pointer hover:text-[var(--rc-accent-pink)] mb-0.5"
+                onClick={() => onWineTap(w.wineId)}
+              >
                 <Body size="caption" as="span" truncate>
                   {w.vintage} {w.producer}
                 </Body>
               </div>
-              {/* Bar area */}
-              <div className="flex-1 relative">
+              <div className="relative">
                 <DrinkingWindowBar
                   window={w}
                   range={range}
@@ -127,7 +115,7 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
         {totalSpan > 0 && (
           <div
             className="absolute top-0 bottom-0 pointer-events-none"
-            style={{ left: `calc(${labelWidth}px + (100% - ${labelWidth}px) * ${currentYearPct / 100})` }}
+            style={{ left: `${currentYearPct}%` }}
           >
             <div className="h-full border-l-2 border-dashed border-[var(--rc-accent-pink)] opacity-60" />
             <div className="absolute -top-5 -translate-x-1/2 bg-[var(--rc-accent-pink)] text-white px-1.5 py-0.5 rounded-full">
