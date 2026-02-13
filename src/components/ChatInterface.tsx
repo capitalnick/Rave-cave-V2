@@ -30,7 +30,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onAddToCellar,
   onViewWine,
 }) => {
-  const cellarSnapshot = useMemo(() => inventoryService.getCellarSnapshot(inventory), [inventory]);
+  const cellarSnapshot = useMemo(() => inventoryService.buildCellarSummary(inventory), [inventory]);
 
   const {
     transcript,

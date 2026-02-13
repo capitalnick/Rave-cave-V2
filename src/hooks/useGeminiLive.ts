@@ -11,6 +11,11 @@ import { sanitizeWineName } from '@/utils/wineNameGuard';
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
   `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/gemini`;
 
+const QUERY_INVENTORY_URL = process.env.QUERY_INVENTORY_URL ||
+  `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/queryInventory`;
+
+const MAX_TOOL_ROUNDS = 5;
+
 async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string; tools?: any[] }) {
   const res = await fetch(GEMINI_PROXY_URL, {
     method: 'POST',
@@ -214,7 +219,30 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   const handleToolCalls = useCallback(async (calls: any[]) => {
     const results: { result: string }[] = [];
     for (const call of calls) {
-      if (call.name === 'stageWine') {
+      if (call.name === 'queryInventory') {
+        try {
+          const res = await fetch(QUERY_INVENTORY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(call.args),
+          });
+          if (!res.ok) throw new Error(`queryInventory error: ${res.status}`);
+          const data = await res.json();
+          const wines = data.wines || [];
+          if (wines.length === 0) {
+            results.push({ result: `No wines found matching those criteria. Total in cellar: ${data.total || 0}.` });
+          } else {
+            const formatted = wines.map((w: any) =>
+              `${w.producer}${w.name ? ' ' + w.name : ''} ${w.vintage || 'NV'} — ${w.type || ''}, ${w.region || ''}${w.country ? ', ' + w.country : ''} — $${w.price || 0} — Qty: ${w.quantity || 1} — ${w.maturity || 'Unknown'}`
+            ).join('\n');
+            results.push({ result: `Found ${data.total} wines (showing ${wines.length}):\n${formatted}` });
+          }
+        } catch (err) {
+          console.error('queryInventory call failed, using fallback:', err);
+          const fallback = inventoryService.buildCellarSummary(localCellar);
+          results.push({ result: `queryInventory is temporarily unavailable. Here is a summary of the cellar instead: ${fallback}` });
+        }
+      } else if (call.name === 'stageWine') {
         const args = sanitizeWineName(call.args);
         const staged = { ...args, stagedId: Date.now().toString() };
         stagedWineRef.current = staged;
@@ -245,7 +273,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       }
     }
     return results;
-  }, []);
+  }, [localCellar]);
 
   const sendMessage = useCallback(async (text: string, imageBase64?: string, isVoice: boolean = false) => {
     if (!text && !imageBase64) return;
@@ -276,49 +304,88 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       }
 
       historyRef.current.push({ role: 'user', parts });
+
+      // Enforce history turn limit to prevent unbounded context growth.
+      // A "turn" = one user message + one model response (including tool calls/results).
+      // We count user-role messages as turn boundaries.
+      const maxTurns = CONFIG.MAX_HISTORY_TURNS;
+      const userIndices: number[] = [];
+      historyRef.current.forEach((entry, i) => {
+        if (entry.role === 'user') userIndices.push(i);
+      });
+      if (userIndices.length > maxTurns) {
+        const cutIndex = userIndices[userIndices.length - maxTurns];
+        historyRef.current = historyRef.current.slice(cutIndex);
+      }
+
       const prompt = buildSystemPrompt(cellarSnapshot, JSON.stringify(stagedWine));
 
-      const response = await callGeminiProxy({
+      const toolDeclarations = [{ functionDeclarations: [
+        { name: 'queryInventory', description: "Search the user's wine cellar. Use this whenever you need to find specific wines, answer questions about inventory, make food pairing recommendations, or check what's available. Always use this tool rather than relying on the cellar summary for specific wine queries.", parameters: {
+          type: "OBJECT",
+          properties: {
+            wineType: { type: "STRING", description: "Wine type filter: Red, White, Rosé, Sparkling, Dessert, Fortified" },
+            country: { type: "STRING", description: "Country filter" },
+            region: { type: "STRING", description: "Region filter" },
+            producer: { type: "STRING", description: "Producer name filter (partial match)" },
+            grapeVarieties: { type: "ARRAY", items: { type: "STRING" }, description: "Grape variety filter" },
+            vintageMin: { type: "NUMBER", description: "Minimum vintage year" },
+            vintageMax: { type: "NUMBER", description: "Maximum vintage year" },
+            priceMin: { type: "NUMBER", description: "Minimum price" },
+            priceMax: { type: "NUMBER", description: "Maximum price" },
+            maturityStatus: { type: "STRING", description: "Maturity filter: HOLD, DRINK_NOW, or PAST_PEAK" },
+            query: { type: "STRING", description: "Free text search across producer, name, cepage, region, appellation" },
+            sortBy: { type: "STRING", description: "Sort field: vintage, price, or rating" },
+            sortOrder: { type: "STRING", description: "Sort direction: asc or desc" },
+            limit: { type: "NUMBER", description: "Max results to return (default 10, max 20)" },
+            semanticQuery: { type: "STRING", description: "Natural language description of what you're looking for. Use for food pairing queries, mood-based requests, or characteristic descriptions. Examples: 'bold earthy red for braised meat', 'crisp refreshing white for seafood'. Can be combined with structured filters." },
+          },
+        } },
+        { name: 'stageWine', parameters: {
+          type: "OBJECT",
+          properties: {
+            producer: { type: "STRING", description: "Wine producer/house name" },
+            vintage: { type: "NUMBER", description: "Vintage year" },
+            type: { type: "STRING", description: "Wine type: Red, White, Rosé, Sparkling, Dessert, Fortified" },
+            name: { type: "STRING", description: "Cuvee/bottling name only — must NOT duplicate producer or cepage" },
+            cepage: { type: "STRING", description: "Grape variety or blend" },
+            region: { type: "STRING", description: "Wine region" },
+            country: { type: "STRING", description: "Country of origin" },
+            appellation: { type: "STRING", description: "Appellation or classification" },
+            tastingNotes: { type: "STRING", description: "Comma-separated flavour adjectives (5-8 descriptors)" },
+            drinkFrom: { type: "NUMBER", description: "Suggested drink-from year" },
+            drinkUntil: { type: "NUMBER", description: "Suggested drink-until year" },
+            format: { type: "STRING", description: "Bottle format e.g. 750ml, 1.5L" },
+          },
+          required: ['producer', 'vintage', 'type'],
+        } },
+        { name: 'commitWine', parameters: { type: "OBJECT", properties: { price: { type: "NUMBER" }, quantity: { type: "NUMBER" } }, required: ['price'] } }
+      ] }];
+
+      // Multi-round tool call loop
+      let response = await callGeminiProxy({
         model: CONFIG.MODELS.TEXT,
         contents: historyRef.current,
         systemInstruction: prompt,
-        tools: [{ functionDeclarations: [
-          { name: 'stageWine', parameters: {
-            type: "OBJECT",
-            properties: {
-              producer: { type: "STRING", description: "Wine producer/house name" },
-              vintage: { type: "NUMBER", description: "Vintage year" },
-              type: { type: "STRING", description: "Wine type: Red, White, Rosé, Sparkling, Dessert, Fortified" },
-              name: { type: "STRING", description: "Cuvee/bottling name only — must NOT duplicate producer or cepage" },
-              cepage: { type: "STRING", description: "Grape variety or blend" },
-              region: { type: "STRING", description: "Wine region" },
-              country: { type: "STRING", description: "Country of origin" },
-              appellation: { type: "STRING", description: "Appellation or classification" },
-              tastingNotes: { type: "STRING", description: "Comma-separated flavour adjectives (5-8 descriptors)" },
-              drinkFrom: { type: "NUMBER", description: "Suggested drink-from year" },
-              drinkUntil: { type: "NUMBER", description: "Suggested drink-until year" },
-              format: { type: "STRING", description: "Bottle format e.g. 750ml, 1.5L" },
-            },
-            required: ['producer', 'vintage', 'type'],
-          } },
-          { name: 'commitWine', parameters: { type: "OBJECT", properties: { price: { type: "NUMBER" }, quantity: { type: "NUMBER" } }, required: ['price'] } }
-        ] }]
+        tools: toolDeclarations,
       });
 
-      const toolCalls = response.functionCalls;
       let finalContent = response.text || "";
+      let toolRound = 0;
 
-      if (toolCalls && toolCalls.length > 0 && response.candidateContent) {
-        const toolResults = await handleToolCalls(toolCalls);
+      while (response.functionCalls?.length > 0 && response.candidateContent && toolRound < MAX_TOOL_ROUNDS) {
+        toolRound++;
+        const toolResults = await handleToolCalls(response.functionCalls);
         historyRef.current.push(response.candidateContent);
         historyRef.current.push({ role: 'user', parts: [{ text: `Tool Output: ${JSON.stringify(toolResults)}` }] });
 
-        const finalRes = await callGeminiProxy({
+        response = await callGeminiProxy({
           model: CONFIG.MODELS.TEXT,
           contents: historyRef.current,
           systemInstruction: prompt,
+          tools: toolDeclarations,
         });
-        finalContent = finalRes.text || "Processed.";
+        finalContent = response.text || finalContent || "Processed.";
       }
 
       historyRef.current.push({ role: 'model', parts: [{ text: finalContent }] });

@@ -83,6 +83,61 @@ export const inventoryService = {
     }
   },
 
+  buildCellarSummary: (inventory: Wine[]): string => {
+    if (inventory.length === 0) return "Cellar is empty.";
+
+    const totalBottles = inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
+
+    // Type breakdown
+    const types: Record<string, number> = {};
+    inventory.forEach(w => { types[w.type] = (types[w.type] || 0) + (Number(w.quantity) || 0); });
+    const typeStr = Object.entries(types).map(([t, n]) => `${t}: ${n}`).join(', ');
+
+    // Top 5 helpers
+    const top5 = (acc: Record<string, number>) =>
+      Object.entries(acc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k} (${v})`).join(', ');
+
+    const countries: Record<string, number> = {};
+    const regions: Record<string, number> = {};
+    const producers: Record<string, number> = {};
+    inventory.forEach(w => {
+      const qty = Number(w.quantity) || 0;
+      if (w.country) countries[w.country] = (countries[w.country] || 0) + qty;
+      if (w.region) regions[w.region] = (regions[w.region] || 0) + qty;
+      if (w.producer) producers[w.producer] = (producers[w.producer] || 0) + qty;
+    });
+
+    // Price range
+    const prices = inventory.map(w => Number(w.price) || 0).filter(p => p > 0);
+    const priceRange = prices.length > 0 ? `$${Math.min(...prices)}-$${Math.max(...prices)}` : 'N/A';
+
+    // Vintage range
+    const vintages = inventory.map(w => Number(w.vintage) || 0).filter(v => v > 0);
+    const vintageRange = vintages.length > 0 ? `${Math.min(...vintages)}-${Math.max(...vintages)}` : 'N/A';
+
+    // Maturity breakdown
+    const maturity: Record<string, number> = { 'Drink Now': 0, Hold: 0, 'Past Peak': 0, Unknown: 0 };
+    inventory.forEach(w => {
+      const m = w.maturity || 'Unknown';
+      maturity[m] = (maturity[m] || 0) + (Number(w.quantity) || 0);
+    });
+    const maturityStr = Object.entries(maturity).filter(([, n]) => n > 0).map(([k, v]) => `${k}: ${v}`).join(', ');
+
+    // 3 most recent (by array order, newest last)
+    const recent = inventory.slice(-3).reverse().map(w => `${w.vintage} ${w.producer}${w.name ? ' ' + w.name : ''}`).join('; ');
+
+    return [
+      `${totalBottles} bottles.`,
+      `Types: ${typeStr}.`,
+      `Countries: ${top5(countries)}.`,
+      `Regions: ${top5(regions)}.`,
+      `Producers: ${top5(producers)}.`,
+      `Prices: ${priceRange}. Vintages: ${vintageRange}.`,
+      `Maturity: ${maturityStr}.`,
+      `Recent: ${recent}.`,
+    ].join(' ');
+  },
+
   getCellarSnapshot: (inventory: Wine[]): string => {
     if (inventory.length === 0) return "Cellar is empty.";
     // Limit to prevent token bloat
