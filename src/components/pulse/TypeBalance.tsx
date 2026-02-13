@@ -4,6 +4,7 @@ import { Card, Heading, Chip, InlineMessage } from '@/components/rc';
 
 interface TypeBalanceProps {
   distribution: Record<string, number>;
+  onChipClick?: (value: string) => void;
 }
 
 const WINE_TYPE_CSS_VARS: Record<string, string> = {
@@ -16,7 +17,7 @@ const WINE_TYPE_CSS_VARS: Record<string, string> = {
   'Orange': 'var(--rc-wine-orange)',
 };
 
-const TypeBalance: React.FC<TypeBalanceProps> = ({ distribution }) => {
+const TypeBalance: React.FC<TypeBalanceProps> = ({ distribution, onChipClick }) => {
   const entries = (Object.entries(distribution) as [string, number][])
     .filter(([, count]) => count > 0)
     .sort(([, a], [, b]) => b - a);
@@ -57,6 +58,7 @@ const TypeBalance: React.FC<TypeBalanceProps> = ({ distribution }) => {
                 state="Selected"
                 label={`${type} ${count}`}
                 indicatorColor={WINE_TYPE_CSS_VARS[type] || 'var(--rc-ink-ghost)'}
+                onClick={() => onChipClick?.(type)}
               />
             ))}
           </div>

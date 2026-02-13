@@ -5,6 +5,7 @@ import { Card, Heading, Chip, MonoLabel, InlineMessage } from '@/components/rc';
 
 interface MaturityDonutProps {
   breakdown: MaturityBreakdown;
+  onChipClick?: (value: string) => void;
 }
 
 const MATURITY_COLORS = {
@@ -13,7 +14,7 @@ const MATURITY_COLORS = {
   pastPeak: 'var(--rc-maturity-past-peak)',
 };
 
-const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown }) => {
+const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown, onChipClick }) => {
   const hasData = breakdown.drinkNow + breakdown.hold + breakdown.pastPeak > 0;
 
   const data = [
@@ -65,13 +66,13 @@ const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown }) => {
           {/* Chip legend */}
           <div className="flex flex-wrap gap-2 mt-4">
             {breakdown.drinkNow > 0 && (
-              <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label={`Drink now ${breakdown.drinkNow}`} />
+              <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label={`Drink now ${breakdown.drinkNow}`} onClick={() => onChipClick?.('Drink Now')} />
             )}
             {breakdown.hold > 0 && (
-              <Chip variant="Maturity" state="Selected" maturityValue="hold" label={`Hold ${breakdown.hold}`} />
+              <Chip variant="Maturity" state="Selected" maturityValue="hold" label={`Hold ${breakdown.hold}`} onClick={() => onChipClick?.('Hold')} />
             )}
             {breakdown.pastPeak > 0 && (
-              <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label={`Past peak ${breakdown.pastPeak}`} />
+              <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label={`Past peak ${breakdown.pastPeak}`} onClick={() => onChipClick?.('Past Peak')} />
             )}
           </div>
         </>

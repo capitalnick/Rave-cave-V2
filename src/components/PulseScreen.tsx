@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Wine, StoryCard } from '@/types';
+import { Wine, StoryCard, FacetKey } from '@/types';
 import { computePulseStats } from '@/services/pulseService';
 import { Heading, Body, MonoLabel } from '@/components/rc';
 import { IconButton } from '@/components/rc';
@@ -22,6 +22,7 @@ interface PulseScreenProps {
   onRefreshInventory?: () => void;
   onNavigateToWine?: (wineId: string) => void;
   onScanPress?: () => void;
+  onFilterNavigate?: (key: FacetKey, value: string) => void;
 }
 
 const STALENESS_MS = 5 * 60 * 1000;
@@ -31,6 +32,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   onRefreshInventory,
   onNavigateToWine,
   onScanPress,
+  onFilterNavigate,
 }) => {
   const [pulseView, setPulseView] = useState<PulseView>('dashboard');
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
@@ -185,7 +187,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
 
               {/* Contextual content based on story type */}
               {story.type === 'cellar-diversity' && (
-                <TypeBalance distribution={stats.typeDistribution} />
+                <TypeBalance distribution={stats.typeDistribution} onChipClick={(value) => onFilterNavigate?.('wineType', value)} />
               )}
               {story.type === 'aging-potential' && (
                 <DrinkingWindowTimeline
@@ -193,6 +195,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
                   range={stats.timelineRange}
                   onWineTap={(id) => onNavigateToWine?.(id)}
                   onSeeAll={() => navigateAway('drinking-window')}
+                  onChipClick={(value) => onFilterNavigate?.('maturityStatus', value)}
                 />
               )}
             </motion.div>
@@ -296,8 +299,8 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
 
         {/* Charts — masonry on desktop, single-column mobile */}
         <div className="md:columns-2 md:gap-6 space-y-6 md:space-y-0 [&>*]:md:break-inside-avoid [&>*]:md:mb-6">
-          <MaturityDonut breakdown={stats.maturityBreakdown} />
-          <TypeBalance distribution={stats.typeDistribution} />
+          <MaturityDonut breakdown={stats.maturityBreakdown} onChipClick={(value) => onFilterNavigate?.('maturityStatus', value)} />
+          <TypeBalance distribution={stats.typeDistribution} onChipClick={(value) => onFilterNavigate?.('wineType', value)} />
         </div>
 
         {/* Drinking Windows — always full-width */}
@@ -306,6 +309,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
           range={stats.timelineRange}
           onWineTap={(id) => onNavigateToWine?.(id)}
           onSeeAll={() => navigateAway('drinking-window')}
+          onChipClick={(value) => onFilterNavigate?.('maturityStatus', value)}
         />
 
         {/* Top Producers */}

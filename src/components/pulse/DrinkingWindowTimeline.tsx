@@ -8,6 +8,7 @@ interface DrinkingWindowTimelineProps {
   range: { min: number; max: number };
   onWineTap: (wineId: string) => void;
   onSeeAll: () => void;
+  onChipClick?: (value: string) => void;
 }
 
 const currentYear = new Date().getFullYear();
@@ -44,6 +45,7 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
   range,
   onWineTap,
   onSeeAll,
+  onChipClick,
 }) => {
   const visibleCount = useResponsiveCount();
   const labelWidth = useResponsiveLabelWidth();
@@ -137,9 +139,9 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
 
       {/* Legend */}
       <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[var(--rc-border-subtle)]">
-        <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label="Drink now" />
-        <Chip variant="Maturity" state="Selected" maturityValue="hold" label="Hold" />
-        <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label="Past peak" />
+        <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label="Drink now" onClick={() => onChipClick?.('Drink Now')} />
+        <Chip variant="Maturity" state="Selected" maturityValue="hold" label="Hold" onClick={() => onChipClick?.('Hold')} />
+        <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label="Past peak" onClick={() => onChipClick?.('Past Peak')} />
       </div>
     </Card>
   );

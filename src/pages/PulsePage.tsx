@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import PulseScreen from '@/components/PulseScreen';
 import { useInventory } from '@/context/InventoryContext';
+import type { FacetKey } from '@/types';
 
 const PulsePage: React.FC = () => {
   const {
@@ -8,7 +10,16 @@ const PulsePage: React.FC = () => {
     triggerRefreshFeedback,
     setSelectedWine,
     openScan,
+    clearFilters,
+    toggleFacet,
   } = useInventory();
+  const navigate = useNavigate();
+
+  const handleFilterNavigate = useCallback((key: FacetKey, value: string) => {
+    clearFilters();
+    toggleFacet(key, value);
+    navigate({ to: '/cellar' });
+  }, [clearFilters, toggleFacet, navigate]);
 
   return (
     <PulseScreen
@@ -19,6 +30,7 @@ const PulsePage: React.FC = () => {
         if (wine) setSelectedWine(wine);
       }}
       onScanPress={() => openScan()}
+      onFilterNavigate={handleFilterNavigate}
     />
   );
 };
