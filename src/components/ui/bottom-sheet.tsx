@@ -70,6 +70,9 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   // Phase 2: Full sheets get strict drag handling by default
   const isFull = effectiveSnap === 'full';
 
+  // Compute explicit height for the snap point so flex children can scroll
+  const snapHeight = `${initialSnap * 100}dvh`;
+
   // One-level stacking: when this sheet opens, close any other open sheet
   useEffect(() => {
     if (open && id) {
@@ -121,7 +124,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             "max-h-[92vh]",
             className,
           )}
-          style={reducedMotion ? { transition: 'none' } : undefined}
+          style={{
+            height: snapHeight,
+            ...(reducedMotion ? { transition: 'none' } : undefined),
+          }}
         >
           {/* Drag handle */}
           <Drawer.Handle className="mx-auto mt-3 mb-2 w-10 h-1 rounded-full bg-[var(--rc-ink-ghost)]" />
