@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Chip, MonoLabel, Divider, Heading, Input, Checkbox } from '@/components/rc';
+import { Chip, MonoLabel, Divider, Heading, Input, Checkbox, Button } from '@/components/rc';
 import type { ChipState, MaturityValue } from '@/components/rc/Chip';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';
 
@@ -147,15 +147,14 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
 
   return (
     <div className="space-y-2">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-2">
+      {/* Header — pr-8 avoids overlap with BottomSheet X close button */}
+      <div className="flex items-center justify-between pb-2 pr-8">
         <Heading scale="heading">Filters</Heading>
-        <button
+        <Button
+          variantType="Tertiary"
+          label="Clear All"
           onClick={onClearFilters}
-          className="font-[var(--rc-font-mono)] text-[9px] font-bold uppercase underline text-[var(--rc-ink-ghost)] hover:text-[var(--rc-accent-pink)] transition-colors"
-        >
-          Clear All
-        </button>
+        />
       </div>
 
       {/* ── TYPE chips ── */}
