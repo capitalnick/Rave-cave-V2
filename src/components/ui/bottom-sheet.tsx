@@ -147,7 +147,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           {/* Scrollable content — data-vaul-no-drag prevents content scroll from dismissing */}
           <div
             data-vaul-no-drag
-            className="flex-1 overflow-y-auto overscroll-contain px-6 pb-[env(safe-area-inset-bottom)]"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-[env(safe-area-inset-bottom)]"
           >
             {children}
           </div>
