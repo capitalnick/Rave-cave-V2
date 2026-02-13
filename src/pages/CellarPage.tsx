@@ -5,6 +5,7 @@ import { useInventory } from '@/context/InventoryContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
 import { IconButton } from '@/components/rc';
 import { SortMenu } from '@/components/SortMenu';
+import type { SortField } from '@/types';
 
 /* ── Condensed sticky header ─────────────────────────── */
 const CondensedHeader: React.FC<{
@@ -13,24 +14,29 @@ const CondensedHeader: React.FC<{
   totalLabels: number;
   activeFilterCount: number;
   onFilterPress: () => void;
-  sortMenu: React.ReactNode;
-}> = ({ isPastHero, totalBottles, totalLabels, activeFilterCount, onFilterPress, sortMenu }) => (
+  sortField: SortField;
+  setSortField: (f: SortField) => void;
+}> = ({ isPastHero, totalBottles, totalLabels, activeFilterCount, onFilterPress, sortField, setSortField }) => (
   <div
-    className="sticky top-0 z-[var(--rc-z-sticky)] flex items-center justify-end gap-3 sm:gap-4 px-4 sm:px-10 bg-[var(--rc-surface-elevated)] border-b border-[var(--rc-border-subtle)] transition-opacity duration-150 motion-reduce:transition-none"
+    className="sticky top-0 z-[var(--rc-z-sticky)] flex items-center gap-3 sm:gap-4 px-4 sm:px-10 bg-[var(--rc-surface-elevated)] border-b border-[var(--rc-border-subtle)] transition-opacity duration-150 motion-reduce:transition-none"
     style={{
       height: 56,
       opacity: isPastHero ? 1 : 0,
       pointerEvents: isPastHero ? 'auto' : 'none',
     }}
   >
-    <div className="flex gap-3 sm:gap-4 items-center font-mono text-xs uppercase tracking-widest text-[var(--rc-ink-ghost)] flex-shrink-0">
+    {/* Counts — left */}
+    <div className="flex gap-3 sm:gap-4 items-center font-mono text-xs uppercase tracking-widest text-[var(--rc-ink-ghost)]">
       <span className="flex items-baseline gap-1">
         <span className="text-[var(--rc-accent-pink)] font-display text-lg">{totalBottles}</span> bottles
       </span>
       <span className="flex items-baseline gap-1">
         <span className="text-[var(--rc-accent-acid)] font-display text-lg text-stroke-black">{totalLabels}</span> labels
       </span>
-      {sortMenu}
+    </div>
+
+    {/* Filter + Sort — right */}
+    <div className="flex gap-2 items-center ml-auto flex-shrink-0">
       <div className="relative">
         <IconButton icon={Filter} aria-label="Filter" onClick={onFilterPress} />
         {activeFilterCount > 0 && (
@@ -39,6 +45,7 @@ const CondensedHeader: React.FC<{
           </span>
         )}
       </div>
+      <SortMenu value={sortField} onChange={setSortField} iconButton />
     </div>
   </div>
 );
@@ -71,7 +78,8 @@ const CellarPage: React.FC = () => {
         totalLabels={filteredInventory.length}
         activeFilterCount={activeFilterCount}
         onFilterPress={openFilters}
-        sortMenu={<SortMenu value={sortField} onChange={setSortField} compact />}
+        sortField={sortField}
+        setSortField={setSortField}
       />
 
       {/* Hero section */}
@@ -84,8 +92,7 @@ const CellarPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex gap-4 sm:gap-8 items-end flex-shrink-0">
-            <SortMenu value={sortField} onChange={setSortField} />
+          <div className="flex gap-4 sm:gap-6 items-end flex-shrink-0">
             <div className="flex flex-col items-end">
               <span className="text-[var(--rc-accent-pink)] text-4xl sm:text-6xl font-display leading-none tracking-tight">{totalBottlesFiltered}</span>
               <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-[var(--rc-ink-primary)]">Bottles</span>
@@ -94,13 +101,16 @@ const CellarPage: React.FC = () => {
               <span className="text-[var(--rc-accent-acid)] text-4xl sm:text-6xl font-display leading-none tracking-tight text-stroke-black">{filteredInventory.length}</span>
               <span className="text-[9px] sm:text-xs font-mono uppercase tracking-widest text-[var(--rc-ink-primary)]">Labels</span>
             </div>
-            <div className="relative self-center">
-              <IconButton icon={Filter} aria-label="Filter" onClick={openFilters} />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[var(--rc-ink-primary)] text-[var(--rc-accent-acid)] font-[var(--rc-font-mono)] text-[9px] font-bold">
-                  {activeFilterCount}
-                </span>
-              )}
+            <div className="flex gap-2 items-center self-center">
+              <div className="relative">
+                <IconButton icon={Filter} aria-label="Filter" onClick={openFilters} />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[var(--rc-ink-primary)] text-[var(--rc-accent-acid)] font-[var(--rc-font-mono)] text-[9px] font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
+              <SortMenu value={sortField} onChange={setSortField} iconButton />
             </div>
           </div>
         </div>

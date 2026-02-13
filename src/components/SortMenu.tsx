@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowUpDown, Check } from 'lucide-react';
-import { Divider, MonoLabel } from '@/components/rc';
+import { Divider, MonoLabel, IconButton } from '@/components/rc';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { useIsSheetMobile } from '@/components/ui/use-mobile';
 import { SORT_OPTIONS } from '@/types';
@@ -10,6 +10,8 @@ interface SortMenuProps {
   value: SortField;
   onChange: (field: SortField) => void;
   compact?: boolean;
+  /** Render trigger as an IconButton (Secondary style) instead of text */
+  iconButton?: boolean;
 }
 
 /* ── Shared option rendering ─────────────────────────────── */
@@ -96,7 +98,7 @@ const SortMenuSheet: React.FC<SortMenuSheetProps> = ({ open, onOpenChange, value
 
 /* ── Main SortMenu ───────────────────────────────────────── */
 
-export const SortMenu: React.FC<SortMenuProps> = ({ value, onChange, compact }) => {
+export const SortMenu: React.FC<SortMenuProps> = ({ value, onChange, compact, iconButton }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const isSheetMobile = useIsSheetMobile();
@@ -127,7 +129,9 @@ export const SortMenu: React.FC<SortMenuProps> = ({ value, onChange, compact }) 
     setOpen(false);
   };
 
-  const trigger = (
+  const trigger = iconButton ? (
+    <IconButton icon={ArrowUpDown} aria-label="Sort" onClick={toggle} />
+  ) : (
     <button
       onClick={toggle}
       className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[var(--rc-ink-ghost)] hover:text-[var(--rc-ink-primary)] transition-colors"
