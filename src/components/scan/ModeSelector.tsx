@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Camera, PenLine, ImageIcon } from 'lucide-react';
 import { Heading, MonoLabel, Body } from '@/components/rc';
 import { hapticLight } from '@/utils/haptics';
@@ -10,34 +10,48 @@ interface ModeSelectorProps {
   autoCapture?: boolean;
 }
 
+/**
+ * Opens a native file picker by creating a temporary <input type="file">.
+ * This avoids having hidden file inputs in the DOM that can be auto-triggered
+ * by focus traps (e.g. Radix Dialog) on Chrome Android / Desktop.
+ */
+function openFilePicker(
+  opts: { capture?: boolean },
+  onFile: (file: File) => void,
+) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  if (opts.capture) input.setAttribute('capture', 'environment');
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (file) onFile(file);
+  });
+  input.click();
+}
+
 const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryCapture, onManualEntry, autoCapture }) => {
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const hasAutoFired = useRef(false);
 
-  // Auto-open camera for multi-scan session flow
-  useEffect(() => {
-    if (autoCapture) {
-      requestAnimationFrame(() => cameraInputRef.current?.click());
-    }
-  }, [autoCapture]);
+  const handleCamera = useCallback(() => {
+    hapticLight();
+    openFilePicker({ capture: true }, onCameraCapture);
+  }, [onCameraCapture]);
 
-  const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      hapticLight();
-      onCameraCapture(file);
-    }
-    e.target.value = '';
-  };
+  const handleGallery = useCallback(() => {
+    hapticLight();
+    openFilePicker({ capture: false }, onGalleryCapture);
+  }, [onGalleryCapture]);
 
-  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      hapticLight();
-      onGalleryCapture(file);
-    }
-    e.target.value = '';
-  };
+  // Auto-open camera for multi-scan session flow ("SCAN ANOTHER")
+  // Only fire once per mount to avoid loops
+  if (autoCapture && !hasAutoFired.current) {
+    hasAutoFired.current = true;
+    // Schedule after first paint so the mode-select screen is visible
+    requestAnimationFrame(() => {
+      openFilePicker({ capture: true }, onCameraCapture);
+    });
+  }
 
   return (
     <div className="flex flex-col items-center px-6 pt-10 pb-16 space-y-8">
@@ -53,7 +67,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
       <div className="w-full max-w-sm space-y-3">
         {/* Scan a Label — triggers camera */}
         <button
-          onClick={() => cameraInputRef.current?.click()}
+          onClick={handleCamera}
           className="w-full flex items-center gap-4 p-5 border-2 border-[var(--rc-ink-primary)] bg-[var(--rc-surface-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors rounded-[var(--rc-radius-md)] text-left group"
         >
           <div className="w-12 h-12 rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -67,7 +81,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
 
         {/* Choose from gallery */}
         <button
-          onClick={() => galleryInputRef.current?.click()}
+          onClick={handleGallery}
           className="w-full flex items-center gap-4 p-5 border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors rounded-[var(--rc-radius-md)] text-left group"
         >
           <div className="w-12 h-12 rounded-full bg-[var(--rc-surface-secondary)] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -93,25 +107,6 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
           </div>
         </button>
       </div>
-
-      {/* Hidden file inputs */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleCameraChange}
-        className="hidden"
-        aria-label="Take photo of wine label"
-      />
-      <input
-        ref={galleryInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleGalleryChange}
-        className="hidden"
-        aria-label="Choose photo from gallery"
-      />
     </div>
   );
 };
