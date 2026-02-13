@@ -461,7 +461,14 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     <Dialog open onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent
         showClose={false}
-        className="max-w-full sm:max-w-3xl w-full h-[90dvh] sm:h-auto sm:max-h-[92vh] overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-t-[var(--rc-radius-lg)] sm:rounded-[var(--rc-radius-lg)] relative top-auto bottom-0 translate-y-0 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%]"
+        className="!max-w-full sm:!max-w-3xl w-full overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-[var(--rc-radius-lg)]"
+        style={{
+          height: '90dvh',
+          maxHeight: '90dvh',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
       >
         <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
 
