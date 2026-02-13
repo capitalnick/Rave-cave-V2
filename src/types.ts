@@ -273,6 +273,15 @@ export type CommitStage = 'idle' | 'saving' | 'success' | 'error';
 
 export type { ExtractionErrorCode } from '@/services/extractionService';
 
+// ── Faceted filter types (re-exported from lib) ──
+export type {
+  FacetKey,
+  MultiSelectFacet,
+  RangeFacet,
+  FiltersState,
+  FacetOption,
+} from '@/lib/faceted-filters';
+
 /**
  * SINGLE SOURCE OF TRUTH FOR FIELD MAPPING
  */

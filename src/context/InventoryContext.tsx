@@ -2,16 +2,26 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { useNavigate } from '@tanstack/react-router';
 import { inventoryService } from '@/services/inventoryService';
 import { getMaturityStatus } from '@/constants';
-import type { Wine, CellarFilters, RecommendChatContext, Recommendation, SortField } from '@/types';
+import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey } from '@/types';
+import type { FiltersState, FacetOption } from '@/lib/faceted-filters';
+import {
+  EMPTY_FILTERS,
+  matchesAllFacets,
+  aggregateFacetOptions,
+  countActiveFilters,
+} from '@/lib/faceted-filters';
 
-// ── Filter options derived from inventory ──
-interface FilterOptions {
-  vintage: number[];
-  type: string[];
-  cepage: string[];
-  producer: string[];
-  region: string[];
-  country: string[];
+// ── Dynamic facet options shape ──
+interface FacetOptionsMap {
+  wineType: FacetOption[];
+  maturityStatus: FacetOption[];
+  country: FacetOption[];
+  region: FacetOption[];
+  appellation: FacetOption[];
+  producer: FacetOption[];
+  grapeVariety: FacetOption[];
+  vintage: FacetOption[];
+  price: FacetOption[];
 }
 
 // ── Context value shape ──
@@ -24,11 +34,12 @@ interface InventoryContextValue {
   // Search + filters + sort
   search: string;
   setSearch: (s: string) => void;
-  filters: CellarFilters;
-  filterOptions: FilterOptions;
+  filters: FiltersState;
+  facetOptions: FacetOptionsMap;
   filteredInventory: Wine[];
-  toggleFilter: (category: keyof CellarFilters, value: any) => void;
+  toggleFacet: (key: FacetKey, value: string) => void;
   clearFilters: () => void;
+  activeFilterCount: number;
   totalBottlesFiltered: number;
   heroWineIds: string[];
   sortField: SortField;
@@ -69,17 +80,6 @@ export function useInventory(): InventoryContextValue {
   return ctx;
 }
 
-const EMPTY_FILTERS: CellarFilters = {
-  vintage: [],
-  type: [],
-  cepage: [],
-  producer: [],
-  region: [],
-  country: [],
-  maturity: [],
-  priceRange: [],
-};
-
 const NUMERIC_WINE_FIELDS = new Set(['vintage', 'quantity', 'drinkFrom', 'drinkUntil', 'vivinoRating', 'price']);
 
 function maturityRank(wine: Wine): number {
@@ -99,9 +99,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isSynced, setIsSynced] = useState(false);
 
   // ── Search + filter + sort state ──
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<CellarFilters>(EMPTY_FILTERS);
+  const [search, setSearchRaw] = useState('');
+  const [filters, setFilters] = useState<FiltersState>(EMPTY_FILTERS);
   const [sortField, setSortField] = useState<SortField>('maturity');
+
+  // Sync search into filters.searchQuery
+  const setSearch = useCallback((s: string) => {
+    setSearchRaw(s);
+    setFilters(prev => ({ ...prev, searchQuery: s }));
+  }, []);
 
   // ── Wine detail ──
   const [selectedWine, setSelectedWine] = useState<Wine | null>(null);
@@ -124,45 +130,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => unsubscribe();
   }, []);
 
-  // ── Filter logic ──
-  const filteredInventory = useMemo(() => {
-    return inventory.filter(wine => {
-      const matchesSearch = !search ||
-        wine.producer.toLowerCase().includes(search.toLowerCase()) ||
-        wine.name.toLowerCase().includes(search.toLowerCase());
-      if (!matchesSearch) return false;
-
-      if (filters.vintage.length > 0 && !filters.vintage.includes(wine.vintage)) return false;
-      if (filters.type.length > 0 && !filters.type.includes(wine.type)) return false;
-      if (filters.region.length > 0 && !filters.region.includes(wine.region)) return false;
-      if (filters.country.length > 0 && !filters.country.includes(wine.country)) return false;
-
-      const maturity = getMaturityStatus(wine.drinkFrom, wine.drinkUntil).replace(/[🍷🟢⚠️]/g, '').trim();
-      if (filters.maturity.length > 0 && !filters.maturity.includes(maturity)) return false;
-
-      if (filters.priceRange.length > 0) {
-        const matchesPrice = filters.priceRange.some(range => {
-          if (range === 'Under $30') return wine.price < 30;
-          if (range === '$30-$60') return wine.price >= 30 && wine.price < 60;
-          if (range === '$60-$100') return wine.price >= 60 && wine.price < 100;
-          if (range === '$100+') return wine.price >= 100;
-          return false;
-        });
-        if (!matchesPrice) return false;
-      }
-
-      if (filters.producer.length > 0 && !filters.producer.includes(wine.producer)) return false;
-
-      if (filters.cepage.length > 0) {
-        if (!wine.cepage || wine.cepage.trim() === '') return false;
-        const wineGrapes = wine.cepage.split(/[\/&+,]|(?:\s+and\s+)/i).map(g => g.trim().toLowerCase()).filter(g => g.length > 0);
-        const hasMatch = filters.cepage.some(fGrape => wineGrapes.includes(fGrape.toLowerCase()));
-        if (!hasMatch) return false;
-      }
-
-      return true;
-    });
-  }, [inventory, search, filters]);
+  // ── Faceted filter logic ──
+  const filteredInventory = useMemo(
+    () => inventory.filter(w => matchesAllFacets(w, filters)),
+    [inventory, filters],
+  );
 
   const sortedInventory = useMemo(() => {
     const sorted = [...filteredInventory];
@@ -191,48 +163,38 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return sorted;
   }, [filteredInventory, sortField]);
 
-  const filterOptions = useMemo<FilterOptions>(() => {
-    const grapes = new Set<string>();
-    const vintages = new Set<number>();
-    const types = new Set<string>();
-    const regions = new Set<string>();
-    const countries = new Set<string>();
-    const producers = new Set<string>();
+  // ── Dynamic self-excluding facet options ──
+  const facetOptions = useMemo<FacetOptionsMap>(() => ({
+    wineType: aggregateFacetOptions(inventory, filters, 'wineType'),
+    maturityStatus: aggregateFacetOptions(inventory, filters, 'maturityStatus'),
+    country: aggregateFacetOptions(inventory, filters, 'country'),
+    region: aggregateFacetOptions(inventory, filters, 'region'),
+    appellation: aggregateFacetOptions(inventory, filters, 'appellation'),
+    producer: aggregateFacetOptions(inventory, filters, 'producer'),
+    grapeVariety: aggregateFacetOptions(inventory, filters, 'grapeVariety'),
+    vintage: aggregateFacetOptions(inventory, filters, 'vintage'),
+    price: aggregateFacetOptions(inventory, filters, 'price'),
+  }), [inventory, filters]);
 
-    inventory.forEach(wine => {
-      if (wine.cepage) {
-        wine.cepage.split(/[\/&+,]|(?:\s+and\s+)/i).map(g => g.trim()).filter(g => g.length > 0).forEach(g => grapes.add(g));
-      }
-      if (wine.vintage) vintages.add(wine.vintage);
-      if (wine.type) types.add(wine.type);
-      if (wine.region) regions.add(wine.region);
-      if (wine.country) countries.add(wine.country);
-      if (wine.producer) producers.add(wine.producer);
-    });
-
-    return {
-      cepage: Array.from(grapes).sort(),
-      producer: Array.from(producers).sort(),
-      vintage: Array.from(vintages).sort((a, b) => b - a),
-      type: Array.from(types).sort(),
-      region: Array.from(regions).sort(),
-      country: Array.from(countries).sort(),
-    };
-  }, [inventory]);
-
-  const toggleFilter = useCallback((category: keyof CellarFilters, value: any) => {
+  const toggleFacet = useCallback((key: FacetKey, value: string) => {
     setFilters(prev => {
-      const current = prev[category] as any[];
-      const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
-      return { ...prev, [category]: next };
+      const facet = prev[key];
+      if ('include' in facet) {
+        const arr = facet.include;
+        const next = arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
+        return { ...prev, [key]: { ...facet, include: next } };
+      }
+      return prev;
     });
   }, []);
 
   const clearFilters = useCallback(() => {
     setFilters(EMPTY_FILTERS);
-    setSearch('');
+    setSearchRaw('');
     setSortField('maturity');
   }, []);
+
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const totalBottlesFiltered = useMemo(
     () => sortedInventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0),
@@ -289,8 +251,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   // ── Recommend / Chat handoff ──
-  // At >=1440px, pinned Remy panel is visible — skip navigation, just set context.
-  // AppShell watches recommendContext and auto-opens the pinned panel.
   const handleHandoffToRemy = useCallback((ctx: RecommendChatContext) => {
     setRecommendContext(ctx);
     const isPinned = window.matchMedia('(min-width: 1440px)').matches;
@@ -327,10 +287,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     search,
     setSearch,
     filters,
-    filterOptions,
+    facetOptions,
     filteredInventory: sortedInventory,
-    toggleFilter,
+    toggleFacet,
     clearFilters,
+    activeFilterCount,
     totalBottlesFiltered,
     heroWineIds,
     sortField,
@@ -352,12 +313,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleAddToCellarFromChat,
     triggerRefreshFeedback,
   }), [
-    inventory, loading, isSynced, search, filters, filterOptions,
-    sortedInventory, sortField, toggleFilter, clearFilters, totalBottlesFiltered,
-    heroWineIds, handleUpdate, scanOpen, prefillData, openScan, closeScan,
-    handleWineCommitted, handleViewWine, selectedWine, recommendContext,
-    handleHandoffToRemy, handleAddToCellarFromRecommend, handleAddToCellarFromChat,
-    triggerRefreshFeedback,
+    inventory, loading, isSynced, search, setSearch, filters, facetOptions,
+    sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
+    totalBottlesFiltered, heroWineIds, handleUpdate, scanOpen, prefillData,
+    openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
+    recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
+    handleAddToCellarFromChat, triggerRefreshFeedback,
   ]);
 
   return (

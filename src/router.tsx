@@ -98,8 +98,10 @@ function AppShell() {
       activeTab={activeTab}
       onTabChange={handleTabChange}
       filters={ctx.filters}
-      filterOptions={ctx.filterOptions}
-      onToggleFilter={ctx.toggleFilter}
+      facetOptions={ctx.facetOptions}
+      filteredCount={ctx.filteredInventory.length}
+      activeFilterCount={ctx.activeFilterCount}
+      onToggleFacet={ctx.toggleFacet}
       onClearFilters={ctx.clearFilters}
       onScanPress={() => ctx.openScan()}
       onScanLongPress={() => ctx.openScan()}
