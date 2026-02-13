@@ -158,7 +158,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] overflow-hidden relative">
+    <div className="flex flex-col h-full bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] overflow-hidden relative">
       {/* Header */}
       <div className="px-6 py-4 border-b border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-elevated,#2d2d2d)] flex items-center justify-between shrink-0">
         <div className="flex-1">
