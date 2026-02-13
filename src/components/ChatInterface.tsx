@@ -20,6 +20,7 @@ interface ChatInterfaceProps {
   recommendContext?: RecommendChatContext | null;
   onRecommendContextConsumed?: () => void;
   onAddToCellar?: (wine: Partial<Wine>) => void;
+  onViewWine?: (wine: Wine) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -28,6 +29,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   recommendContext,
   onRecommendContextConsumed,
   onAddToCellar,
+  onViewWine,
 }) => {
   const cellarSnapshot = useMemo(() => inventoryService.getCellarSnapshot(inventory), [inventory]);
 
@@ -200,7 +202,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
         <div className="max-w-[720px] mx-auto px-6 py-8">
           {/* Greeting — synthetic first message, not part of Gemini transcript */}
           {visibleTranscript.length === 0 && !isProcessing && (
-            <RemyMessage message={syntheticGreeting} onAddToCellar={handleWineCardAddToCellar} />
+            <RemyMessage message={syntheticGreeting} inventory={inventory} onAddToCellar={handleWineCardAddToCellar} onViewWine={onViewWine} />
           )}
           {visibleTranscript.map((msg, i) => {
             const prev = i > 0 ? visibleTranscript[i - 1] : null;
@@ -211,7 +213,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
               </div>
             ) : (
               <div key={msg.id} className={gap}>
-                <RemyMessage message={msg} onAddToCellar={handleWineCardAddToCellar} />
+                <RemyMessage message={msg} inventory={inventory} onAddToCellar={handleWineCardAddToCellar} onViewWine={onViewWine} />
               </div>
             );
           })}

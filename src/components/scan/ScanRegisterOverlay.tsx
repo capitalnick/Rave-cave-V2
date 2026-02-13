@@ -540,12 +540,8 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                   </MonoLabel>
                 </div>
                 <div className="flex flex-col gap-3 w-full max-w-xs">
-                  <Button variant="Primary" onClick={handleScanAnother} className="w-full">
-                    SCAN ANOTHER
-                  </Button>
-                  <Button variant="Secondary" onClick={handleDone} className="w-full">
-                    DONE
-                  </Button>
+                  <Button variantType="Primary" label="SCAN ANOTHER" onClick={handleScanAnother} className="w-full" />
+                  <Button variantType="Secondary" label="DONE" onClick={handleDone} className="w-full" />
                 </div>
               </div>
             </motion.div>

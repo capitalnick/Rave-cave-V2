@@ -258,13 +258,12 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
             <CommitTransition stage={commitStage} onComplete={onCommitAnimationComplete ?? (() => {})} />
           ) : (
             <Button
-              variant="Primary"
+              variantType="Primary"
+              label={isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
               onClick={onConfirm}
               disabled={!priceValid || isCommitting}
               className="w-full"
-            >
-              {isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
-            </Button>
+            />
           )}
         </div>
       </div>

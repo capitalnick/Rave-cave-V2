@@ -46,12 +46,8 @@ const DuplicateAlert: React.FC<DuplicateAlertProps> = ({
 
         {/* Actions */}
         <div className="space-y-2">
-          <Button variant="Primary" onClick={onAddToExisting} className="w-full">
-            ADD TO EXISTING (+1 QTY)
-          </Button>
-          <Button variant="Secondary" onClick={onKeepSeparate} className="w-full">
-            KEEP AS SEPARATE BOTTLE
-          </Button>
+          <Button variantType="Primary" label="ADD TO EXISTING (+1 QTY)" onClick={onAddToExisting} className="w-full" />
+          <Button variantType="Secondary" label="KEEP AS SEPARATE BOTTLE" onClick={onKeepSeparate} className="w-full" />
           {onViewExisting && (
             <button
               onClick={onViewExisting}

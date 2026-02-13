@@ -9,6 +9,7 @@ const RemyPage: React.FC = () => {
     recommendContext,
     setRecommendContext,
     handleAddToCellarFromChat,
+    setSelectedWine,
   } = useInventory();
 
   return (
@@ -18,6 +19,7 @@ const RemyPage: React.FC = () => {
       recommendContext={recommendContext}
       onRecommendContextConsumed={() => setRecommendContext(null)}
       onAddToCellar={handleAddToCellarFromChat}
+      onViewWine={setSelectedWine}
     />
   );
 };

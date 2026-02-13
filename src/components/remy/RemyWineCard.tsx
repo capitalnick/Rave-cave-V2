@@ -1,14 +1,17 @@
 import React from 'react';
 import { Heading, Body, MonoLabel, Badge } from '@/components/rc';
 import type { RemyWineData } from '@/utils/remyParser';
+import type { Wine } from '@/types';
 
 interface RemyWineCardProps {
   wine: RemyWineData;
   index: number;
   onAddToCellar?: (wine: RemyWineData) => void;
+  cellarMatch?: Wine;
+  onViewWine?: (wine: Wine) => void;
 }
 
-const RemyWineCard: React.FC<RemyWineCardProps> = ({ wine, index, onAddToCellar }) => {
+const RemyWineCard: React.FC<RemyWineCardProps> = ({ wine, index, onAddToCellar, cellarMatch, onViewWine }) => {
   const displayName = wine.vintage
     ? `${wine.name} ${wine.vintage}`
     : wine.name;
@@ -45,14 +48,21 @@ const RemyWineCard: React.FC<RemyWineCardProps> = ({ wine, index, onAddToCellar 
         </Body>
       )}
 
-      {onAddToCellar && (
+      {cellarMatch && onViewWine ? (
+        <button
+          onClick={() => onViewWine(cellarMatch)}
+          className="mt-3 font-[var(--rc-font-mono)] text-[11px] uppercase tracking-wider text-[var(--rc-accent-acid)] underline underline-offset-2 hover:text-[var(--rc-accent-pink)] transition-colors"
+        >
+          Open bottle detail &rarr;
+        </button>
+      ) : onAddToCellar ? (
         <button
           onClick={() => onAddToCellar(wine)}
           className="mt-3 font-[var(--rc-font-mono)] text-[11px] uppercase tracking-wider text-[var(--rc-accent-pink)] underline underline-offset-2 hover:text-[var(--rc-accent-coral)] transition-colors"
         >
           Add to cellar &rarr;
         </button>
-      )}
+      ) : null}
     </div>
   );
 };

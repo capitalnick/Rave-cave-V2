@@ -65,21 +65,12 @@ const ExtractionProgress: React.FC<ExtractionProgressProps> = ({
           </Body>
           <div className="flex gap-3 pt-2">
             {errorDisplay.showRetry && onRetry && (
-              <Button variant="Secondary" onClick={onRetry}>
-                <RotateCcw size={16} className="mr-2" />
-                RETRY
-              </Button>
+              <Button variantType="Secondary" label="RETRY" iconAsset={RotateCcw} iconPosition="Leading" onClick={onRetry} />
             )}
             {errorDisplay.showRetake && (
-              <Button variant="Secondary" onClick={onRetake}>
-                <RefreshCw size={16} className="mr-2" />
-                RETAKE
-              </Button>
+              <Button variantType="Secondary" label="RETAKE" iconAsset={RefreshCw} iconPosition="Leading" onClick={onRetake} />
             )}
-            <Button variant="Primary" onClick={onManualEntry}>
-              <PenLine size={16} className="mr-2" />
-              ENTER MANUALLY
-            </Button>
+            <Button variantType="Primary" label="ENTER MANUALLY" iconAsset={PenLine} iconPosition="Leading" onClick={onManualEntry} />
           </div>
         </div>
       ) : (

@@ -3,16 +3,35 @@ import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { parseRemyContent } from '@/utils/remyParser';
 import type { RemyWineData } from '@/utils/remyParser';
-import type { Message } from '@/types';
+import type { Message, Wine } from '@/types';
 import RemyMarkdown from './RemyMarkdown';
 import RemyWineCard from './RemyWineCard';
 
-interface RemyMessageProps {
-  message: Message;
-  onAddToCellar?: (wine: RemyWineData) => void;
+/** Fuzzy match a Remy wine suggestion against the cellar inventory. */
+function findCellarMatch(remy: RemyWineData, inventory: Wine[]): Wine | undefined {
+  const producer = (remy.producer || '').toLowerCase().trim();
+  const vintage = remy.vintage ? Number(remy.vintage) : null;
+
+  for (const wine of inventory) {
+    const cellarProducer = wine.producer.toLowerCase().trim();
+    const cellarVintage = Number(wine.vintage);
+
+    const producerMatch = cellarProducer.includes(producer) || producer.includes(cellarProducer);
+    if (producerMatch && (vintage === null || cellarVintage === vintage)) {
+      return wine;
+    }
+  }
+  return undefined;
 }
 
-const RemyMessage: React.FC<RemyMessageProps> = ({ message, onAddToCellar }) => {
+interface RemyMessageProps {
+  message: Message;
+  inventory?: Wine[];
+  onAddToCellar?: (wine: RemyWineData) => void;
+  onViewWine?: (wine: Wine) => void;
+}
+
+const RemyMessage: React.FC<RemyMessageProps> = ({ message, inventory, onAddToCellar, onViewWine }) => {
   const reduced = useReducedMotion();
   const segments = parseRemyContent(message.content);
 
@@ -37,14 +56,19 @@ const RemyMessage: React.FC<RemyMessageProps> = ({ message, onAddToCellar }) => 
             }
             return (
               <div key={i}>
-                {segment.wines.map((wine, j) => (
-                  <RemyWineCard
-                    key={j}
-                    wine={wine}
-                    index={j}
-                    onAddToCellar={onAddToCellar}
-                  />
-                ))}
+                {segment.wines.map((wine, j) => {
+                  const match = inventory ? findCellarMatch(wine, inventory) : undefined;
+                  return (
+                    <RemyWineCard
+                      key={j}
+                      wine={wine}
+                      index={j}
+                      cellarMatch={match}
+                      onViewWine={onViewWine}
+                      onAddToCellar={onAddToCellar}
+                    />
+                  );
+                })}
               </div>
             );
           })}
