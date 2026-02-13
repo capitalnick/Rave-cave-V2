@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 
 const KEYBOARD_THRESHOLD = 150; // px — URL bar changes are ~50-80px, keyboards are ~250-350px
 
-export function useKeyboardVisible(): { keyboardVisible: boolean } {
+export function useKeyboardVisible(): { keyboardVisible: boolean; viewportHeight: number | null } {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
 
   useEffect(() => {
     const vv = window.visualViewport;
@@ -11,7 +12,9 @@ export function useKeyboardVisible(): { keyboardVisible: boolean } {
 
     const update = () => {
       const delta = window.innerHeight - vv.height;
-      setKeyboardVisible(delta > KEYBOARD_THRESHOLD);
+      const isOpen = delta > KEYBOARD_THRESHOLD;
+      setKeyboardVisible(isOpen);
+      setViewportHeight(isOpen ? vv.height : null);
     };
 
     vv.addEventListener('resize', update);
@@ -23,5 +26,5 @@ export function useKeyboardVisible(): { keyboardVisible: boolean } {
     };
   }, []);
 
-  return { keyboardVisible };
+  return { keyboardVisible, viewportHeight };
 }

@@ -9,7 +9,6 @@ import { Wine, Message, RecommendChatContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
-import { cn } from '@/lib/utils';
 import type { RemyWineData } from '@/utils/remyParser';
 
 const CONTEXT_PREFIX = '[RECOMMEND_CONTEXT]';
@@ -47,7 +46,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const [input, setInput] = useState('');
   const [dragOver, setDragOver] = useState(false);
-  const [imageIntent, setImageIntent] = useState<'label' | 'list'>('label');
   const [showFollowUpChips, setShowFollowUpChips] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -119,10 +117,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = (reader.result as string).split(',')[1];
-      const prompt = imageIntent === 'label'
-        ? "Analyze this wine label to add to cellar."
-        : "Analyze this wine list and suggest pairings from my inventory.";
-      sendMessage(prompt, base64);
+      sendMessage("Analyze this wine label to add to cellar.", base64);
     };
     reader.readAsDataURL(file);
   };
@@ -234,23 +229,8 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
       {showFollowUpChips && <FollowUpChips onChipClick={handleChipClick} />}
 
       {/* Input Area */}
-      <div className="p-6 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)]">
-        <div className="max-w-3xl mx-auto space-y-4">
-
-          <div className="flex items-center gap-4 bg-[var(--rc-ink-primary)] p-2 border border-[var(--rc-border-emphasis)] rounded-[var(--rc-radius-sm)]">
-            <button
-              onClick={() => setImageIntent(imageIntent === 'label' ? 'list' : 'label')}
-              className={cn(
-                "px-3 py-1 font-[var(--rc-font-mono)] text-[10px] uppercase border border-[var(--rc-ink-primary)] transition-colors rounded-[var(--rc-radius-sm)]",
-                imageIntent === 'label'
-                  ? "bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)]"
-                  : "bg-[var(--rc-surface-elevated,#3d3d3d)] text-[var(--rc-ink-on-accent)]"
-              )}
-            >
-              Mode: {imageIntent === 'label' ? 'Label Ingest' : 'Wine List'}
-            </button>
-          </div>
-
+      <div className="px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
+        <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3">
             <input ref={fileRef} type="file" className="hidden" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
             <IconButton

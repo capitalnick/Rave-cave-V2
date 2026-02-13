@@ -171,7 +171,7 @@ interface ScanRegisterOverlayProps {
 
 const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData }) => {
   const isMobile = useIsMobile();
-  const { keyboardVisible } = useKeyboardVisible();
+  const { keyboardVisible, viewportHeight } = useKeyboardVisible();
   const reducedMotion = useReducedMotion();
   const stageMotion = reducedMotion
     ? { initial: {}, animate: {}, exit: {}, transition: { duration: 0 } }
@@ -467,9 +467,13 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
         showClose={false}
         className={`!max-w-full sm:!max-w-3xl w-full overflow-hidden bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 ${
           isMobile
-            ? 'h-[100dvh] max-h-[100dvh] !rounded-none !top-0 !translate-y-0'
+            ? 'max-h-[100dvh] !rounded-none !top-0 !translate-y-0'
             : 'h-[90dvh] max-h-[90dvh] rounded-[var(--rc-radius-lg)]'
         }`}
+        style={isMobile ? {
+          height: viewportHeight ? `${viewportHeight}px` : '100dvh',
+          transition: 'height 100ms ease-out',
+        } : undefined}
       >
         <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
 

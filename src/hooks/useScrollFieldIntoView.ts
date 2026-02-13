@@ -20,7 +20,7 @@ export function useScrollFieldIntoView(containerRef: RefObject<HTMLElement | nul
       clearTimeout(timer);
       // 300ms delay lets keyboard animation settle before scrolling
       timer = setTimeout(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 300);
     };
 
