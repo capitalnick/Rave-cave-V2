@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect } from 'react';
 import { Drawer } from 'vaul';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getEffectiveSnapPoint, getEffectiveSnapPoints } from '@/lib/sheet-utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useSurfaceManager } from '@/context/SurfaceContext';
+import { useIsSheetMobile } from '@/components/ui/use-mobile';
 
 export type SheetSnapPoint = 'peek' | 'half' | 'full';
 
@@ -31,6 +34,8 @@ interface BottomSheetProps {
   className?: string;
   /** If true, the sheet cannot be dismissed by swiping/clicking overlay */
   dismissible?: boolean;
+  /** Override drag behavior. Defaults to true for full sheets, false otherwise */
+  handleOnly?: boolean;
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -44,13 +49,23 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   description,
   className,
   dismissible = true,
+  handleOnly,
 }) => {
   const reducedMotion = useReducedMotion();
   const surfaceManager = useSurfaceManager();
+  const isSheetMobile = useIsSheetMobile();
 
-  // Compute numeric snap points
-  const snaps = (allowedSnapPoints ?? ['peek', 'half', 'full']).map(s => SNAP_VALUES[s]);
-  const initialSnap = SNAP_VALUES[snapPoint];
+  // Phase 0: Remap snap points on mobile (<1024px) — peek → half, dedup
+  const effectiveSnap = getEffectiveSnapPoint(snapPoint, isSheetMobile);
+  const effectiveAllowed = getEffectiveSnapPoints(
+    allowedSnapPoints ?? ['peek', 'half', 'full'],
+    isSheetMobile,
+  );
+  const snaps = effectiveAllowed.map(s => SNAP_VALUES[s]);
+  const initialSnap = SNAP_VALUES[effectiveSnap];
+
+  // Phase 2: Full sheets get strict drag handling by default
+  const isFull = effectiveSnap === 'full';
 
   // One-level stacking: when this sheet opens, close any other open sheet
   useEffect(() => {
@@ -72,6 +87,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       activeSnapPoint={open ? initialSnap : undefined}
       fadeFromIndex={snaps.length - 1}
       dismissible={dismissible}
+      handleOnly={handleOnly ?? isFull}
+      scrollLockTimeout={500}
       modal
     >
       <Drawer.Portal>
@@ -94,12 +111,26 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           {/* Drag handle */}
           <Drawer.Handle className="mx-auto mt-3 mb-2 w-10 h-1 rounded-full bg-[var(--rc-ink-ghost)]" />
 
+          {/* X close button for full sheets */}
+          {isFull && dismissible && (
+            <button
+              onClick={() => onOpenChange(false)}
+              className="absolute top-3 right-3 z-10 p-1.5 rounded-[var(--rc-radius-sm)] text-[var(--rc-ink-tertiary)] hover:text-[var(--rc-ink-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+          )}
+
           {/* Accessible title */}
           <Drawer.Title className="sr-only">{title}</Drawer.Title>
           {description && <Drawer.Description className="sr-only">{description}</Drawer.Description>}
 
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-[env(safe-area-inset-bottom)]">
+          {/* Scrollable content — data-vaul-no-drag prevents content scroll from dismissing */}
+          <div
+            data-vaul-no-drag
+            className="flex-1 overflow-y-auto overscroll-contain px-6 pb-[env(safe-area-inset-bottom)]"
+          >
             {children}
           </div>
         </Drawer.Content>

@@ -336,6 +336,7 @@
 
   /* Z-index layers */
   --rc-z-sticky:                  40;
+  --rc-z-dropdown:                45;
 
   --rc-toast-neutral-bar:         var(--rc-ink-tertiary);
   --rc-toast-neutral-icon:        var(--rc-ink-tertiary);
