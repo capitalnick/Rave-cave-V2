@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, X, Filter, Sparkles, Crosshair } from 'lucide-react';
+import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, ChevronDown, ChevronUp, Filter, Sparkles, Crosshair } from 'lucide-react';
 import { CellarFilters, NavId, TabId } from '@/types';
-import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, IconButton, ScanFAB } from '@/components/rc';
+import { TabItem, Divider, Heading, MonoLabel, Checkbox, Input, ScanFAB } from '@/components/rc';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { useRailExpanded } from '@/hooks/useRailExpanded';
 import { cn } from '@/lib/utils';
 
@@ -263,25 +264,27 @@ const Layout: React.FC<LayoutProps> = ({
         </button>
       )}
 
-      {/* Mobile Filter Overlay */}
-      {mobileFiltersOpen && activeTab === 'cellar' && (
-        <div className="md:hidden fixed inset-0 bg-[var(--rc-surface-tertiary)] z-[60] flex flex-col">
-          <div className="p-6 border-b-[var(--rc-divider-emphasis-weight)] border-b-[var(--rc-ink-primary)] flex items-center justify-between bg-[var(--rc-surface-primary)]">
-            <Heading scale="heading">Filters</Heading>
-            <IconButton
-              icon={X}
-              aria-label="Close filters"
-              onClick={() => setMobileFiltersOpen(false)}
-              className="bg-[var(--rc-accent-acid)]"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-2">
-            <button
-              onClick={() => onClearFilters?.()}
-              className="w-full py-3 bg-[var(--rc-ink-primary)] text-[var(--rc-accent-acid)] font-[var(--rc-font-mono)] text-xs uppercase mb-4 rounded-[var(--rc-radius-sm)]"
-            >
-              Clear All Filters
-            </button>
+      {/* Mobile Filter Overlay — BottomSheet at 90% */}
+      {activeTab === 'cellar' && (
+        <BottomSheet
+          open={mobileFiltersOpen}
+          onOpenChange={setMobileFiltersOpen}
+          snapPoint="full"
+          snapPoints={['full']}
+          id="mobile-filters"
+          title="Filters"
+          dismissible
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between pb-2">
+              <Heading scale="heading">Filters</Heading>
+              <button
+                onClick={() => onClearFilters?.()}
+                className="font-[var(--rc-font-mono)] text-[9px] font-bold uppercase underline text-[var(--rc-ink-ghost)] hover:text-[var(--rc-accent-pink)] transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
             {filterOptions && filters && (
               <>
                 <FilterSection title="Grapes" options={filterOptions.cepage} selected={filters.cepage} onToggle={(val) => onToggleFilter?.('cepage', val)} searchable />
@@ -294,16 +297,16 @@ const Layout: React.FC<LayoutProps> = ({
                 <FilterSection title="Country" options={filterOptions.country} selected={filters.country} onToggle={(val) => onToggleFilter?.('country', val)} />
               </>
             )}
+            <div className="pt-4 pb-2">
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="w-full py-4 bg-[var(--rc-accent-acid)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] font-[var(--rc-font-display)] text-2xl uppercase font-black rounded-[var(--rc-radius-md)]"
+              >
+                Show Results
+              </button>
+            </div>
           </div>
-          <div className="p-6 border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] bg-[var(--rc-surface-primary)]">
-            <button
-              onClick={() => setMobileFiltersOpen(false)}
-              className="w-full py-4 bg-[var(--rc-accent-acid)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] font-[var(--rc-font-display)] text-2xl uppercase font-black rounded-[var(--rc-radius-md)]"
-            >
-              Show Results
-            </button>
-          </div>
-        </div>
+        </BottomSheet>
       )}
 
       <main

@@ -87,7 +87,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       activeSnapPoint={open ? initialSnap : undefined}
       fadeFromIndex={snaps.length - 1}
       dismissible={dismissible}
-      handleOnly={handleOnly ?? isFull}
+      handleOnly={handleOnly ?? false}
       scrollLockTimeout={500}
       modal
     >
@@ -115,7 +115,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           {isFull && dismissible && (
             <button
               onClick={() => onOpenChange(false)}
-              className="absolute top-3 right-3 z-10 p-1.5 rounded-[var(--rc-radius-sm)] text-[var(--rc-ink-tertiary)] hover:text-[var(--rc-ink-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors"
+              className="absolute top-3 right-3 z-10 p-1.5 rounded-[var(--rc-radius-sm)] bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] hover:bg-[var(--rc-accent-acid-hover)] transition-colors"
               aria-label="Close"
             >
               <X size={18} />
