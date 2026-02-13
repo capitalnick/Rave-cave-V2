@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Card, Heading, Body } from '@/components/rc';
 import type { Occasion } from '@/types';
 
 interface OccasionCardProps {
@@ -9,40 +10,40 @@ interface OccasionCardProps {
 }
 
 const OccasionCard: React.FC<OccasionCardProps> = ({ occasion, onClick, disabled = false }) => {
+  const accentVar = `var(--rc-${occasion.accentToken})`;
+  const Icon = occasion.icon;
+  const isFeatured = occasion.featured;
+
   return (
-    <div
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      aria-label={`${occasion.title}: ${occasion.description}`}
-      aria-disabled={disabled || undefined}
+    <Card
+      elevation="flat"
+      padding="standard"
       onClick={disabled ? undefined : onClick}
-      onKeyDown={(e) => {
-        if (disabled) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
+      disabled={disabled}
       className={cn(
-        "relative flex flex-col items-center justify-center gap-2 p-4 sm:p-6",
-        "bg-[var(--rc-surface-primary)] border border-[var(--rc-border-subtle)] rounded-[8px]",
-        "transition-all duration-150 ease-out select-none cursor-pointer",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--rc-accent-pink)] focus-visible:outline-offset-2",
-        // Pressed
-        "active:scale-[0.97] active:duration-100",
-        // Hover (desktop)
-        "md:hover:-translate-y-[1px] md:hover:shadow-[var(--rc-card-shadow-raised)]",
-        // Disabled
-        disabled && "opacity-40 pointer-events-none cursor-not-allowed"
+        "transition-all duration-150 ease-out select-none",
+        isFeatured ? "flex flex-row items-center gap-4" : "flex flex-col items-center gap-2",
+        "md:hover:-translate-y-[2px] md:hover:shadow-[var(--rc-card-shadow-raised)]",
+        "active:scale-[0.97]",
+        disabled && "opacity-40 pointer-events-none"
       )}
+      style={{ borderTop: `3px solid ${accentVar}` }}
     >
-      <span className="text-[28px] sm:text-[48px] leading-none" aria-hidden="true">
-        {occasion.icon}
-      </span>
-      <span className="font-[var(--rc-font-display)] font-black text-[var(--rc-type-body)] text-[var(--rc-ink-primary)] text-center uppercase tracking-wide leading-tight">
-        {occasion.title}
-      </span>
-    </div>
+      <Icon
+        size={isFeatured ? 32 : 28}
+        style={{ color: accentVar }}
+        aria-hidden="true"
+        className="shrink-0"
+      />
+      <div className={cn(isFeatured ? "text-left" : "text-center")}>
+        <Heading scale="subhead" colour="primary">
+          {occasion.title.toUpperCase()}
+        </Heading>
+        <Body size="caption" colour="ghost">
+          {occasion.description}
+        </Body>
+      </div>
+    </Card>
   );
 };
 

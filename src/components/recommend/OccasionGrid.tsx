@@ -29,9 +29,9 @@ const OccasionGrid: React.FC<OccasionGridProps> = ({
         <MonoLabel size="label" colour="ghost">WHAT'S THE OCCASION?</MonoLabel>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
-        {OCCASIONS.map((occasion) => (
+      {/* Standard grid (no flags) */}
+      <div className="grid grid-cols-2 gap-4">
+        {OCCASIONS.filter(o => !o.featured && !o.primary).map((occasion) => (
           <OccasionCard
             key={occasion.id}
             occasion={occasion}
@@ -40,6 +40,26 @@ const OccasionGrid: React.FC<OccasionGridProps> = ({
           />
         ))}
       </div>
+
+      {/* Primary cards (full-width standard) */}
+      {OCCASIONS.filter(o => o.primary).map((occasion) => (
+        <OccasionCard
+          key={occasion.id}
+          occasion={occasion}
+          onClick={() => onSelectOccasion(occasion.id)}
+          disabled={cellarEmpty}
+        />
+      ))}
+
+      {/* Featured cards (full-width horizontal) */}
+      {OCCASIONS.filter(o => o.featured).map((occasion) => (
+        <OccasionCard
+          key={occasion.id}
+          occasion={occasion}
+          onClick={() => onSelectOccasion(occasion.id)}
+          disabled={cellarEmpty}
+        />
+      ))}
 
       {cellarEmpty && (
         <MonoLabel size="micro" colour="ghost" align="centre" as="p">

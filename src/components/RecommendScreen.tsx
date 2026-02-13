@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ArrowLeft, Camera, ImageIcon } from 'lucide-react';
 import OccasionGrid from './recommend/OccasionGrid';
 import OccasionContextForm from './recommend/OccasionContextForm';
 import RecommendResults from './recommend/RecommendResults';
-import { MonoLabel } from '@/components/rc';
-import { getRecommendations, getSurpriseMe } from '@/services/recommendService';
+import { MonoLabel, Heading, Body, IconButton } from '@/components/rc';
+import { getRecommendations, getSurpriseMe, getMenuScanRecommendations } from '@/services/recommendService';
 import { SkeletonCard } from '@/components/rc';
 import type {
   OccasionId,
   OccasionContext,
+  ScanMenuContext,
   Recommendation,
+  MenuScanRecommendation,
   RecentQuery,
   RecommendChatContext,
   Wine,
@@ -29,7 +32,7 @@ function saveRecentQueries(queries: RecentQuery[]) {
   localStorage.setItem(RECENT_QUERIES_KEY, JSON.stringify(queries.slice(0, 5)));
 }
 
-export type RecommendView = 'grid' | 'form' | 'loading' | 'results';
+export type RecommendView = 'grid' | 'form' | 'scan-capture' | 'loading' | 'results';
 
 interface RecommendScreenProps {
   inventory: Wine[];
@@ -44,6 +47,11 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [recentQueries, setRecentQueries] = useState<RecentQuery[]>(loadRecentQueries);
   const [error, setError] = useState<string | null>(null);
+  // Scan menu state
+  const [menuImage, setMenuImage] = useState<string | null>(null);
+  const [menuResults, setMenuResults] = useState<MenuScanRecommendation[]>([]);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   // Surprise Me state
   const [surpriseExcludeIds, setSurpriseExcludeIds] = useState<string[]>([]);
   const [surpriseRerollCount, setSurpriseRerollCount] = useState(0);
@@ -61,17 +69,40 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
 
     const doFetch = async () => {
       try {
-        let results: Recommendation[];
-        if (selectedOccasion === 'surprise') {
+        if (selectedOccasion === 'scan_menu' && menuImage) {
+          const scanResults = await getMenuScanRecommendations(menuImage, occasionContext as ScanMenuContext, inventory);
+          setMenuResults(scanResults);
+          // Convert to Recommendation[] for results view compatibility
+          const results: Recommendation[] = scanResults.map(r => ({
+            wineId: r.wineId,
+            producer: r.producer,
+            name: r.name,
+            vintage: r.vintage ?? new Date().getFullYear(),
+            type: r.type,
+            rank: r.rank as 1 | 2 | 3,
+            rankLabel: r.rankLabel,
+            rationale: r.rationale,
+            isFromCellar: r.isFromCellar,
+            maturity: 'DRINK_NOW',
+            rating: null,
+          }));
+          setRecommendations(results);
+          addRecentQuery(selectedOccasion, occasionContext, results);
+          setError(null);
+          setView('results');
+        } else if (selectedOccasion === 'surprise') {
           const result = await getSurpriseMe(inventory, surpriseExcludeIds);
-          results = [result];
+          setRecommendations([result]);
+          addRecentQuery(selectedOccasion, null, [result]);
+          setError(null);
+          setView('results');
         } else {
-          results = await getRecommendations(selectedOccasion, occasionContext, inventory);
+          const results = await getRecommendations(selectedOccasion, occasionContext, inventory);
+          setRecommendations(results);
+          addRecentQuery(selectedOccasion, occasionContext, results);
+          setError(null);
+          setView('results');
         }
-        setRecommendations(results);
-        addRecentQuery(selectedOccasion, occasionContext, results);
-        setError(null);
-        setView('results');
       } catch (err: any) {
         setError(err.message || 'Something went wrong. Please try again.');
         setView('results');
@@ -81,7 +112,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     };
 
     doFetch();
-  }, [view, selectedOccasion, occasionContext, inventory, surpriseExcludeIds]);
+  }, [view, selectedOccasion, occasionContext, inventory, surpriseExcludeIds, menuImage]);
 
   const handleSelectOccasion = useCallback((id: OccasionId) => {
     setSelectedOccasion(id);
@@ -101,7 +132,22 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     setOccasionContext(context);
     setError(null);
     setRecommendations([]);
+    if (selectedOccasion === 'scan_menu') {
+      setView('scan-capture');
+      return;
+    }
     setView('loading');
+  }, [selectedOccasion]);
+
+  const handleImageCapture = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      setMenuImage(base64);
+      fetchingRef.current = false;
+      setView('loading');
+    };
+    reader.readAsDataURL(file);
   }, []);
 
   const handleBack = useCallback(() => {
@@ -109,6 +155,8 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     setSelectedOccasion(null);
     setOccasionContext(null);
     setRecommendations([]);
+    setMenuResults([]);
+    setMenuImage(null);
     setError(null);
     fetchingRef.current = false;
   }, []);
@@ -207,6 +255,63 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
         />
       )}
 
+      {view === 'scan-capture' && (
+        <div className="flex flex-col h-full overflow-y-auto">
+          <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-1 text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)] transition-colors"
+              aria-label="Back to occasions"
+            >
+              <ArrowLeft size={20} />
+              <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider">Back</span>
+            </button>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 pb-24">
+            <div className="text-center space-y-1">
+              <Heading scale="heading">SCAN A WINE LIST</Heading>
+              <Body size="caption" colour="ghost">Photograph the wine list</Body>
+            </div>
+
+            <div className="flex flex-col items-center gap-4">
+              <IconButton
+                icon={Camera}
+                aria-label="Take photo of wine list"
+                onClick={() => cameraInputRef.current?.click()}
+                className="w-20 h-20 bg-[var(--rc-surface-secondary)] hover:bg-[var(--rc-accent-pink)] hover:text-white"
+              />
+              <MonoLabel size="label" colour="ghost">Take photo</MonoLabel>
+            </div>
+
+            <button
+              onClick={() => galleryInputRef.current?.click()}
+              className="flex items-center gap-2 text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)] transition-colors"
+            >
+              <ImageIcon size={16} />
+              <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider underline">
+                Choose from gallery
+              </span>
+            </button>
+
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleImageCapture(e.target.files[0])}
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleImageCapture(e.target.files[0])}
+            />
+          </div>
+        </div>
+      )}
+
       {view === 'loading' && (
         <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
           {isSurprise ? (
@@ -267,6 +372,8 @@ function buildQueryText(occasionId: OccasionId, context: OccasionContext): strin
       return (context as any).recipient ? `Gift for ${(context as any).recipient}` : 'Wine gift';
     case 'cheese':
       return (context as any).cheeses ? `Cheese: ${(context as any).cheeses}` : 'Cheese board';
+    case 'scan_menu':
+      return 'Wine list scan';
     default:
       return 'Recommendation';
   }

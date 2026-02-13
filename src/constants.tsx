@@ -3,6 +3,7 @@
  * Rave Cave Constants & Configuration
  */
 
+import { UtensilsCrossed, PartyPopper, Gift, PocketKnife, Sparkles, ScanLine } from 'lucide-react';
 import type { Occasion, RankLabel } from './types';
 
 export const COLORS = {
@@ -123,11 +124,12 @@ export const SYSTEM_PROMPT = buildSystemPrompt("Inventory context unavailable.")
 // ── Phase 6: Recommend ──
 
 export const OCCASIONS: Occasion[] = [
-  { id: 'dinner',   title: 'Pair a Meal',          description: 'Perfect wines for your meal',     icon: '🍽️' },
-  { id: 'party',    title: 'Wines for a Crowd',    description: 'Crowd-pleasing selections',       icon: '🎉' },
-  { id: 'gift',     title: 'Choose a Gift',        description: 'Thoughtful wine gifts',           icon: '🎁' },
-  { id: 'cheese',   title: 'For Cheese',           description: 'Perfect cheese pairings',         icon: '🧀' },
-  { id: 'surprise', title: 'Something Unexpected', description: 'Let Rémy decide',                 icon: '✨' },
+  { id: 'dinner',    title: 'Pair a Meal',          description: 'Perfect wines for your meal',      icon: UtensilsCrossed, accentToken: 'accent-pink' },
+  { id: 'party',     title: 'Wines for a Crowd',    description: 'Crowd-pleasing selections',        icon: PartyPopper,     accentToken: 'accent-acid' },
+  { id: 'gift',      title: 'Choose a Gift',        description: 'Thoughtful wine gifts',            icon: Gift,            accentToken: 'accent-coral' },
+  { id: 'cheese',    title: 'For Cheese',           description: 'Perfect cheese pairings',          icon: PocketKnife,     accentToken: 'accent-pink' },
+  { id: 'scan_menu', title: 'Scan a Wine List',     description: 'Photograph a menu, get picks',     icon: ScanLine,        accentToken: 'accent-coral',  primary: true },
+  { id: 'surprise',  title: 'Something Unexpected', description: 'Let Rémy decide',                  icon: Sparkles,        accentToken: 'accent-acid',   featured: true },
 ];
 
 export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {

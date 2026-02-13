@@ -1,7 +1,10 @@
+import type { LucideIcon } from 'lucide-react';
+
 export type TabId = 'cellar' | 'pulse' | 'recommend' | 'remy';
 export type NavId = TabId | 'settings';
 
 export type WineType = 'Red' | 'White' | 'Rosé' | 'Sparkling' | 'Dessert' | 'Fortified';
+export type AccentToken = 'accent-pink' | 'accent-acid' | 'accent-coral';
 export type MaturityStatus = 'Hold' | 'Drink Now' | 'Past Peak';
 
 export interface Wine {
@@ -86,13 +89,16 @@ export interface CellarFilters {
 }
 
 // ── Occasion Types ──
-export type OccasionId = 'dinner' | 'party' | 'gift' | 'cheese' | 'surprise';
+export type OccasionId = 'dinner' | 'party' | 'gift' | 'cheese' | 'surprise' | 'scan_menu';
 
 export interface Occasion {
   id: OccasionId;
   title: string;
   description: string;
-  icon: string; // emoji character
+  icon: LucideIcon;
+  accentToken: AccentToken;
+  featured?: boolean;
+  primary?: boolean;
 }
 
 // ── Context Types (per-occasion form inputs) ──
@@ -124,7 +130,16 @@ export interface CheeseContext {
   cellarOnly: boolean;
 }
 
-export type OccasionContext = DinnerContext | PartyContext | GiftContext | CheeseContext | null;
+export interface ScanMenuContext {
+  budgetMin: number | null;
+  budgetMax: number | null;
+  currency: 'AUD' | 'EUR' | 'USD' | 'GBP';
+  budgetUnit: 'bottle' | 'glass';
+  meal: string;
+  preferences: string;
+}
+
+export type OccasionContext = DinnerContext | PartyContext | GiftContext | CheeseContext | ScanMenuContext | null;
 
 // ── Recommendation Types ──
 export type RankLabel = 'best-match' | 'also-great' | 'adventurous';
@@ -141,6 +156,21 @@ export interface Recommendation {
   isFromCellar: boolean;
   maturity: string;
   rating: number | null;
+}
+
+export interface MenuScanRecommendation {
+  producer: string;
+  name: string;
+  vintage: number | null;
+  type: WineType;
+  rank: number;
+  rankLabel: RankLabel;
+  rationale: string;
+  price: number | null;
+  asListed: string;
+  confidence: 'high' | 'medium' | 'low';
+  wineId: string;
+  isFromCellar: boolean;
 }
 
 export interface RecommendChatContext {

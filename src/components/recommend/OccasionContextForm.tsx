@@ -10,6 +10,7 @@ import type {
   PartyContext,
   GiftContext,
   CheeseContext,
+  ScanMenuContext,
 } from '@/types';
 
 interface OccasionContextFormProps {
@@ -52,6 +53,9 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
         )}
         {occasionId === 'cheese' && (
           <CheeseForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
+        )}
+        {occasionId === 'scan_menu' && (
+          <ScanMenuForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
         )}
       </div>
     </div>
@@ -400,6 +404,85 @@ const CheeseForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }
 
       <CellarToggle value={cellarOnly} onChange={setCellarOnly} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />
+    </div>
+  );
+};
+
+// ── Scan Menu Form ──
+
+type BudgetPreset = 'any' | 'under-30' | '30-60' | '60-100' | '100-plus';
+
+const BUDGET_RANGES: Record<BudgetPreset, { min: number | null; max: number | null }> = {
+  'any':       { min: null, max: null },
+  'under-30':  { min: null, max: 30 },
+  '30-60':     { min: 30,   max: 60 },
+  '60-100':    { min: 60,   max: 100 },
+  '100-plus':  { min: 100,  max: null },
+};
+
+const ScanMenuForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
+  const [budgetPreset, setBudgetPreset] = useState<BudgetPreset>('any');
+  const [meal, setMeal] = useState('');
+  const [preferences, setPreferences] = useState('');
+
+  const handleSubmit = () => {
+    setSubmitting(true);
+    const range = BUDGET_RANGES[budgetPreset];
+    const ctx: ScanMenuContext = {
+      budgetMin: range.min,
+      budgetMax: range.max,
+      currency: 'AUD',
+      budgetUnit: 'bottle',
+      meal,
+      preferences,
+    };
+    onSubmit(ctx);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Heading scale="subhead" colour="primary">TELL RÉMY WHAT YOU'RE AFTER</Heading>
+
+      <FieldGroup label="Budget per bottle">
+        <SegmentedControl
+          options={[
+            { value: 'any' as const,      label: 'Any' },
+            { value: 'under-30' as const, label: 'Under $30' },
+            { value: '30-60' as const,    label: '$30\u201360' },
+            { value: '60-100' as const,   label: '$60\u2013100' },
+            { value: '100-plus' as const, label: '$100+' },
+          ]}
+          value={budgetPreset}
+          onChange={setBudgetPreset}
+        />
+      </FieldGroup>
+
+      <FieldGroup label="What are you eating?" hint={!meal ? 'Helps Rémy match wines to your meal' : undefined}>
+        <Input
+          typeVariant="Textarea"
+          placeholder="e.g., Grilled lamb chops with mint..."
+          value={meal}
+          onChange={(e) => setMeal(e.target.value)}
+        />
+      </FieldGroup>
+
+      <FieldGroup label="Style preferences (optional)">
+        <Input
+          placeholder="e.g., French only, nothing too tannic..."
+          value={preferences}
+          onChange={(e) => setPreferences(e.target.value)}
+        />
+      </FieldGroup>
+
+      <div className="pt-6">
+        <Button
+          variantType="Primary"
+          label={submitting ? 'THINKING\u2026' : 'NEXT: SCAN MENU'}
+          onClick={handleSubmit}
+          disabled={submitting}
+          className={cn("w-full", submitting && "animate-pulse")}
+        />
+      </div>
     </div>
   );
 };
