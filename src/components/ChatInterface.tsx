@@ -56,8 +56,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Stable greeting — computed once on mount, displayed as synthetic first message
   const [greeting] = useState(() => getRandomGreeting());
 
+  // Scroll behavior: user messages → bottom, assistant messages → top of new message
+  const prevTranscriptLen = useRef(0);
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const len = transcript.length;
+    const lastMsg = len > 0 ? transcript[len - 1] : null;
+
+    if (lastMsg && lastMsg.role === 'assistant' && len > prevTranscriptLen.current) {
+      // New assistant message — scroll to its top so user reads from the start
+      requestAnimationFrame(() => {
+        const messages = container.querySelectorAll('[data-msg-id]');
+        const lastEl = messages[messages.length - 1];
+        if (lastEl) {
+          lastEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    } else {
+      // User message, processing indicator, or follow-up chips — scroll to bottom
+      container.scrollTop = container.scrollHeight;
+    }
+
+    prevTranscriptLen.current = len;
   }, [transcript, isProcessing, showFollowUpChips]);
 
   // ── Recommend Context Injection ──
@@ -208,11 +230,11 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
             const prev = i > 0 ? visibleTranscript[i - 1] : null;
             const gap = getMessageGap(prev, msg);
             return msg.role === 'user' ? (
-              <div key={msg.id} className={gap}>
+              <div key={msg.id} data-msg-id={msg.id} className={gap}>
                 <UserMessage message={msg} />
               </div>
             ) : (
-              <div key={msg.id} className={gap}>
+              <div key={msg.id} data-msg-id={msg.id} className={gap}>
                 <RemyMessage message={msg} inventory={inventory} onAddToCellar={handleWineCardAddToCellar} onViewWine={onViewWine} />
               </div>
             );
