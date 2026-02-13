@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { inventoryService } from '@/services/inventoryService';
+import { deleteLabelImage } from '@/services/storageService';
+import { showToast } from '@/components/rc';
 import { getMaturityStatus } from '@/constants';
 import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey } from '@/types';
 import type { FiltersState, FacetOption } from '@/lib/faceted-filters';
@@ -215,6 +217,17 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // ── Wine update handler ──
   const handleUpdate = useCallback(async (wine: Wine, key: string, value: string) => {
+    // Auto-delete when quantity reaches 0
+    if (key === 'quantity' && Number(value) <= 0) {
+      const wineName = `${wine.vintage || ''} ${wine.producer || 'Wine'}`.trim();
+      await inventoryService.deleteWine(wine.id);
+      deleteLabelImage(wine.id).catch(() => {});
+      setInventory(prev => prev.filter(w => w.id !== wine.id));
+      setSelectedWine(prev => prev?.id === wine.id ? null : prev);
+      showToast({ tone: 'neutral', message: `${wineName} removed from cellar` });
+      return;
+    }
+
     const success = await inventoryService.updateField(wine.id, key, value);
     if (success) {
       const coerced: any = NUMERIC_WINE_FIELDS.has(key) ? Number(value) : value;
