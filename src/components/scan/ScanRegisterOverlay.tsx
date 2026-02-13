@@ -18,6 +18,8 @@ import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
 import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
 import { useScanSession } from '@/hooks/useScanSession';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
+import { useIsMobile } from '@/components/ui/use-mobile';
 import { hapticHeavy } from '@/utils/haptics';
 
 // ── State Machine ──
@@ -168,6 +170,8 @@ interface ScanRegisterOverlayProps {
 }
 
 const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData }) => {
+  const isMobile = useIsMobile();
+  const { keyboardVisible } = useKeyboardVisible();
   const reducedMotion = useReducedMotion();
   const stageMotion = reducedMotion
     ? { initial: {}, animate: {}, exit: {}, transition: { duration: 0 } }
@@ -461,7 +465,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     <Dialog open onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent
         showClose={false}
-        className="!max-w-full sm:!max-w-3xl w-full h-[90dvh] max-h-[90dvh] overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-[var(--rc-radius-lg)]"
+        className={`!max-w-full sm:!max-w-3xl w-full overflow-hidden bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 ${
+          isMobile
+            ? 'h-[100dvh] max-h-[100dvh] !rounded-none !top-0 !translate-y-0'
+            : 'h-[90dvh] max-h-[90dvh] rounded-[var(--rc-radius-lg)]'
+        }`}
       >
         <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
 
@@ -523,6 +531,8 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 imageQualityWarning={imageQualityWarning}
                 moreFieldsExpanded={moreFieldsExpanded}
                 onToggleMoreFields={handleToggleMoreFields}
+                isMobile={isMobile}
+                keyboardVisible={keyboardVisible}
               />
             </motion.div>
           )}
