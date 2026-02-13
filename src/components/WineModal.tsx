@@ -313,7 +313,8 @@ const WineDetailContent: React.FC<{
           {renderField('Region', 'region', wine.region)}
           {renderField('Producer', 'producer', wine.producer)}
           {renderField('Appellation', 'appellation', wine.appellation || '')}
-          {renderField('Cépage', 'cepage', wine.cepage, true)}
+          {renderField('Vintage', 'vintage', wine.vintage)}
+          {renderField('Cépage', 'cepage', wine.cepage)}
           {renderField('Personal Note', 'personalNote', wine.personalNote || '', true)}
           {renderLinkField('Link to Wine', 'linkToWine', wine.linkToWine)}
         </dl>
