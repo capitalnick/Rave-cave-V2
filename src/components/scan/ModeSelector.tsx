@@ -40,7 +40,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[50vh] px-6 py-10 space-y-8">
+    <div className="flex flex-col items-center px-6 pt-10 pb-16 space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <Heading scale="title">REGISTER WINE</Heading>
