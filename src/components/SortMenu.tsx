@@ -84,7 +84,7 @@ const SortMenuSheet: React.FC<SortMenuSheetProps> = ({ open, onOpenChange, value
         ))}
       </div>
       <Divider weight="subtle" className="mx-1" />
-      <div className="py-2">
+      <div className="py-2 pb-8">
         <MonoLabel size="micro" colour="ghost" className="px-3 pt-2 pb-1">Organisational</MonoLabel>
         {orgOptions.map(opt => (
           <SortOptionButton key={opt.value} label={opt.label} selected={opt.value === value} onClick={() => onSelect(opt.value)} mobile />

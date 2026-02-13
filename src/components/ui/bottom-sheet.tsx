@@ -101,7 +101,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       fadeFromIndex={snaps.length - 1}
       dismissible={dismissible}
       handleOnly={handleOnly ?? false}
-      scrollLockTimeout={500}
+      scrollLockTimeout={100}
       modal
     >
       <Drawer.Portal>
