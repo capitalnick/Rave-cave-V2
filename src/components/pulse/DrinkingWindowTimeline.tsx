@@ -96,7 +96,7 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
         <div className="flex justify-between mb-2" style={{ paddingLeft: labelWidth }}>
           {years.map(y => (
             <MonoLabel key={y} size="micro" colour="ghost" className="flex-1 text-center">
-              {y}
+              {y >= 2000 ? `'${String(y).slice(-2)}` : y}
             </MonoLabel>
           ))}
         </div>
@@ -131,7 +131,7 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
           >
             <div className="h-full border-l-2 border-dashed border-[var(--rc-accent-pink)] opacity-60" />
             <div className="absolute -top-5 -translate-x-1/2 bg-[var(--rc-accent-pink)] text-white px-1.5 py-0.5 rounded-full">
-              <MonoLabel size="micro" colour="on-accent">{currentYear}</MonoLabel>
+              <MonoLabel size="micro" colour="on-accent">'{String(currentYear).slice(-2)}</MonoLabel>
             </div>
           </div>
         )}
