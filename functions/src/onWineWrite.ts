@@ -105,8 +105,9 @@ export const onWineWrite = onDocumentWritten(
       const ai = new GoogleGenAI({apiKey});
 
       const result = await ai.models.embedContent({
-        model: "text-embedding-004",
+        model: "gemini-embedding-001",
         contents: text,
+        config: {outputDimensionality: 768},
       });
 
       const embedding = result.embeddings?.[0]?.values;

@@ -128,8 +128,9 @@ export const queryInventory = onRequest(
         const ai = new GoogleGenAI({apiKey});
 
         const embedResult = await ai.models.embedContent({
-          model: "text-embedding-004",
+          model: "gemini-embedding-001",
           contents: body.semanticQuery,
+          config: {outputDimensionality: 768},
         });
         const queryVector = embedResult.embeddings?.[0]?.values;
         if (!queryVector || queryVector.length === 0) {
@@ -151,36 +152,23 @@ export const queryInventory = onRequest(
         wines = vectorSnapshot.docs.map((d) => docToWine(d.id, d.data()));
       } else {
         // ── Structured search path ──
-        let query = db.collection(WINES_COLLECTION)
-          .where(FIELD_MAP.producer, "!=", "");
-
-        if (body.wineType) {
-          query = query.where(FIELD_MAP.type, "==", body.wineType);
-        }
-        if (body.country) {
-          query = query.where(FIELD_MAP.country, "==", body.country);
-        }
-        if (body.region) {
-          query = query.where(FIELD_MAP.region, "==", body.region);
-        }
-
-        const snapshot = await query.get();
+        // Single base query, all filters in-memory
+        // (avoids composite index requirements)
+        const snapshot = await db.collection(WINES_COLLECTION)
+          .where(FIELD_MAP.producer, "!=", "")
+          .get();
         wines = snapshot.docs.map((d) => docToWine(d.id, d.data()));
       }
 
-      // In-memory filters (applied to both structured and semantic results)
-      // For semantic path, structured filters apply
-      // post-vector-search
-      if (body.semanticQuery) {
-        if (body.wineType) {
-          wines = wines.filter((w) => w.type === body.wineType);
-        }
-        if (body.country) {
-          wines = wines.filter((w) => w.country === body.country);
-        }
-        if (body.region) {
-          wines = wines.filter((w) => w.region === body.region);
-        }
+      // In-memory filters (applied to both paths)
+      if (body.wineType) {
+        wines = wines.filter((w) => w.type === body.wineType);
+      }
+      if (body.country) {
+        wines = wines.filter((w) => w.country === body.country);
+      }
+      if (body.region) {
+        wines = wines.filter((w) => w.region === body.region);
       }
       if (body.producer) {
         const p = body.producer.toLowerCase();
