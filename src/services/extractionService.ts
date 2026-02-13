@@ -1,5 +1,6 @@
 import { CONFIG } from '@/constants';
 import type { Wine, ExtractionResult, ExtractionConfidence, ExtractedField } from '@/types';
+import { sanitizeWineName } from '@/utils/wineNameGuard';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
   `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/gemini`;
@@ -46,6 +47,7 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
 }
 
 Rules:
+- WINE NAME: The "name" field is the cuvee/bottling name ONLY. It must NEVER match or contain the producer name or grape variety. If no distinct cuvee name is visible, set name to null.
 - Only extract what is clearly visible on the label
 - Set confidence to "high" if text is clearly legible, "medium" if partially visible/inferred, "low" if guessed from context
 - For wine type, infer from grape variety, colour cues, or label text if not explicitly stated
@@ -98,6 +100,10 @@ function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: Ex
       }
     }
   }
+
+  // Sanitize name (remove if it duplicates producer or cepage)
+  const sanitized = sanitizeWineName(wineFields);
+  Object.assign(wineFields, sanitized);
 
   // Set defaults
   if (!wineFields.quantity) wineFields.quantity = 1;

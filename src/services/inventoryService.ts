@@ -69,6 +69,20 @@ export const inventoryService = {
     }
   },
 
+  updateFields: async (docId: string, fields: Record<string, any>): Promise<boolean> => {
+    const mapped: Record<string, any> = {};
+    for (const [key, value] of Object.entries(fields)) {
+      mapped[FIRESTORE_FIELD_MAP[key] || key] = value;
+    }
+    try {
+      await updateDoc(doc(db, WINES_COLLECTION, docId), mapped);
+      return true;
+    } catch (e) {
+      console.error("Firestore Batch Update Failed", e);
+      return false;
+    }
+  },
+
   getCellarSnapshot: (inventory: Wine[]): string => {
     if (inventory.length === 0) return "Cellar is empty.";
     // Limit to prevent token bloat

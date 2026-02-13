@@ -5,6 +5,8 @@ import { Wine, StagedWine, Message, IngestionState } from '../types';
 import { buildSystemPrompt, CONFIG } from '../constants';
 import { fetchElevenLabsAudio, playAudioUrl, CHUNK_TIMEOUT_FIRST_MS, CHUNK_TIMEOUT_MS } from '../services/ttsService';
 import { formatForSpeech } from '../services/ttsFormatter';
+import { enrichWine } from '@/services/enrichmentService';
+import { sanitizeWineName } from '@/utils/wineNameGuard';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
   `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/gemini`;
@@ -213,7 +215,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     const results: { result: string }[] = [];
     for (const call of calls) {
       if (call.name === 'stageWine') {
-        const args = call.args;
+        const args = sanitizeWineName(call.args);
         const staged = { ...args, stagedId: Date.now().toString() };
         stagedWineRef.current = staged;
         setStagedWine(staged);
@@ -228,9 +230,13 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
             ...currentStaged,
             price: call.args.price,
             quantity: call.args.quantity || 1,
-            name: currentStaged.name || "Unknown Label"
+            name: currentStaged.name || ''
           };
           const id = await inventoryService.addWine(finalWine as any);
+          if (id) {
+            enrichWine(id, finalWine as Partial<Wine>).catch(err =>
+              console.error('Post-commit enrichment failed (non-blocking):', err));
+          }
           setIngestionState('COMMITTED');
           stagedWineRef.current = null;
           setStagedWine(null);
@@ -277,7 +283,24 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
         contents: historyRef.current,
         systemInstruction: prompt,
         tools: [{ functionDeclarations: [
-          { name: 'stageWine', parameters: { type: "OBJECT", properties: { producer: { type: "STRING" }, vintage: { type: "NUMBER" }, type: { type: "STRING" } } } },
+          { name: 'stageWine', parameters: {
+            type: "OBJECT",
+            properties: {
+              producer: { type: "STRING", description: "Wine producer/house name" },
+              vintage: { type: "NUMBER", description: "Vintage year" },
+              type: { type: "STRING", description: "Wine type: Red, White, Rosé, Sparkling, Dessert, Fortified" },
+              name: { type: "STRING", description: "Cuvee/bottling name only — must NOT duplicate producer or cepage" },
+              cepage: { type: "STRING", description: "Grape variety or blend" },
+              region: { type: "STRING", description: "Wine region" },
+              country: { type: "STRING", description: "Country of origin" },
+              appellation: { type: "STRING", description: "Appellation or classification" },
+              tastingNotes: { type: "STRING", description: "Comma-separated flavour adjectives (5-8 descriptors)" },
+              drinkFrom: { type: "NUMBER", description: "Suggested drink-from year" },
+              drinkUntil: { type: "NUMBER", description: "Suggested drink-until year" },
+              format: { type: "STRING", description: "Bottle format e.g. 750ml, 1.5L" },
+            },
+            required: ['producer', 'vintage', 'type'],
+          } },
           { name: 'commitWine', parameters: { type: "OBJECT", properties: { price: { type: "NUMBER" }, quantity: { type: "NUMBER" } }, required: ['price'] } }
         ] }]
       });

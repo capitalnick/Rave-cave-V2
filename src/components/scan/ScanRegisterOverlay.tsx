@@ -15,6 +15,8 @@ import { analyseImageQuality } from '@/utils/imageQuality';
 import { findDuplicates } from '@/services/duplicateService';
 import { inventoryService } from '@/services/inventoryService';
 import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
+import { enrichWine } from '@/services/enrichmentService';
+import { sanitizeWineName } from '@/utils/wineNameGuard';
 import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
 import { useScanSession } from '@/hooks/useScanSession';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -310,23 +312,24 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     setCommitStage('saving');
 
     try {
+      const cleanedFields = sanitizeWineName(draftFields);
       const wineData = {
-        producer: draftFields.producer || '',
-        name: draftFields.name || '',
-        vintage: draftFields.vintage || 0,
-        type: draftFields.type || 'Red',
-        cepage: draftFields.cepage || '',
-        region: draftFields.region || '',
-        country: draftFields.country || '',
-        quantity: draftFields.quantity || 1,
-        drinkFrom: draftFields.drinkFrom || 0,
-        drinkUntil: draftFields.drinkUntil || 0,
-        maturity: draftFields.maturity || 'Unknown',
-        tastingNotes: draftFields.tastingNotes || '',
-        price: draftFields.price || 0,
-        format: draftFields.format || '750ml',
-        appellation: draftFields.appellation || '',
-        personalNote: draftFields.personalNote || '',
+        producer: cleanedFields.producer || '',
+        name: cleanedFields.name || '',
+        vintage: cleanedFields.vintage || 0,
+        type: cleanedFields.type || 'Red',
+        cepage: cleanedFields.cepage || '',
+        region: cleanedFields.region || '',
+        country: cleanedFields.country || '',
+        quantity: cleanedFields.quantity || 1,
+        drinkFrom: cleanedFields.drinkFrom || 0,
+        drinkUntil: cleanedFields.drinkUntil || 0,
+        maturity: cleanedFields.maturity || 'Unknown',
+        tastingNotes: cleanedFields.tastingNotes || '',
+        price: cleanedFields.price || 0,
+        format: cleanedFields.format || '750ml',
+        appellation: cleanedFields.appellation || '',
+        personalNote: cleanedFields.personalNote || '',
       } as Omit<Wine, 'id'>;
 
       const docId = await inventoryService.addWine(wineData);
@@ -340,6 +343,10 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
           .then((url) => inventoryService.updateField(docId, 'imageUrl', url))
           .catch((err) => console.error('Image upload failed (non-blocking):', err));
       }
+
+      // Fire-and-forget enrichment (tasting notes, drink window, cepage, rating)
+      enrichWine(docId, wineData as Partial<Wine>).catch(err =>
+        console.error('Post-commit enrichment failed (non-blocking):', err));
 
       lastCommittedDocId.current = docId;
       lastCommittedName.current = `${draftFields.vintage || ''} ${draftFields.producer || 'Wine'}`.trim();
