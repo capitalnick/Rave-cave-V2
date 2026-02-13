@@ -32,7 +32,8 @@ const wineTypeToHeadingColour = {
 const WineDetailContent: React.FC<{
   wine: Wine;
   onUpdate?: (key: string, value: string) => Promise<void>;
-}> = ({ wine, onUpdate }) => {
+  hideHeroImage?: boolean;
+}> = ({ wine, onUpdate, hideHeroImage }) => {
   const rcProps = toRCWineCardProps(wine);
   const vintageColour = wineTypeToHeadingColour[rcProps.type];
   const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
@@ -178,8 +179,8 @@ const WineDetailContent: React.FC<{
 
   return (
     <>
-      {/* Hero Image */}
-      <div className="relative">
+      {/* Hero Image — hidden when rendered externally via dragZone */}
+      {!hideHeroImage && (
         <div className="h-60 bg-[var(--rc-ink-primary)] flex items-center justify-center overflow-hidden">
           {displayImageUrl ? (
             <ImageWithFallback
@@ -192,7 +193,9 @@ const WineDetailContent: React.FC<{
             <WineIcon size={64} className="text-[var(--rc-ink-on-accent)] opacity-20" />
           )}
         </div>
+      )}
 
+      <div className="relative">
         {/* Header: Producer, Vintage, Cepage, Location */}
         <div className="p-6 pb-2 space-y-0.5">
           <div className="flex items-center gap-1.5 opacity-60">
@@ -339,18 +342,36 @@ const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
     );
   }
 
-  // Mobile: BottomSheet (vaul) — destination view, opens at full
+  // Mobile: BottomSheet (vaul) — destination view, opens at full only
+  const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
+
+  const heroZone = (
+    <div className="h-60 bg-[var(--rc-ink-primary)] flex items-center justify-center overflow-hidden">
+      {displayImageUrl ? (
+        <ImageWithFallback
+          src={displayImageUrl}
+          alt={wine.name}
+          className="w-full h-full object-contain"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <WineIcon size={64} className="text-[var(--rc-ink-on-accent)] opacity-20" />
+      )}
+    </div>
+  );
+
   return (
     <BottomSheet
       open
       onOpenChange={(open) => { if (!open) onClose(); }}
       snapPoint="full"
-      snapPoints={['half', 'full']}
+      snapPoints={['full']}
       id="wine-detail"
       title={`${wine.producer} ${wine.vintage}`}
       className="[&>div:last-child]:px-0"
+      dragZone={heroZone}
     >
-      <WineDetailContent wine={wine} onUpdate={onUpdate} />
+      <WineDetailContent wine={wine} onUpdate={onUpdate} hideHeroImage />
     </BottomSheet>
   );
 };

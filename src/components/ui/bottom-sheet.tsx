@@ -34,8 +34,10 @@ interface BottomSheetProps {
   className?: string;
   /** If true, the sheet cannot be dismissed by swiping/clicking overlay */
   dismissible?: boolean;
-  /** Override drag behavior. Defaults to true for full sheets, false otherwise */
+  /** Override drag behavior. Defaults to false */
   handleOnly?: boolean;
+  /** Content rendered above the scroll area that allows swipe-to-dismiss (no data-vaul-no-drag) */
+  dragZone?: React.ReactNode;
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -50,6 +52,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   className,
   dismissible = true,
   handleOnly,
+  dragZone,
 }) => {
   const reducedMotion = useReducedMotion();
   const surfaceManager = useSurfaceManager();
@@ -125,6 +128,9 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           {/* Accessible title */}
           <Drawer.Title className="sr-only">{title}</Drawer.Title>
           {description && <Drawer.Description className="sr-only">{description}</Drawer.Description>}
+
+          {/* Drag zone — swipeable area above scroll content (no data-vaul-no-drag) */}
+          {dragZone}
 
           {/* Scrollable content — data-vaul-no-drag prevents content scroll from dismissing */}
           <div
