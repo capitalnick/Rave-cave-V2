@@ -229,7 +229,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
       {showFollowUpChips && <FollowUpChips onChipClick={handleChipClick} />}
 
       {/* Input Area */}
-      <div className="px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
+      <div className="px-6 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3">
             <input ref={fileRef} type="file" className="hidden" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />

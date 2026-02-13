@@ -199,7 +199,7 @@ const Layout: React.FC<LayoutProps> = ({
 
       <main
         ref={scrollWrapperRef}
-        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-[max(5rem,calc(4rem+env(safe-area-inset-bottom)))] md:pb-0 transition-[padding-right] duration-200"
+        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
         {children}
