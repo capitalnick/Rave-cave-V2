@@ -461,7 +461,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     <Dialog open onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent
         showClose={false}
-        className="max-w-full sm:max-w-3xl w-full max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-none sm:rounded-[var(--rc-radius-lg)] relative"
+        className="max-w-full sm:max-w-3xl w-full h-full sm:h-auto sm:max-h-[92vh] overflow-y-auto bg-[var(--rc-surface-primary)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[var(--rc-shadow-elevated)] p-0 gap-0 rounded-none sm:rounded-[var(--rc-radius-lg)] relative"
       >
         <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
 
