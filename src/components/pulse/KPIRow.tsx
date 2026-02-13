@@ -17,7 +17,7 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
       {/* Bottles */}
       <Card elevation="flat" padding="standard" className="border border-[var(--rc-border-subtle)]">
         <Heading scale="subhead" className="mb-4 pb-2 border-b-4 border-[var(--rc-accent-acid)]">
-          BOTTLES
+          BOTTLE COUNT
         </Heading>
         <Heading
           scale="hero"
@@ -43,7 +43,7 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
         className="border border-[var(--rc-border-emphasis)] bg-[var(--rc-accent-pink)] shadow-[6px_6px_0_rgba(0,0,0,1)]"
       >
         <Heading scale="subhead" colour="on-accent" className="mb-4 pb-2 border-b-4 border-white/30">
-          VALUE
+          CELLAR VALUE
         </Heading>
         <Heading
           scale="hero"
@@ -69,7 +69,7 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
           scale="subhead"
           className={`mb-4 pb-2 border-b-4 ${hasAttention ? 'border-[var(--rc-accent-coral)]' : 'border-[var(--rc-accent-acid)]'}`}
         >
-          ATTENTION
+          SIGNATURE PRODUCERS
         </Heading>
         <Heading
           scale="hero"
@@ -80,7 +80,7 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
           {hasAttention ? bottlesNeedingAttention : '0'}
         </Heading>
         <MonoLabel size="micro" colour="ghost" className="mt-2">
-          {hasAttention ? 'PAST PEAK' : 'ALL CLEAR'}
+          {hasAttention ? 'Past peak' : 'ALL CLEAR'}
         </MonoLabel>
       </Card>
     </div>

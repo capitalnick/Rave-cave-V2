@@ -172,12 +172,12 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
           </Heading>
           <div className="flex items-center gap-2 mt-1">
             <MonoLabel size="micro" colour="ghost" as="span" className="w-auto">
-              {isRecording ? 'Listening...' : 'Text Ready'}
+              {isRecording ? "I'm listening" : 'Text Ready'}
             </MonoLabel>
             {stagedWine && (
               <span className="flex items-center gap-2">
                 <span className="bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] px-2 py-0.5 rounded-[var(--rc-radius-sm)] font-[var(--rc-font-mono)] text-[9px] font-bold animate-pulse">
-                  WINE STAGED: {stagedWine.producer}
+                  Bottle ready to review
                 </span>
                 <button
                   onClick={() => onAddToCellar?.(stagedWine)}
@@ -197,7 +197,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
             className="flex items-center gap-2 bg-[var(--rc-accent-pink)] border border-[var(--rc-ink-primary)] px-3 py-1.5 hover:brightness-110 transition-all animate-pulse shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-[var(--rc-radius-sm)]"
           >
             <VolumeX size={18} />
-            <MonoLabel size="micro" weight="bold" colour="on-accent" as="span" className="w-auto">Stop Rémy</MonoLabel>
+            <MonoLabel size="micro" weight="bold" colour="on-accent" as="span" className="w-auto">Mute</MonoLabel>
           </button>
         )}
       </div>
@@ -224,7 +224,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
           })}
           {isProcessing && (
             <MonoLabel size="micro" colour="accent-acid" as="span" className="w-auto animate-pulse mt-6 block">
-              Rémy is thinking...
+              Let me think.
             </MonoLabel>
           )}
         </div>

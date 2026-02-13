@@ -135,7 +135,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
         <Button variantType="Secondary" label="Start Over" onClick={onStartOver} className="flex-1" />
         <Button
           variantType="Primary"
-          label="Ask Rémy More"
+          label="Refine with Rémy"
           iconAsset={ArrowRight}
           iconPosition="Trailing"
           onClick={handleAskRemy}

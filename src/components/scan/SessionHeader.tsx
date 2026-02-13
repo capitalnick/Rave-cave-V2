@@ -17,14 +17,14 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({ bottleNumber, onDone }) =
           key={bottleNumber}
           className={reducedMotion ? '' : 'inline-block animate-[slideInUp_200ms_ease-out]'}
         >
-          Bottle {bottleNumber}
+          Session: {bottleNumber} bottles added
         </span>
       </MonoLabel>
       <button
         onClick={onDone}
         className="px-3 py-1 bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] font-[var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-wider rounded-full hover:brightness-95 transition-all"
       >
-        DONE
+        Finish Session
       </button>
       <style>{`
         @keyframes slideInUp {

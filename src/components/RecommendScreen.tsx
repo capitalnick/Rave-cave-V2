@@ -215,7 +215,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
                 <SkeletonCard />
               </div>
               <MonoLabel size="label" colour="accent-pink" align="centre" className="animate-pulse">
-                Rémy is thinking…
+                Let me think.
               </MonoLabel>
             </>
           ) : (
@@ -226,7 +226,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
                 <SkeletonCard />
               </div>
               <MonoLabel size="label" colour="accent-pink" align="centre" className="animate-pulse">
-                Rémy is picking wines…
+                Let me think.
               </MonoLabel>
             </>
           )}

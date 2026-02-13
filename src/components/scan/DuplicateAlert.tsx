@@ -25,9 +25,9 @@ const DuplicateAlert: React.FC<DuplicateAlertProps> = ({
       <div className="w-full sm:max-w-md bg-[var(--rc-surface-primary)] rounded-t-[var(--rc-radius-lg)] sm:rounded-[var(--rc-radius-lg)] p-6 space-y-5 shadow-[var(--rc-shadow-elevated)]">
         {/* Header */}
         <div className="text-center space-y-1">
-          <Heading scale="heading">POSSIBLE DUPLICATE</Heading>
+          <Heading scale="heading">This looks familiar</Heading>
           <MonoLabel size="micro" colour="ghost">
-            {Math.round(similarityScore * 100)}% match — {matchedFields.join(', ')}
+            You already have this bottle in your cellar.
           </MonoLabel>
         </div>
 
@@ -46,8 +46,8 @@ const DuplicateAlert: React.FC<DuplicateAlertProps> = ({
 
         {/* Actions */}
         <div className="space-y-2">
-          <Button variantType="Primary" label="ADD TO EXISTING (+1 QTY)" onClick={onAddToExisting} className="w-full" />
-          <Button variantType="Secondary" label="KEEP AS SEPARATE BOTTLE" onClick={onKeepSeparate} className="w-full" />
+          <Button variantType="Primary" label="Review existing" onClick={onAddToExisting} className="w-full" />
+          <Button variantType="Secondary" label="Add anyway" onClick={onKeepSeparate} className="w-full" />
           {onViewExisting && (
             <button
               onClick={onViewExisting}

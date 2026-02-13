@@ -65,13 +65,13 @@ const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown }) => {
           {/* Chip legend */}
           <div className="flex flex-wrap gap-2 mt-4">
             {breakdown.drinkNow > 0 && (
-              <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label={`Drink Now ${breakdown.drinkNow}`} />
+              <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label={`Drink now ${breakdown.drinkNow}`} />
             )}
             {breakdown.hold > 0 && (
               <Chip variant="Maturity" state="Selected" maturityValue="hold" label={`Hold ${breakdown.hold}`} />
             )}
             {breakdown.pastPeak > 0 && (
-              <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label={`Past Peak ${breakdown.pastPeak}`} />
+              <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label={`Past peak ${breakdown.pastPeak}`} />
             )}
           </div>
         </>

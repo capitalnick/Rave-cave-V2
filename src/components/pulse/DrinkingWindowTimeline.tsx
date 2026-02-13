@@ -137,9 +137,9 @@ const DrinkingWindowTimeline: React.FC<DrinkingWindowTimelineProps> = ({
 
       {/* Legend */}
       <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[var(--rc-border-subtle)]">
-        <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label="Drink Now" />
+        <Chip variant="Maturity" state="Selected" maturityValue="drink-now" label="Drink now" />
         <Chip variant="Maturity" state="Selected" maturityValue="hold" label="Hold" />
-        <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label="Past Peak" />
+        <Chip variant="Maturity" state="Selected" maturityValue="past-peak" label="Past peak" />
       </div>
     </Card>
   );

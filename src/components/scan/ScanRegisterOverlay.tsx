@@ -571,8 +571,8 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
         {/* Discard Confirmation overlay */}
         {showDiscard && (
           <DiscardConfirmation
-            title={state.stage === 'draft' ? 'DISCARD THIS SCAN?' : 'END SESSION?'}
-            message={state.stage === 'draft' ? 'Your current scan will be lost.' : 'You can always scan more later.'}
+            title={state.stage === 'draft' ? 'DISCARD THIS SCAN?' : 'Finish session?'}
+            message={state.stage === 'draft' ? 'Your current scan will be lost.' : `${session.bottleCount} bottles have been added.`}
             onDiscard={handleDiscardConfirm}
             onKeep={handleDiscardKeep}
           />

@@ -22,8 +22,8 @@ const DiscardConfirmation: React.FC<DiscardConfirmationProps> = ({
           <MonoLabel size="micro" colour="ghost">{message}</MonoLabel>
         </div>
         <div className="space-y-2">
-          <Button variantType="Destructive" label="DISCARD" onClick={onDiscard} className="w-full" />
-          <Button variantType="Secondary" label="KEEP EDITING" onClick={onKeep} className="w-full" />
+          <Button variantType="Destructive" label={title?.includes('session') ? 'Finish Session' : 'DISCARD'} onClick={onDiscard} className="w-full" />
+          <Button variantType="Secondary" label={title?.includes('session') ? 'Continue' : 'KEEP EDITING'} onClick={onKeep} className="w-full" />
         </div>
       </div>
     </div>

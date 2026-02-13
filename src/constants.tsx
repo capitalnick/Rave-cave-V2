@@ -123,11 +123,11 @@ export const SYSTEM_PROMPT = buildSystemPrompt("Inventory context unavailable.")
 // ── Phase 6: Recommend ──
 
 export const OCCASIONS: Occasion[] = [
-  { id: 'dinner',   title: 'Dinner Pairing', description: 'Perfect wines for your meal',     icon: '🍽️' },
-  { id: 'party',    title: 'Party Wines',     description: 'Crowd-pleasing selections',       icon: '🎉' },
-  { id: 'gift',     title: 'Gift Picking',    description: 'Thoughtful wine gifts',           icon: '🎁' },
-  { id: 'cheese',   title: 'Cheese Board',    description: 'Perfect cheese pairings',         icon: '🧀' },
-  { id: 'surprise', title: 'Surprise Me',     description: 'Let Rémy decide',                 icon: '✨' },
+  { id: 'dinner',   title: 'Pair a Meal',          description: 'Perfect wines for your meal',     icon: '🍽️' },
+  { id: 'party',    title: 'Wines for a Crowd',    description: 'Crowd-pleasing selections',       icon: '🎉' },
+  { id: 'gift',     title: 'Choose a Gift',        description: 'Thoughtful wine gifts',           icon: '🎁' },
+  { id: 'cheese',   title: 'For Cheese',           description: 'Perfect cheese pairings',         icon: '🧀' },
+  { id: 'surprise', title: 'Something Unexpected', description: 'Let Rémy decide',                 icon: '✨' },
 ];
 
 export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {

@@ -86,7 +86,7 @@ const CellarPage: React.FC = () => {
       <div className="p-4 sm:p-10 space-y-6 sm:space-y-10">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="space-y-2 flex-1 w-full">
-            <h2 className="font-display text-5xl sm:text-7xl lg:text-8xl leading-none uppercase tracking-tighter">Your Cave</h2>
+            <h2 className="font-display text-5xl sm:text-7xl lg:text-8xl leading-none uppercase tracking-tighter">Your Collection</h2>
             <p className="font-mono text-[10px] sm:text-sm uppercase tracking-widest text-[var(--rc-ink-ghost)]">
               Firestore &bull; {isSynced ? 'Live Synchronized' : 'Connecting...'}
             </p>
@@ -136,8 +136,9 @@ const CellarPage: React.FC = () => {
             ))}
             {filteredInventory.length === 0 && (
               <div className="col-span-full py-20 sm:py-40 text-center border-4 sm:border-8 border-dashed border-[var(--rc-ink-ghost)] bg-[var(--rc-surface-elevated)]/50 px-4">
-                <p className="font-display text-4xl sm:text-6xl text-[var(--rc-ink-ghost)]">NO RECORDS FOUND</p>
-                <button onClick={clearFilters} className="mt-6 bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink)]">Reset All</button>
+                <p className="font-display text-4xl sm:text-6xl text-[var(--rc-ink-ghost)]">Your cellar awaits its first libation.</p>
+                <p className="mt-3 font-mono text-sm text-[var(--rc-ink-ghost)]">Add a bottle to begin.</p>
+                <button onClick={clearFilters} className="mt-6 bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink)]">Add to Cellar</button>
               </div>
             )}
           </div>

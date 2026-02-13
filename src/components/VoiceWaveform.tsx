@@ -24,7 +24,7 @@ const VoiceWaveform: React.FC = () => {
           ))}
         </div>
         <MonoLabel size="micro" colour="ghost" as="span" className="w-auto">
-          Listening…
+          I'm listening
         </MonoLabel>
       </div>
     </>
