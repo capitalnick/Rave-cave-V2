@@ -100,9 +100,10 @@ function AppShell() {
       filters={ctx.filters}
       facetOptions={ctx.facetOptions}
       filteredCount={ctx.filteredInventory.length}
-      activeFilterCount={ctx.activeFilterCount}
       onToggleFacet={ctx.toggleFacet}
       onClearFilters={ctx.clearFilters}
+      mobileFiltersOpen={ctx.mobileFiltersOpen}
+      onMobileFiltersOpenChange={ctx.setMobileFiltersOpen}
       onScanPress={() => ctx.openScan()}
       onScanLongPress={() => ctx.openScan()}
       scanFABRef={ctx.scanFABRef}

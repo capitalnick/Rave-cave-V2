@@ -68,6 +68,10 @@ interface InventoryContextValue {
   handleAddToCellarFromRecommend: (rec: Recommendation) => void;
   handleAddToCellarFromChat: (wine: Partial<Wine>) => void;
 
+  // Mobile filter overlay
+  mobileFiltersOpen: boolean;
+  setMobileFiltersOpen: (open: boolean) => void;
+
   // Refresh (for Pulse)
   triggerRefreshFeedback: () => void;
 }
@@ -116,6 +120,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [scanOpen, setScanOpen] = useState(false);
   const [prefillData, setPrefillData] = useState<Partial<Wine> | null>(null);
   const scanFABRef = useRef<HTMLButtonElement | null>(null);
+
+  // ── Mobile filter overlay ──
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // ── Recommend handoff ──
   const [recommendContext, setRecommendContext] = useState<RecommendChatContext | null>(null);
@@ -311,6 +318,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleHandoffToRemy,
     handleAddToCellarFromRecommend,
     handleAddToCellarFromChat,
+    mobileFiltersOpen,
+    setMobileFiltersOpen,
     triggerRefreshFeedback,
   }), [
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
@@ -318,7 +327,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     totalBottlesFiltered, heroWineIds, handleUpdate, scanOpen, prefillData,
     openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
-    handleAddToCellarFromChat, triggerRefreshFeedback,
+    handleAddToCellarFromChat, mobileFiltersOpen, triggerRefreshFeedback,
   ]);
 
   return (

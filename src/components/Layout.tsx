@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, Filter, Sparkles, Crosshair } from 'lucide-react';
+import React from 'react';
+import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, Sparkles, Crosshair } from 'lucide-react';
 import { NavId, TabId } from '@/types';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';
 import { TabItem, Divider, Heading, MonoLabel, ScanFAB } from '@/components/rc';
@@ -15,9 +15,10 @@ interface LayoutProps {
   filters?: FiltersState;
   facetOptions?: Record<string, FacetOption[]>;
   filteredCount?: number;
-  activeFilterCount?: number;
   onToggleFacet?: (key: FacetKey, value: string) => void;
   onClearFilters?: () => void;
+  mobileFiltersOpen?: boolean;
+  onMobileFiltersOpenChange?: (open: boolean) => void;
   onScanPress?: () => void;
   onScanLongPress?: () => void;
   scanFABRef?: React.Ref<HTMLButtonElement>;
@@ -41,9 +42,10 @@ const Layout: React.FC<LayoutProps> = ({
   filters,
   facetOptions,
   filteredCount = 0,
-  activeFilterCount = 0,
   onToggleFacet,
   onClearFilters,
+  mobileFiltersOpen = false,
+  onMobileFiltersOpenChange,
   onScanPress,
   onScanLongPress,
   scanFABRef,
@@ -52,7 +54,6 @@ const Layout: React.FC<LayoutProps> = ({
   isPinnedRemy = false,
   remyPanelOpen = false,
 }) => {
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const isRailExpanded = useRailExpanded();
   const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
 
@@ -174,26 +175,11 @@ const Layout: React.FC<LayoutProps> = ({
         ))}
       </nav>
 
-      {/* Mobile Filter FAB with count badge */}
-      {activeTab === 'cellar' && (
-        <button
-          onClick={() => setMobileFiltersOpen(true)}
-          className="md:hidden fixed bottom-20 right-4 w-12 h-12 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] border-[var(--rc-divider-emphasis-weight)] border-[var(--rc-ink-primary)] shadow-[4px_4px_0_rgba(0,0,0,1)] z-40 flex items-center justify-center rounded-[var(--rc-radius-md)]"
-        >
-          <Filter size={20} />
-          {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full bg-[var(--rc-ink-primary)] text-[var(--rc-accent-acid)] font-[var(--rc-font-mono)] text-[9px] font-bold border border-[var(--rc-ink-primary)]">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-      )}
-
       {/* Mobile Filter Overlay — BottomSheet */}
       {showFilters && (
         <BottomSheet
           open={mobileFiltersOpen}
-          onOpenChange={setMobileFiltersOpen}
+          onOpenChange={(open) => onMobileFiltersOpenChange?.(open)}
           snapPoint="full"
           snapPoints={['full']}
           id="mobile-filters"
@@ -206,7 +192,7 @@ const Layout: React.FC<LayoutProps> = ({
             filteredCount={filteredCount}
             onToggleFacet={onToggleFacet}
             onClearFilters={onClearFilters}
-            onClose={() => setMobileFiltersOpen(false)}
+            onClose={() => onMobileFiltersOpenChange?.(false)}
           />
         </BottomSheet>
       )}
