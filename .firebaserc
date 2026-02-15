@@ -1,7 +1,8 @@
 {
   "projects": {
     "default": "rave-cave-production",
-    "Prod": "rave-cave-production"
+    "dev": "rave-cave-production",
+    "prod": "rave-cave-prod"
   },
   "targets": {},
   "etags": {}

@@ -19,6 +19,7 @@ import { enrichWine } from '@/services/enrichmentService';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
 import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
 import { useScanSession } from '@/hooks/useScanSession';
+import { confirmProdWrite } from '@/components/ProdWriteGuard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { useIsMobile } from '@/components/ui/use-mobile';
@@ -299,6 +300,10 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   const handleConfirm = useCallback(async () => {
     if (!state.draft) return;
     const draftFields = state.draft.fields;
+
+    // 0. Production write guard
+    const confirmed = await confirmProdWrite();
+    if (!confirmed) return;
 
     // 1. Check for duplicates
     const dupes = findDuplicates(draftFields, inventory);

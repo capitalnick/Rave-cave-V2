@@ -7,12 +7,13 @@ import { fetchElevenLabsAudio, playAudioUrl, CHUNK_TIMEOUT_FIRST_MS, CHUNK_TIMEO
 import { formatForSpeech } from '../services/ttsFormatter';
 import { enrichWine } from '@/services/enrichmentService';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
+import { firebaseConfig } from '@/config/firebaseConfig';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
-  `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/gemini`;
+  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/gemini`;
 
-const QUERY_INVENTORY_URL = process.env.QUERY_INVENTORY_URL ||
-  `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/queryInventory`;
+const QUERY_INVENTORY_URL =
+  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/queryInventory`;
 
 const MAX_TOOL_ROUNDS = 5;
 

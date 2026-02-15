@@ -1,6 +1,8 @@
+import { firebaseConfig } from '@/config/firebaseConfig';
+
 const TTS_URL =
   process.env.TTS_FUNCTION_URL ||
-  `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/tts`;
+  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/tts`;
 
 export const CHUNK_TIMEOUT_FIRST_MS = 8000;
 export const CHUNK_TIMEOUT_MS = 5000;

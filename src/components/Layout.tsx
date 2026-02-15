@@ -2,7 +2,8 @@ import React from 'react';
 import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, Sparkles, Crosshair } from 'lucide-react';
 import { NavId, TabId } from '@/types';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';
-import { TabItem, Divider, Heading, MonoLabel, ScanFAB } from '@/components/rc';
+import { TabItem, Divider, Heading, MonoLabel, ScanFAB, EnvBadge } from '@/components/rc';
+import { ProdWriteGuard } from '@/components/ProdWriteGuard';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import FilterOverlay from '@/components/FilterOverlay';
 import { useRailExpanded } from '@/hooks/useRailExpanded';
@@ -73,6 +74,7 @@ const Layout: React.FC<LayoutProps> = ({
         )}>
           <WineIcon size={isRailExpanded ? 48 : 28} className="text-[var(--rc-accent-pink)]" />
           {isRailExpanded && <Heading scale="title" align="centre" className="mt-2">RAVE CAVE</Heading>}
+          <EnvBadge />
         </div>
 
         {/* Nav Items */}
@@ -202,8 +204,10 @@ const Layout: React.FC<LayoutProps> = ({
         className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
+        <EnvBadge className="fixed top-2 right-2 z-40 md:hidden" />
         {children}
       </main>
+      <ProdWriteGuard />
     </div>
   );
 };

@@ -1,9 +1,10 @@
 import { CONFIG } from '@/constants';
 import { inventoryService } from './inventoryService';
 import type { Wine } from '@/types';
+import { firebaseConfig } from '@/config/firebaseConfig';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
-  `https://australia-southeast1-${process.env.FIREBASE_PROJECT_ID}.cloudfunctions.net/gemini`;
+  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/gemini`;
 
 function computeMaturity(drinkFrom: number | null, drinkUntil: number | null): Wine['maturity'] {
   const year = new Date().getFullYear();

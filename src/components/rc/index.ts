@@ -21,3 +21,4 @@ export { InlineMessage } from './InlineMessage';
 export { Heading, Body, Caption, MonoLabel } from './typography';
 export { RCWineCard } from './RCWineCard';
 export * from './loading';
+export { EnvBadge } from './EnvBadge';
