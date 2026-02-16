@@ -18,6 +18,9 @@ import { firebaseConfig } from '@/config/firebaseConfig';
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
   `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/gemini`;
 
+const GEMINI_STREAM_URL =
+  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/geminiStream`;
+
 async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }) {
   const res = await fetch(GEMINI_PROXY_URL, {
     method: 'POST',
@@ -362,6 +365,108 @@ export async function getMenuScanRecommendations(
   if (!text) throw new RecommendError('Empty response from AI for menu scan', 'EMPTY_RESULTS');
 
   return parseMenuScanRecommendations(text, inventory);
+}
+
+// ── Streaming API ──
+
+async function callGeminiProxyStream(
+  body: { model: string; contents: any[]; systemInstruction?: string },
+  onRecommendation: (rec: Recommendation) => void,
+  inventory: Wine[],
+  signal?: AbortSignal
+): Promise<void> {
+  const res = await fetch(GEMINI_STREAM_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) throw new RecommendError(`Gemini proxy error: ${res.status}`, 'PROXY_ERROR');
+  if (!res.body) throw new RecommendError('No response body for stream', 'PROXY_ERROR');
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      // Keep the last (possibly incomplete) line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+        const payload = trimmed.slice(6); // strip "data: "
+
+        if (payload === '[DONE]') {
+          return;
+        }
+
+        if (payload.startsWith('{"_fallback"')) {
+          try {
+            const fallback = JSON.parse(payload);
+            const recs = parseRecommendations(fallback._fallback, inventory);
+            recs.forEach(onRecommendation);
+          } catch {
+            throw new RecommendError('Failed to parse fallback response', 'PARSE_ERROR');
+          }
+          return;
+        }
+
+        try {
+          const raw = JSON.parse(payload);
+          const { wineId, isFromCellar } = matchToCellar(raw, inventory);
+          const rec: Recommendation = {
+            wineId,
+            producer: raw.producer || 'Unknown',
+            name: raw.name || 'Unknown',
+            vintage: Number(raw.vintage) || new Date().getFullYear(),
+            type: raw.type || 'Red',
+            rank: raw.rank || 1,
+            rankLabel: (raw.rankLabel || 'best-match') as RankLabel,
+            rationale: raw.rationale || '',
+            isFromCellar,
+            maturity: raw.maturity || 'DRINK_NOW',
+            rating: raw.rating != null ? Number(raw.rating) : null,
+          };
+          onRecommendation(rec);
+        } catch {
+          // Skip malformed individual object
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+export async function getRecommendationsStream(
+  occasionId: OccasionId,
+  context: OccasionContext,
+  inventory: Wine[],
+  onRecommendation: (rec: Recommendation) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const cellarOnly = context ? (context as any).cellarOnly !== false : true;
+  const cellarSnapshot = buildCellarSnapshotForPrompt(inventory);
+  const systemInstruction = buildRecommendPrompt(occasionId, context, cellarSnapshot, cellarOnly);
+
+  await callGeminiProxyStream(
+    {
+      model: CONFIG.MODELS.TEXT,
+      systemInstruction,
+      contents: [{ role: 'user', parts: [{ text: 'Please recommend wines based on the context above.' }] }],
+    },
+    onRecommendation,
+    inventory,
+    signal
+  );
 }
 
 // ── Helpers ──

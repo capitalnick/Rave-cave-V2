@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import RecommendResultCard from './RecommendResultCard';
-import { Button, Heading, MonoLabel, InlineMessage } from '@/components/rc';
+import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/components/rc';
 import { OCCASIONS } from '@/constants';
 import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext } from '@/types';
 
@@ -10,6 +10,7 @@ interface RecommendResultsProps {
   recommendations: Recommendation[];
   cellarOnly: boolean;
   error: string | null;
+  isStreaming?: boolean;
   onStartOver: () => void;
   onHandoffToRemy: (context: RecommendChatContext) => void;
   onRetry: () => void;
@@ -28,6 +29,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   recommendations,
   cellarOnly,
   error,
+  isStreaming = false,
   onStartOver,
   onHandoffToRemy,
   onRetry,
@@ -66,8 +68,8 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
     );
   }
 
-  // Empty state (cellar-only with no matches)
-  if (recommendations.length === 0) {
+  // Empty state (cellar-only with no matches) — only show when not still streaming
+  if (recommendations.length === 0 && !isStreaming) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 gap-6 text-center">
         <Heading scale="heading" align="centre">YOUR CELLAR'S A BIT QUIET.</Heading>
@@ -92,31 +94,36 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
       {/* Header */}
       <div className="space-y-1">
         <Heading scale="heading">{occasionTitle}</Heading>
-        <MonoLabel size="label" colour="ghost">
-          {isSurprise
-            ? "Rémy's surprise pick"
-            : `Rémy's top ${recommendations.length} pick${recommendations.length !== 1 ? 's' : ''} ${cellarOnly ? 'from your cellar' : 'from the wine world'}`
+        <MonoLabel size="label" colour={isStreaming ? 'accent-pink' : 'ghost'} className={isStreaming ? 'animate-pulse' : ''}>
+          {isStreaming
+            ? "Rémy is thinking..."
+            : isSurprise
+              ? "Rémy's surprise pick"
+              : `Rémy's top ${recommendations.length} pick${recommendations.length !== 1 ? 's' : ''} ${cellarOnly ? 'from your cellar' : 'from the wine world'}`
           }
         </MonoLabel>
       </div>
 
-      {/* Cards */}
+      {/* Cards + skeleton placeholders */}
       <div className="grid grid-cols-1 gap-4">
         {recommendations.map((rec, i) => (
           <RecommendResultCard
             key={`${rec.producer}-${rec.vintage}-${rec.rank}`}
             recommendation={rec}
             isSurprise={isSurprise}
-            isSingleResult={recommendations.length === 1}
+            isSingleResult={recommendations.length === 1 && !isStreaming}
             index={i}
             onAddToCellar={onAddToCellar}
             onViewWine={onViewWine}
           />
         ))}
+        {isStreaming && Array.from({ length: 3 - recommendations.length }, (_, i) => (
+          <SkeletonCard key={`skeleton-${i}`} />
+        ))}
       </div>
 
       {/* Surprise Me re-roll */}
-      {isSurprise && (
+      {isSurprise && !isStreaming && (
         <div className="text-center">
           {surpriseRerollCount < 3 ? (
             <button
@@ -133,18 +140,20 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 pb-8">
-        <Button variantType="Secondary" label="Start Over" onClick={onStartOver} className="flex-1" />
-        <Button
-          variantType="Primary"
-          label="Refine with Rémy"
-          iconAsset={ArrowRight}
-          iconPosition="Trailing"
-          onClick={handleAskRemy}
-          className="flex-1"
-        />
-      </div>
+      {/* Actions — hidden while streaming */}
+      {!isStreaming && (
+        <div className="flex flex-col sm:flex-row gap-3 pb-8">
+          <Button variantType="Secondary" label="Start Over" onClick={onStartOver} className="flex-1" />
+          <Button
+            variantType="Primary"
+            label="Refine with Rémy"
+            iconAsset={ArrowRight}
+            iconPosition="Trailing"
+            onClick={handleAskRemy}
+            className="flex-1"
+          />
+        </div>
+      )}
 
       {/* Slide-in keyframes */}
       <style>{`

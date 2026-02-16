@@ -4,7 +4,7 @@ import OccasionGrid from './recommend/OccasionGrid';
 import OccasionContextForm from './recommend/OccasionContextForm';
 import RecommendResults from './recommend/RecommendResults';
 import { MonoLabel, Heading, Body, IconButton } from '@/components/rc';
-import { getRecommendations, getSurpriseMe, getMenuScanRecommendations } from '@/services/recommendService';
+import { getRecommendations, getRecommendationsStream, getSurpriseMe, getMenuScanRecommendations } from '@/services/recommendService';
 import { SkeletonCard } from '@/components/rc';
 import type {
   OccasionId,
@@ -39,12 +39,19 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   // Surprise Me state
   const [surpriseExcludeIds, setSurpriseExcludeIds] = useState<string[]>([]);
   const [surpriseRerollCount, setSurpriseRerollCount] = useState(0);
+  // Streaming state
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const cellarEmpty = inventory.length === 0;
   const isSurprise = selectedOccasion === 'surprise';
 
   // Track whether we're currently fetching to avoid double-calls
   const fetchingRef = useRef(false);
+  // Stream abort ref — persists across view changes, only aborted on nav/unmount
+  const streamAbortRef = useRef<AbortController | null>(null);
+
+  // Abort stream on unmount
+  useEffect(() => () => { streamAbortRef.current?.abort(); }, []);
 
   // ── AI Fetch Effect ──
   useEffect(() => {
@@ -79,12 +86,41 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
           setError(null);
           setView('results');
         } else {
-          const results = await getRecommendations(selectedOccasion, occasionContext, inventory);
-          setRecommendations(results);
-          setError(null);
+          // ── Progressive streaming with batch fallback ──
+          streamAbortRef.current?.abort();
+          streamAbortRef.current = new AbortController();
+          let streamedCount = 0;
+
+          setIsStreaming(true);
+          setRecommendations([]);
           setView('results');
+
+          try {
+            await getRecommendationsStream(
+              selectedOccasion,
+              occasionContext,
+              inventory,
+              (rec) => { streamedCount++; setRecommendations(prev => [...prev, rec]); },
+              streamAbortRef.current.signal
+            );
+          } catch (streamErr: any) {
+            if (streamErr.name === 'AbortError') throw streamErr;
+            console.warn('[Recommend] Stream error, falling back:', streamErr.message);
+          }
+
+          // Fallback to batch if streaming yielded nothing
+          if (streamedCount === 0) {
+            console.warn('[Recommend] Stream yielded 0, using batch');
+            const results = await getRecommendations(selectedOccasion, occasionContext, inventory);
+            setRecommendations(results);
+          }
+
+          setIsStreaming(false);
+          setError(null);
         }
       } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        setIsStreaming(false);
         setError(err.message || 'Something went wrong. Please try again.');
         setView('results');
       } finally {
@@ -132,6 +168,8 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   }, []);
 
   const handleBack = useCallback(() => {
+    streamAbortRef.current?.abort();
+    setIsStreaming(false);
     setView('grid');
     setSelectedOccasion(null);
     setOccasionContext(null);
@@ -283,6 +321,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
           recommendations={recommendations}
           cellarOnly={cellarOnly}
           error={error}
+          isStreaming={isStreaming}
           onStartOver={handleBack}
           onHandoffToRemy={handleHandoffToRemy}
           onRetry={handleRetry}

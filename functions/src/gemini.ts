@@ -25,64 +25,76 @@ type GeminiRequestBody = {
   tools?: unknown[];
 };
 
+// eslint-disable-next-line valid-jsdoc
+/** Shared validation + setup used by both gemini and geminiStream */
+function parseAndValidate(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: any, res: any
+): { body: GeminiRequestBody; apiKey: string } | null {
+  if (req.method !== "POST") {
+    res.status(405).send("Method not allowed");
+    return null;
+  }
+
+  const apiKey = GEMINI_API_KEY.value();
+  if (!apiKey) {
+    res.status(500).send("Missing GEMINI_API_KEY secret");
+    return null;
+  }
+
+  const body: GeminiRequestBody = typeof req.body === "string" ?
+    (JSON.parse(req.body || "{}") as GeminiRequestBody) :
+    ((req.body ?? {}) as GeminiRequestBody);
+
+  const {model, contents} = body;
+
+  if (!model || !MODEL_ALLOWLIST.has(model)) {
+    res.status(400).json({
+      error: `Invalid model. Allowed: ${[...MODEL_ALLOWLIST].join(", ")}`,
+    });
+    return null;
+  }
+
+  if (!Array.isArray(contents) || contents.length === 0) {
+    res.status(400).json({error: "Missing or empty contents array"});
+    return null;
+  }
+
+  if (contents.length > MAX_CONTENTS_TURNS) {
+    res.status(400).json({
+      error: `Too many turns (max ${MAX_CONTENTS_TURNS})`,
+    });
+    return null;
+  }
+
+  const rawSize = JSON.stringify(body).length;
+  if (rawSize > MAX_BODY_SIZE) {
+    res.status(400).json({
+      error: `Request too large (${rawSize} bytes, max ${MAX_BODY_SIZE})`,
+    });
+    return null;
+  }
+
+  return {body, apiKey};
+}
+
+// ── Non-streaming endpoint (used by Remy chat, scan, enrichment) ──
+
 export const gemini = onRequest(
   {
     region: "australia-southeast1",
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,
+    minInstances: 1,
   },
   async (req, res) => {
     try {
-      if (req.method !== "POST") {
-        res.status(405).send("Method not allowed");
-        return;
-      }
-
-      const apiKey = GEMINI_API_KEY.value();
-      if (!apiKey) {
-        res.status(500).send("Missing GEMINI_API_KEY secret");
-        return;
-      }
-
-      const body: GeminiRequestBody = typeof req.body === "string" ?
-        (JSON.parse(req.body || "{}") as GeminiRequestBody) :
-        ((req.body ?? {}) as GeminiRequestBody);
-
+      const result = parseAndValidate(req, res);
+      if (!result) return;
+      const {body, apiKey} = result;
       const {model, contents, systemInstruction, tools} = body;
 
-      // Validate model against allowlist
-      if (!model || !MODEL_ALLOWLIST.has(model)) {
-        res.status(400).json({
-          error: `Invalid model. Allowed: ${[...MODEL_ALLOWLIST].join(", ")}`,
-        });
-        return;
-      }
-
-      // Validate contents
-      if (!Array.isArray(contents) || contents.length === 0) {
-        res.status(400).json({error: "Missing or empty contents array"});
-        return;
-      }
-
-      // Contents length cap
-      if (contents.length > MAX_CONTENTS_TURNS) {
-        res.status(400).json({
-          error: `Too many turns (max ${MAX_CONTENTS_TURNS})`,
-        });
-        return;
-      }
-
-      // Request size cap
-      const rawSize = JSON.stringify(body).length;
-      if (rawSize > MAX_BODY_SIZE) {
-        res.status(400).json({
-          error: `Request too large (${rawSize} bytes, max ${MAX_BODY_SIZE})`,
-        });
-        return;
-      }
-
-      // Dynamic import: @google/genai is ESM-only
       const {GoogleGenAI} = await import("@google/genai");
       const ai = new GoogleGenAI({apiKey});
 
@@ -107,6 +119,117 @@ export const gemini = onRequest(
       const msg = e instanceof Error ? e.message : String(e);
       logger.error("Gemini proxy failed", {error: msg});
       res.status(500).json({error: "Gemini proxy failed", details: msg});
+    }
+  }
+);
+
+// ── Streaming SSE endpoint (used by recommendations) ──
+
+export const geminiStream = onRequest(
+  {
+    region: "australia-southeast1",
+    secrets: [GEMINI_API_KEY],
+    cors: ALLOWED_ORIGINS,
+    timeoutSeconds: 60,
+  },
+  async (req, res) => {
+    try {
+      const result = parseAndValidate(req, res);
+      if (!result) return;
+      const {body, apiKey} = result;
+      const {model, contents, systemInstruction} = body;
+
+      const {GoogleGenAI} = await import("@google/genai");
+      const ai = new GoogleGenAI({apiKey});
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const config: Record<string, any> = {};
+      if (systemInstruction) config.systemInstruction = systemInstruction;
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+
+      try {
+        const streamResponse = await ai.models.generateContentStream({
+          model,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          contents: contents as any,
+          config,
+        });
+
+        // Bracket-depth tracker to extract top-level JSON objects
+        let buffer = "";
+        let depth = 0;
+        let inString = false;
+        let escaped = false;
+        let objStart = -1;
+        let objectCount = 0;
+
+        for await (const chunk of streamResponse) {
+          const text = chunk.text ?? "";
+          if (!text) continue;
+
+          for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            buffer += ch;
+
+            if (escaped) {
+              escaped = false;
+              continue;
+            }
+            if (ch === "\\") {
+              escaped = true;
+              continue;
+            }
+            if (ch === "\"") {
+              inString = !inString;
+              continue;
+            }
+            if (inString) continue;
+
+            if (ch === "{") {
+              if (depth === 0) objStart = buffer.length - 1;
+              depth++;
+            } else if (ch === "}") {
+              depth--;
+              if (depth === 0 && objStart >= 0) {
+                const objStr = buffer.substring(objStart);
+                try {
+                  const parsed = JSON.parse(objStr);
+                  res.write(`data: ${JSON.stringify(parsed)}\n\n`);
+                  objectCount++;
+                } catch {
+                  // incomplete/invalid — skip
+                }
+                objStart = -1;
+              }
+            }
+          }
+        }
+
+        // If no objects extracted, send full text as fallback
+        if (objectCount === 0) {
+          res.write(`data: ${JSON.stringify({_fallback: buffer})}\n\n`);
+        }
+
+        res.write("data: [DONE]\n\n");
+        res.end();
+      } catch (streamErr: unknown) {
+        const streamMsg = streamErr instanceof Error ?
+          streamErr.message : String(streamErr);
+        logger.error("Gemini stream failed", {error: streamMsg});
+        res.write(
+          `event: error\ndata: ${JSON.stringify({error: streamMsg})}\n\n`
+        );
+        res.end();
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      logger.error("Gemini stream proxy failed", {error: msg});
+      res.status(500).json({error: "Gemini stream failed", details: msg});
     }
   }
 );
