@@ -10,6 +10,7 @@ interface RecommendResultCardProps {
   isSingleResult?: boolean;
   index: number;
   onAddToCellar?: (recommendation: Recommendation) => void;
+  onViewWine?: (wineId: string) => void;
 }
 
 const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
@@ -18,6 +19,7 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
   isSingleResult = false,
   index,
   onAddToCellar,
+  onViewWine,
 }) => {
   const badge = isSurprise || isSingleResult
     ? REMYS_PICK_BADGE
@@ -107,20 +109,28 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
       </div>
 
       {/* Bottom actions */}
-      {recommendation.isFromCellar && recommendation.wineId && (
+      {recommendation.isFromCellar && recommendation.wineId ? (
         <div className="px-4 pb-4">
-          <button className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider">
+          <button
+            onClick={() => onViewWine?.(recommendation.wineId)}
+            className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
+          >
             Open bottle detail →
           </button>
         </div>
-      )}
-      {!recommendation.isFromCellar && (
+      ) : (
         <div className="px-4 pb-4">
           <button
-            onClick={() => onAddToCellar?.(recommendation)}
+            onClick={() => {
+              const q = [recommendation.producer, recommendation.name, recommendation.type, recommendation.vintage]
+                .map(v => String(v ?? '').trim())
+                .filter(Boolean)
+                .join(' ');
+              if (q) window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank');
+            }}
             className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
           >
-            Add to cellar →
+            Search for wine →
           </button>
         </div>
       )}

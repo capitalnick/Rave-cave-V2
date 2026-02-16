@@ -22,9 +22,10 @@ interface RecommendScreenProps {
   inventory: Wine[];
   onHandoffToRemy?: (context: RecommendChatContext) => void;
   onAddToCellar?: (recommendation: Recommendation) => void;
+  onViewWine?: (wine: Wine) => void;
 }
 
-const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffToRemy, onAddToCellar }) => {
+const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffToRemy, onAddToCellar, onViewWine }) => {
   const [view, setView] = useState<RecommendView>('grid');
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
@@ -291,6 +292,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
           surpriseRerollCount={surpriseRerollCount}
           onSurpriseReroll={handleSurpriseReroll}
           onAddToCellar={onAddToCellar}
+          onViewWine={(wineId) => {
+            const wine = inventory.find(w => w.id === wineId);
+            if (wine) onViewWine?.(wine);
+          }}
         />
       )}
     </div>
