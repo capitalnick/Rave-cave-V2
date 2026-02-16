@@ -3,7 +3,8 @@ import { Loader2, Filter } from 'lucide-react';
 import WineCard from '@/components/WineCard';
 import { useInventory } from '@/context/InventoryContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
-import { IconButton } from '@/components/rc';
+import { IconButton, Heading, MonoLabel } from '@/components/rc';
+import WineIcon from '@/components/icons/WineIcon';
 import { SortMenu } from '@/components/SortMenu';
 import type { SortField } from '@/types';
 
@@ -52,7 +53,6 @@ const CondensedHeader: React.FC<{
 
 const CellarPage: React.FC = () => {
   const {
-    isSynced,
     loading,
     filteredInventory,
     totalBottlesFiltered,
@@ -83,13 +83,14 @@ const CellarPage: React.FC = () => {
       />
 
       {/* Hero section */}
-      <div className="p-4 sm:p-10 space-y-6 sm:space-y-10">
+      <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="space-y-2 flex-1 w-full">
-            <h2 className="font-display text-5xl sm:text-7xl lg:text-8xl leading-none uppercase tracking-tighter">Your Collection</h2>
-            <p className="font-mono text-[10px] sm:text-sm uppercase tracking-widest text-[var(--rc-ink-ghost)]">
-              Firestore &bull; {isSynced ? 'Live Synchronized' : 'Connecting...'}
-            </p>
+            <div className="flex items-center gap-3">
+              <WineIcon size={28} />
+              <Heading scale="hero">THE COLLECTION</Heading>
+            </div>
+            <MonoLabel size="label" colour="ghost">Your cellar inventory</MonoLabel>
           </div>
 
           <div className="flex gap-4 sm:gap-6 items-end flex-shrink-0">

@@ -12,25 +12,9 @@ import type {
   ScanMenuContext,
   Recommendation,
   MenuScanRecommendation,
-  RecentQuery,
   RecommendChatContext,
   Wine,
 } from '@/types';
-
-const RECENT_QUERIES_KEY = 'rave-cave-recent-queries';
-
-function loadRecentQueries(): RecentQuery[] {
-  try {
-    const raw = localStorage.getItem(RECENT_QUERIES_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRecentQueries(queries: RecentQuery[]) {
-  localStorage.setItem(RECENT_QUERIES_KEY, JSON.stringify(queries.slice(0, 5)));
-}
 
 export type RecommendView = 'grid' | 'form' | 'scan-capture' | 'loading' | 'results';
 
@@ -45,7 +29,6 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [recentQueries, setRecentQueries] = useState<RecentQuery[]>(loadRecentQueries);
   const [error, setError] = useState<string | null>(null);
   // Scan menu state
   const [menuImage, setMenuImage] = useState<string | null>(null);
@@ -87,19 +70,16 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
             rating: null,
           }));
           setRecommendations(results);
-          addRecentQuery(selectedOccasion, occasionContext, results);
           setError(null);
           setView('results');
         } else if (selectedOccasion === 'surprise') {
           const result = await getSurpriseMe(inventory, surpriseExcludeIds);
           setRecommendations([result]);
-          addRecentQuery(selectedOccasion, null, [result]);
           setError(null);
           setView('results');
         } else {
           const results = await getRecommendations(selectedOccasion, occasionContext, inventory);
           setRecommendations(results);
-          addRecentQuery(selectedOccasion, occasionContext, results);
           setError(null);
           setView('results');
         }
@@ -194,45 +174,6 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     onHandoffToRemy?.(context);
   }, [onHandoffToRemy]);
 
-  const addRecentQuery = useCallback((occasionId: OccasionId, context: OccasionContext, results: Recommendation[]) => {
-    const queryText = buildQueryText(occasionId, context);
-    const query: RecentQuery = {
-      id: Date.now().toString(),
-      occasionId,
-      queryText,
-      resultCount: results.length,
-      resultSetId: Date.now().toString(),
-      timestamp: Date.now(),
-      contextInputs: context,
-    };
-    setRecentQueries(prev => {
-      const next = [query, ...prev.filter(q => q.id !== query.id)].slice(0, 5);
-      saveRecentQueries(next);
-      return next;
-    });
-  }, []);
-
-  const handleReplayQuery = useCallback((query: RecentQuery) => {
-    setSelectedOccasion(query.occasionId);
-    setOccasionContext(query.contextInputs);
-    setError(null);
-    setRecommendations([]);
-    if (query.occasionId === 'surprise') {
-      setSurpriseExcludeIds([]);
-      setSurpriseRerollCount(0);
-    }
-    fetchingRef.current = false;
-    setView('loading');
-  }, []);
-
-  const handleDeleteQuery = useCallback((id: string) => {
-    setRecentQueries(prev => {
-      const next = prev.filter(q => q.id !== id);
-      saveRecentQueries(next);
-      return next;
-    });
-  }, []);
-
   const cellarOnly = occasionContext ? (occasionContext as any).cellarOnly !== false : true;
 
   return (
@@ -241,9 +182,6 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
         <OccasionGrid
           onSelectOccasion={handleSelectOccasion}
           cellarEmpty={cellarEmpty}
-          recentQueries={recentQueries}
-          onReplayQuery={handleReplayQuery}
-          onDeleteQuery={handleDeleteQuery}
         />
       )}
 
@@ -358,25 +296,5 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     </div>
   );
 };
-
-// ── Helpers ──
-
-function buildQueryText(occasionId: OccasionId, context: OccasionContext): string {
-  if (!context) return 'Surprise Me';
-  switch (occasionId) {
-    case 'dinner':
-      return (context as any).meal ? `${(context as any).meal} dinner` : 'Dinner pairing';
-    case 'party':
-      return `Party for ${(context as any).guests}`;
-    case 'gift':
-      return (context as any).recipient ? `Gift for ${(context as any).recipient}` : 'Wine gift';
-    case 'cheese':
-      return (context as any).cheeses ? `Cheese: ${(context as any).cheeses}` : 'Cheese board';
-    case 'scan_menu':
-      return 'Wine list scan';
-    default:
-      return 'Recommendation';
-  }
-}
 
 export default RecommendScreen;

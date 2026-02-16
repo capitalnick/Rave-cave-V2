@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Wine, StoryCard, FacetKey } from '@/types';
 import { computePulseStats } from '@/services/pulseService';
 import { Heading, Body, MonoLabel } from '@/components/rc';
+import WineIcon from '@/components/icons/WineIcon';
 import { IconButton } from '@/components/rc';
 import { ArrowLeft } from 'lucide-react';
 import StoryCards from './pulse/StoryCards';
@@ -279,7 +280,10 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
       <div className="p-4 sm:p-10 space-y-6 sm:space-y-10 pb-24 sm:pb-20">
         {/* Header */}
         <div className="space-y-2">
-          <Heading scale="hero">PULSE</Heading>
+          <div className="flex items-center gap-3">
+            <WineIcon size={28} />
+            <Heading scale="hero">PULSE</Heading>
+          </div>
           <MonoLabel size="label" colour="ghost">
             Your cellar at a glance
           </MonoLabel>
