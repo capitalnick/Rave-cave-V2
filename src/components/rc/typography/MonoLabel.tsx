@@ -30,12 +30,12 @@ export const MonoLabel = React.forwardRef<HTMLElement, MonoLabelProps>(
 
     const sizeStyles = {
       label: {
-        size: 'text-[var(--rc-type-label)]',
+        size: 'text-[length:var(--rc-type-label)]',
         lh: 'leading-[var(--rc-lh-label)]',
         ls: 'tracking-[var(--rc-ls-label)]',
       },
       micro: {
-        size: 'text-[var(--rc-type-micro)]',
+        size: 'text-[length:var(--rc-type-micro)]',
         lh: 'leading-[var(--rc-lh-micro)]',
         ls: 'tracking-[var(--rc-ls-micro)]',
       },
@@ -47,14 +47,14 @@ export const MonoLabel = React.forwardRef<HTMLElement, MonoLabelProps>(
     };
 
     const colourStyles = {
-      primary: 'text-[var(--rc-ink-primary)]',
-      secondary: 'text-[var(--rc-ink-secondary)]',
-      tertiary: 'text-[var(--rc-ink-tertiary)]',
-      ghost: 'text-[var(--rc-ink-ghost)]',
-      'on-accent': 'text-[var(--rc-ink-on-accent)]',
-      'accent-pink': 'text-[var(--rc-accent-pink)]',
-      'accent-acid': 'text-[var(--rc-accent-acid)]',
-      'accent-coral': 'text-[var(--rc-accent-coral)]',
+      primary: 'text-[color:var(--rc-ink-primary)]',
+      secondary: 'text-[color:var(--rc-ink-secondary)]',
+      tertiary: 'text-[color:var(--rc-ink-tertiary)]',
+      ghost: 'text-[color:var(--rc-ink-ghost)]',
+      'on-accent': 'text-[color:var(--rc-ink-on-accent)]',
+      'accent-pink': 'text-[color:var(--rc-accent-pink)]',
+      'accent-acid': 'text-[color:var(--rc-accent-acid)]',
+      'accent-coral': 'text-[color:var(--rc-accent-coral)]',
     };
 
     const alignStyles = {
@@ -69,7 +69,7 @@ export const MonoLabel = React.forwardRef<HTMLElement, MonoLabelProps>(
       <Component
         ref={ref}
         className={cn(
-          "block w-full font-[var(--rc-font-mono)]",
+          "block w-full font-[family-name:var(--rc-font-mono)]",
           currentSize.size,
           currentSize.lh,
           currentSize.ls,

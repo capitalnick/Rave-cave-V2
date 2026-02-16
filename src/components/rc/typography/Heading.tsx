@@ -35,31 +35,31 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
 
     const scaleStyles = {
       hero: {
-        size: 'text-[var(--rc-type-hero)]',
+        size: 'text-[length:var(--rc-type-hero)]',
         weight: 'font-black', // Satoshi 900
         lh: 'leading-[var(--rc-lh-hero)]',
         ls: 'tracking-[var(--rc-ls-hero)]',
       },
       vintage: {
-        size: 'text-[var(--rc-type-vintage)]',
+        size: 'text-[length:var(--rc-type-vintage)]',
         weight: 'font-black', // Satoshi 900
         lh: 'leading-[var(--rc-lh-vintage)]',
         ls: 'tracking-[var(--rc-ls-vintage)]',
       },
       title: {
-        size: 'text-[var(--rc-type-title)]',
+        size: 'text-[length:var(--rc-type-title)]',
         weight: 'font-black', // Satoshi 900
         lh: 'leading-[var(--rc-lh-title)]',
         ls: 'tracking-[var(--rc-ls-title)]',
       },
       heading: {
-        size: 'text-[var(--rc-type-heading)]',
+        size: 'text-[length:var(--rc-type-heading)]',
         weight: 'font-bold', // Satoshi 700
         lh: 'leading-[var(--rc-lh-heading)]',
         ls: 'tracking-[var(--rc-ls-heading)]',
       },
       subhead: {
-        size: 'text-[var(--rc-type-subhead)]',
+        size: 'text-[length:var(--rc-type-subhead)]',
         weight: 'font-bold', // Satoshi 700
         lh: 'leading-[var(--rc-lh-subhead)]',
         ls: 'tracking-[var(--rc-ls-subhead)]',
@@ -67,12 +67,12 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
     };
 
     const colourStyles = {
-      primary: 'text-[var(--rc-ink-primary)]',
-      secondary: 'text-[var(--rc-ink-secondary)]',
-      'on-accent': 'text-[var(--rc-ink-on-accent)]',
-      'accent-pink': 'text-[var(--rc-accent-pink)]',
-      'accent-acid': 'text-[var(--rc-accent-acid)]',
-      'accent-coral': 'text-[var(--rc-accent-coral)]',
+      primary: 'text-[color:var(--rc-ink-primary)]',
+      secondary: 'text-[color:var(--rc-ink-secondary)]',
+      'on-accent': 'text-[color:var(--rc-ink-on-accent)]',
+      'accent-pink': 'text-[color:var(--rc-accent-pink)]',
+      'accent-acid': 'text-[color:var(--rc-accent-acid)]',
+      'accent-coral': 'text-[color:var(--rc-accent-coral)]',
     };
 
     const alignStyles = {
@@ -87,7 +87,7 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
       <Component
         ref={ref}
         className={cn(
-          "block w-full break-word font-[var(--rc-font-display)]",
+          "block w-full break-word font-[family-name:var(--rc-font-display)]",
           currentScale.size,
           currentScale.weight,
           currentScale.lh,

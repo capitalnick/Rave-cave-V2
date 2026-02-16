@@ -31,12 +31,12 @@ export const Body = React.forwardRef<HTMLElement, BodyProps>(
 
     const sizeStyles = {
       body: {
-        size: 'text-[var(--rc-type-body)]',
+        size: 'text-[length:var(--rc-type-body)]',
         lh: 'leading-[var(--rc-lh-body)]',
         ls: 'tracking-[var(--rc-ls-body)]',
       },
       caption: {
-        size: 'text-[var(--rc-type-caption)]',
+        size: 'text-[length:var(--rc-type-caption)]',
         lh: 'leading-[var(--rc-lh-caption)]',
         ls: 'tracking-[var(--rc-ls-caption)]',
       },
@@ -48,13 +48,13 @@ export const Body = React.forwardRef<HTMLElement, BodyProps>(
     };
 
     const colourStyles = {
-      primary: 'text-[var(--rc-ink-primary)]',
-      secondary: 'text-[var(--rc-ink-secondary)]',
-      tertiary: 'text-[var(--rc-ink-tertiary)]',
-      ghost: 'text-[var(--rc-ink-ghost)]',
-      'on-accent': 'text-[var(--rc-ink-on-accent)]',
-      'accent-pink': 'text-[var(--rc-accent-pink)]',
-      'accent-coral': 'text-[var(--rc-accent-coral)]',
+      primary: 'text-[color:var(--rc-ink-primary)]',
+      secondary: 'text-[color:var(--rc-ink-secondary)]',
+      tertiary: 'text-[color:var(--rc-ink-tertiary)]',
+      ghost: 'text-[color:var(--rc-ink-ghost)]',
+      'on-accent': 'text-[color:var(--rc-ink-on-accent)]',
+      'accent-pink': 'text-[color:var(--rc-accent-pink)]',
+      'accent-coral': 'text-[color:var(--rc-accent-coral)]',
     };
 
     const alignStyles = {
@@ -69,7 +69,7 @@ export const Body = React.forwardRef<HTMLElement, BodyProps>(
       <Component
         ref={ref}
         className={cn(
-          "block w-full break-word font-[var(--rc-font-body)]",
+          "block w-full break-word font-[family-name:var(--rc-font-body)]",
           currentSize.size,
           currentSize.lh,
           currentSize.ls,
