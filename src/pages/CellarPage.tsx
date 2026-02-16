@@ -83,7 +83,7 @@ const CellarPage: React.FC = () => {
       />
 
       {/* Hero section */}
-      <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
+      <div className="p-4 sm:p-10 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="flex-1 w-full">
             <PageHeader title="THE COLLECTION" subtitle="Your cellar inventory" />
