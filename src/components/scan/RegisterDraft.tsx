@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { RefreshCw, Plus, Minus } from 'lucide-react';
+import { RefreshCw, Plus, Minus, Search } from 'lucide-react';
 import { Heading, MonoLabel, Button, Input, Divider, Chip, InlineMessage } from '@/components/rc';
 import ConfidenceIndicator from './ConfidenceIndicator';
 import MoreFieldsSection from './MoreFieldsSection';
@@ -154,15 +154,30 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
                 )}
               </div>
             </div>
-            {source === 'scan' && (
+            <div className="flex items-center gap-3">
               <button
-                onClick={onRetake}
+                onClick={() => {
+                  const q = [fields.producer, fields.name, fields.vintage]
+                    .map(v => String(v ?? '').trim())
+                    .filter(Boolean)
+                    .join(' ');
+                  if (q) window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank');
+                }}
                 className="flex items-center gap-1 text-[var(--rc-ink-ghost)] hover:text-[var(--rc-ink-primary)] transition-colors"
               >
-                <RefreshCw size={14} />
-                <MonoLabel size="micro" colour="ghost">RETAKE</MonoLabel>
+                <Search size={14} />
+                <MonoLabel size="micro" colour="ghost">SEARCH</MonoLabel>
               </button>
-            )}
+              {source === 'scan' && (
+                <button
+                  onClick={onRetake}
+                  className="flex items-center gap-1 text-[var(--rc-ink-ghost)] hover:text-[var(--rc-ink-primary)] transition-colors"
+                >
+                  <RefreshCw size={14} />
+                  <MonoLabel size="micro" colour="ghost">RETAKE</MonoLabel>
+                </button>
+              )}
+            </div>
           </div>
 
           <Divider weight="emphasised" className="mx-4" />
