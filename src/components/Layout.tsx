@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, Sparkles } from 'lucide-react';
+import { MessageSquare, Database, LayoutDashboard, Settings, Sparkles } from 'lucide-react';
+import WineIcon from '@/components/icons/WineIcon';
 import { ScanBottleIcon } from '@/components/rc/ScanBottleIcon';
 import { NavId, TabId } from '@/types';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';

@@ -9,7 +9,7 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle }) => (
   <div>
-    <div className="float-left mr-3 mt-[0.25em] w-10 h-10 lg:w-14 lg:h-14">
+    <div className="float-left mr-3 mt-[0.25em] w-10 h-10 md:hidden">
       <WineIcon size={56} className="w-full h-full text-[var(--rc-accent-pink)]" />
     </div>
     <Heading scale="hero">{title}</Heading>
