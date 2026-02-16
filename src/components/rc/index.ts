@@ -22,3 +22,4 @@ export { Heading, Body, Caption, MonoLabel } from './typography';
 export { RCWineCard } from './RCWineCard';
 export * from './loading';
 export { EnvBadge } from './EnvBadge';
+export { PageHeader } from './PageHeader';

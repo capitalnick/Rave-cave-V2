@@ -3,7 +3,7 @@ import { Loader2, Filter } from 'lucide-react';
 import WineCard from '@/components/WineCard';
 import { useInventory } from '@/context/InventoryContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
-import { IconButton, Heading, MonoLabel } from '@/components/rc';
+import { IconButton, Heading, MonoLabel, PageHeader } from '@/components/rc';
 import WineIcon from '@/components/icons/WineIcon';
 import { SortMenu } from '@/components/SortMenu';
 import type { SortField } from '@/types';
@@ -85,12 +85,8 @@ const CellarPage: React.FC = () => {
       {/* Hero section */}
       <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-          <div className="space-y-2 flex-1 w-full">
-            <div className="flex items-center gap-3">
-              <WineIcon size={28} />
-              <Heading scale="hero">THE COLLECTION</Heading>
-            </div>
-            <MonoLabel size="label" colour="ghost">Your cellar inventory</MonoLabel>
+          <div className="flex-1 w-full">
+            <PageHeader title="THE COLLECTION" subtitle="Your cellar inventory" />
           </div>
 
           <div className="flex gap-4 sm:gap-6 items-end flex-shrink-0">

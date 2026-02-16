@@ -1,8 +1,7 @@
 import React from 'react';
 import OccasionCard from './OccasionCard';
 import { OCCASIONS } from '@/constants';
-import { Heading, MonoLabel } from '@/components/rc';
-import WineIcon from '@/components/icons/WineIcon';
+import { PageHeader } from '@/components/rc';
 import type { OccasionId } from '@/types';
 
 interface OccasionGridProps {
@@ -17,13 +16,7 @@ const OccasionGrid: React.FC<OccasionGridProps> = ({
   return (
     <div className="flex flex-col gap-8 p-6 sm:p-10 h-full overflow-y-auto">
       {/* Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-3">
-          <WineIcon size={28} />
-          <Heading scale="hero">RECOMMEND</Heading>
-        </div>
-        <MonoLabel size="label" colour="ghost">WHAT'S THE OCCASION?</MonoLabel>
-      </div>
+      <PageHeader title="RECOMMEND" subtitle="WHAT'S THE OCCASION?" />
 
       {/* Standard grid (no flags) */}
       <div className="grid grid-cols-2 gap-4">
