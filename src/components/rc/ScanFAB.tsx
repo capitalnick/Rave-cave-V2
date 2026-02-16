@@ -1,6 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Crosshair } from 'lucide-react';
+import { ScanBottleIcon } from './ScanBottleIcon';
 import { hapticLight } from '@/utils/haptics';
 
 interface ScanFABProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -69,7 +69,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
       {...props}
       onClick={handleClick}
     >
-      <Crosshair className="w-7 h-7" />
+      <ScanBottleIcon size={28} />
     </button>
   );
 });

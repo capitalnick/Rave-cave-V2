@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, Sparkles, Crosshair } from 'lucide-react';
+import { MessageSquare, Database, LayoutDashboard, Settings, Wine as WineIcon, Sparkles } from 'lucide-react';
+import { ScanBottleIcon } from '@/components/rc/ScanBottleIcon';
 import { NavId, TabId } from '@/types';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';
 import { TabItem, Divider, Heading, MonoLabel, ScanFAB, EnvBadge } from '@/components/rc';
@@ -104,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({
               onClick={onScanPress}
               className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] rounded-[var(--rc-radius-md)] font-[var(--rc-font-mono)] text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
             >
-              <Crosshair size={16} />
+              <ScanBottleIcon size={16} />
               SCAN
             </button>
           ) : (
@@ -113,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({
               className="w-10 h-10 mx-auto flex items-center justify-center rounded-full bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
               aria-label="Scan label"
             >
-              <Crosshair size={18} />
+              <ScanBottleIcon size={18} />
             </button>
           )}
         </div>
