@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Camera, Mic, MicOff, Send, VolumeX } from 'lucide-react';
+import { Mic, Send, VolumeX } from 'lucide-react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import VoiceWaveform from './VoiceWaveform';
 import FollowUpChips from './recommend/FollowUpChips';
@@ -45,10 +45,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   } = useGeminiLive(inventory, cellarSnapshot);
 
   const [input, setInput] = useState('');
-  const [dragOver, setDragOver] = useState(false);
   const [showFollowUpChips, setShowFollowUpChips] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const contextConsumedRef = useRef(false);
   // Track transcript length to detect new assistant messages after context injection
   const transcriptLenAtInjection = useRef<number | null>(null);
@@ -133,15 +131,6 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
   const handleChipClick = (question: string) => {
     sendMessage(question);
     setShowFollowUpChips(false);
-  };
-
-  const handleImageUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      sendMessage("Analyze this wine label to add to cellar.", base64);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleWineCardAddToCellar = (wine: RemyWineData) => {
@@ -254,22 +243,14 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
       <div className="px-6 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3">
-            <input ref={fileRef} type="file" className="hidden" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
-            <IconButton
-              icon={Camera}
-              aria-label="Upload image"
-              onClick={() => fileRef.current?.click()}
-              className="bg-[var(--rc-surface-elevated,#3d3d3d)] text-[var(--rc-ink-on-accent)] hover:bg-[var(--rc-accent-pink)] w-12 h-12"
-            />
-
             {isRecording ? (
-              <div className="flex-1 flex items-center bg-[var(--rc-ink-primary)] border border-[var(--rc-accent-pink)] px-4 py-3 rounded-[var(--rc-radius-md)]">
+              <div className="flex-1 flex items-center bg-[var(--rc-ink-primary)] border border-[var(--rc-accent-acid)] px-4 py-3 rounded-[var(--rc-radius-md)]">
                 <VoiceWaveform />
                 <button
                   onClick={stopRecording}
-                  className="ml-3 text-[var(--rc-accent-pink)] transition-colors shrink-0"
+                  className="ml-3 w-9 h-9 rounded-full bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] flex items-center justify-center transition-colors shrink-0"
                 >
-                  <MicOff size={20} />
+                  <Mic size={18} />
                 </button>
               </div>
             ) : (
