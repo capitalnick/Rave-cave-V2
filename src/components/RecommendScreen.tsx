@@ -3,20 +3,29 @@ import { ArrowLeft, Camera, ImageIcon } from 'lucide-react';
 import OccasionGrid from './recommend/OccasionGrid';
 import OccasionContextForm from './recommend/OccasionContextForm';
 import RecommendResults from './recommend/RecommendResults';
+import WineListCapture from './recommend/WineListCapture';
+import WineListLoading from './recommend/WineListLoading';
+import WineListResults from './recommend/WineListResults';
 import { MonoLabel, Heading, Body, IconButton } from '@/components/rc';
 import { getRecommendations, getRecommendationsStream, getSurpriseMe, getMenuScanRecommendations } from '@/services/recommendService';
+import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
+import { useWineListCapture } from '@/hooks/useWineListCapture';
 import { SkeletonCard } from '@/components/rc';
 import type {
   OccasionId,
   OccasionContext,
   ScanMenuContext,
+  WineListAnalysisContext,
   Recommendation,
   MenuScanRecommendation,
   RecommendChatContext,
+  WineListAnalysis,
   Wine,
 } from '@/types';
 
-export type RecommendView = 'grid' | 'form' | 'scan-capture' | 'loading' | 'results';
+export type RecommendView =
+  | 'grid' | 'form' | 'scan-capture' | 'loading' | 'results'
+  | 'winelist-capture' | 'winelist-loading' | 'winelist-results';
 
 interface RecommendScreenProps {
   inventory: Wine[];
@@ -41,6 +50,11 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   const [surpriseRerollCount, setSurpriseRerollCount] = useState(0);
   // Streaming state
   const [isStreaming, setIsStreaming] = useState(false);
+  // Wine list state
+  const [wineListAnalysis, setWineListAnalysis] = useState<WineListAnalysis | null>(null);
+  const [wineListImages, setWineListImages] = useState<string[]>([]);
+  const [isReanalysing, setIsReanalysing] = useState(false);
+  const wineListCapture = useWineListCapture();
 
   const cellarEmpty = inventory.length === 0;
   const isSurprise = selectedOccasion === 'surprise';
@@ -53,7 +67,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   // Abort stream on unmount
   useEffect(() => () => { streamAbortRef.current?.abort(); }, []);
 
-  // ── AI Fetch Effect ──
+  // ── AI Fetch Effect (existing occasions) ──
   useEffect(() => {
     if (view !== 'loading' || !selectedOccasion || fetchingRef.current) return;
     fetchingRef.current = true;
@@ -131,6 +145,32 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     doFetch();
   }, [view, selectedOccasion, occasionContext, inventory, surpriseExcludeIds, menuImage]);
 
+  // ── Wine List Analysis Effect ──
+  useEffect(() => {
+    if (view !== 'winelist-loading' || fetchingRef.current || wineListImages.length === 0) return;
+    fetchingRef.current = true;
+
+    const doAnalyse = async () => {
+      try {
+        const result = await analyseWineList(
+          wineListImages,
+          occasionContext as WineListAnalysisContext,
+          inventory
+        );
+        setWineListAnalysis(result);
+        setError(null);
+        setView('winelist-results');
+      } catch (err: any) {
+        setError(err.message || 'Failed to analyse the wine list.');
+        setView('winelist-results');
+      } finally {
+        fetchingRef.current = false;
+      }
+    };
+
+    doAnalyse();
+  }, [view, wineListImages, occasionContext, inventory]);
+
   const handleSelectOccasion = useCallback((id: OccasionId) => {
     setSelectedOccasion(id);
     setError(null);
@@ -153,6 +193,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
       setView('scan-capture');
       return;
     }
+    if (selectedOccasion === 'analyze_winelist') {
+      setView('winelist-capture');
+      return;
+    }
     setView('loading');
   }, [selectedOccasion]);
 
@@ -167,6 +211,34 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     reader.readAsDataURL(file);
   }, []);
 
+  const handleWineListAnalyse = useCallback(() => {
+    const images = wineListCapture.allBase64;
+    if (!images || images.length === 0) return;
+    setWineListImages(images);
+    fetchingRef.current = false;
+    setView('winelist-loading');
+  }, [wineListCapture.allBase64]);
+
+  const handleMealContextUpdate = useCallback(async (meal: string) => {
+    if (!wineListAnalysis || !occasionContext) return;
+    setIsReanalysing(true);
+    try {
+      const updatedContext = { ...occasionContext, meal } as WineListAnalysisContext;
+      setOccasionContext(updatedContext);
+      const picks = await reanalyseWineListPicks(
+        wineListAnalysis.entries,
+        wineListAnalysis.restaurantName,
+        updatedContext,
+        inventory
+      );
+      setWineListAnalysis(prev => prev ? { ...prev, picks } : prev);
+    } catch (err: any) {
+      console.error('[WineList] Reanalysis failed:', err.message);
+    } finally {
+      setIsReanalysing(false);
+    }
+  }, [wineListAnalysis, occasionContext, inventory]);
+
   const handleBack = useCallback(() => {
     streamAbortRef.current?.abort();
     setIsStreaming(false);
@@ -178,7 +250,12 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     setMenuImage(null);
     setError(null);
     fetchingRef.current = false;
-  }, []);
+    // Wine list cleanup
+    setWineListAnalysis(null);
+    setWineListImages([]);
+    setIsReanalysing(false);
+    wineListCapture.clear();
+  }, [wineListCapture]);
 
   const handleRetry = useCallback(() => {
     setError(null);
@@ -246,14 +323,14 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
           </div>
           <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 pb-24">
             <div className="text-center space-y-1">
-              <Heading scale="heading">SCAN A WINE LIST</Heading>
-              <Body size="caption" colour="ghost">Photograph the wine list</Body>
+              <Heading scale="heading">SCAN A MENU</Heading>
+              <Body size="caption" colour="ghost">Photograph the menu</Body>
             </div>
 
             <div className="flex flex-col items-center gap-4">
               <IconButton
                 icon={Camera}
-                aria-label="Take photo of wine list"
+                aria-label="Take photo of menu"
                 onClick={() => cameraInputRef.current?.click()}
                 className="w-20 h-20 bg-[var(--rc-surface-secondary)] hover:bg-[var(--rc-accent-pink)] hover:text-white"
               />
@@ -287,6 +364,48 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
             />
           </div>
         </div>
+      )}
+
+      {view === 'winelist-capture' && (
+        <WineListCapture
+          pages={wineListCapture.pages}
+          canAdd={wineListCapture.canAdd}
+          onAddPage={wineListCapture.addPage}
+          onAddPages={wineListCapture.addPages}
+          onRemovePage={wineListCapture.removePage}
+          onAnalyse={handleWineListAnalyse}
+          onBack={handleBack}
+        />
+      )}
+
+      {view === 'winelist-loading' && (
+        <WineListLoading pageCount={wineListImages.length} />
+      )}
+
+      {view === 'winelist-results' && wineListAnalysis && (
+        <WineListResults
+          analysis={wineListAnalysis}
+          context={occasionContext as WineListAnalysisContext}
+          inventory={inventory}
+          error={error}
+          onStartOver={handleBack}
+          onHandoffToRemy={handleHandoffToRemy}
+          onMealContextUpdate={handleMealContextUpdate}
+          isReanalysing={isReanalysing}
+        />
+      )}
+
+      {view === 'winelist-results' && !wineListAnalysis && error && (
+        <WineListResults
+          analysis={{ sessionId: '', restaurantName: null, entries: [], sections: [], picks: [], pageCount: 0, analysedAt: 0 }}
+          context={occasionContext as WineListAnalysisContext}
+          inventory={inventory}
+          error={error}
+          onStartOver={handleBack}
+          onHandoffToRemy={handleHandoffToRemy}
+          onMealContextUpdate={handleMealContextUpdate}
+          isReanalysing={false}
+        />
       )}
 
       {view === 'loading' && (

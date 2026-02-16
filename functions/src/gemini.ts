@@ -15,7 +15,7 @@ const MODEL_ALLOWLIST = new Set([
   "gemini-2.5-flash-native-audio-preview-12-2025",
 ]);
 
-const MAX_BODY_SIZE = 2_000_000; // ~2MB (bumped for label image extraction)
+const MAX_BODY_SIZE = 10_000_000; // ~10MB (multi-page wine list image payloads)
 const MAX_CONTENTS_TURNS = 50;
 
 type GeminiRequestBody = {

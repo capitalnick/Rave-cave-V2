@@ -11,6 +11,7 @@ import type {
   GiftContext,
   CheeseContext,
   ScanMenuContext,
+  WineListAnalysisContext,
 } from '@/types';
 
 interface OccasionContextFormProps {
@@ -56,6 +57,9 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
         )}
         {occasionId === 'scan_menu' && (
           <ScanMenuForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
+        )}
+        {occasionId === 'analyze_winelist' && (
+          <WineListForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
         )}
       </div>
     </div>
@@ -478,6 +482,74 @@ const ScanMenuForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting
         <Button
           variantType="Primary"
           label={submitting ? 'THINKING\u2026' : 'NEXT: SCAN MENU'}
+          onClick={handleSubmit}
+          disabled={submitting}
+          className={cn("w-full", submitting && "animate-pulse")}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ── Wine List Form ──
+
+const WineListForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
+  const [budgetPreset, setBudgetPreset] = useState<BudgetPreset>('any');
+  const [meal, setMeal] = useState('');
+  const [preferences, setPreferences] = useState('');
+
+  const handleSubmit = () => {
+    setSubmitting(true);
+    const range = BUDGET_RANGES[budgetPreset];
+    const ctx: WineListAnalysisContext = {
+      budgetMin: range.min,
+      budgetMax: range.max,
+      currency: 'AUD',
+      meal,
+      preferences,
+    };
+    onSubmit(ctx);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Heading scale="subhead" colour="primary">TELL RÉMY WHAT YOU'RE AFTER</Heading>
+
+      <FieldGroup label="Budget per bottle">
+        <SegmentedControl
+          options={[
+            { value: 'any' as const,      label: 'Any' },
+            { value: 'under-30' as const, label: 'Under $30' },
+            { value: '30-60' as const,    label: '$30\u201360' },
+            { value: '60-100' as const,   label: '$60\u2013100' },
+            { value: '100-plus' as const, label: '$100+' },
+          ]}
+          value={budgetPreset}
+          onChange={setBudgetPreset}
+        />
+      </FieldGroup>
+
+      <FieldGroup label="What are you eating?" hint={!meal ? 'Helps Rémy pick pairings from the list' : undefined}>
+        <Input
+          typeVariant="Textarea"
+          placeholder="e.g., Grilled lamb chops with mint..."
+          value={meal}
+          onChange={(e) => setMeal(e.target.value)}
+        />
+      </FieldGroup>
+
+      <FieldGroup label="Style preferences (optional)">
+        <Input
+          placeholder="e.g., French only, nothing too tannic..."
+          value={preferences}
+          onChange={(e) => setPreferences(e.target.value)}
+        />
+      </FieldGroup>
+
+      <div className="pt-6">
+        <Button
+          variantType="Primary"
+          label={submitting ? 'THINKING\u2026' : 'NEXT: CAPTURE PAGES'}
           onClick={handleSubmit}
           disabled={submitting}
           className={cn("w-full", submitting && "animate-pulse")}

@@ -21,7 +21,7 @@ const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
 const GEMINI_STREAM_URL =
   `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/geminiStream`;
 
-async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }) {
+export async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }) {
   const res = await fetch(GEMINI_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -138,7 +138,7 @@ Rules:
 
 // ── Cellar Matching ──
 
-function matchToCellar(rec: any, inventory: Wine[]): { wineId: string; isFromCellar: boolean } {
+export function matchToCellar(rec: any, inventory: Wine[]): { wineId: string; isFromCellar: boolean } {
   const producer = (rec.producer || '').toLowerCase().trim();
   const vintage = Number(rec.vintage);
 
@@ -471,7 +471,7 @@ export async function getRecommendationsStream(
 
 // ── Helpers ──
 
-function buildCellarSnapshotForPrompt(inventory: Wine[]): string {
+export function buildCellarSnapshotForPrompt(inventory: Wine[]): string {
   if (inventory.length === 0) return 'Cellar is empty.';
   const limited = inventory.slice(0, CONFIG.INVENTORY_LIMIT);
   let context = `Showing ${limited.length} of ${inventory.length} bottles:\n`;

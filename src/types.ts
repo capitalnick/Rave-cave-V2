@@ -89,7 +89,7 @@ export interface CellarFilters {
 }
 
 // ── Occasion Types ──
-export type OccasionId = 'dinner' | 'party' | 'gift' | 'cheese' | 'surprise' | 'scan_menu';
+export type OccasionId = 'dinner' | 'party' | 'gift' | 'cheese' | 'surprise' | 'scan_menu' | 'analyze_winelist';
 
 export interface Occasion {
   id: OccasionId;
@@ -139,10 +139,18 @@ export interface ScanMenuContext {
   preferences: string;
 }
 
-export type OccasionContext = DinnerContext | PartyContext | GiftContext | CheeseContext | ScanMenuContext | null;
+export interface WineListAnalysisContext {
+  budgetMin: number | null;
+  budgetMax: number | null;
+  currency: 'AUD' | 'EUR' | 'USD' | 'GBP';
+  meal: string;
+  preferences: string;
+}
+
+export type OccasionContext = DinnerContext | PartyContext | GiftContext | CheeseContext | ScanMenuContext | WineListAnalysisContext | null;
 
 // ── Recommendation Types ──
-export type RankLabel = 'best-match' | 'also-great' | 'adventurous';
+export type RankLabel = 'best-match' | 'also-great' | 'adventurous' | 'value' | 'pairing';
 
 export interface Recommendation {
   wineId: string;
@@ -179,6 +187,45 @@ export interface RecommendChatContext {
   occasionTitle: string;
   contextInputs: OccasionContext;
   recommendations: Recommendation[];
+  wineListAnalysis?: WineListAnalysis;
+}
+
+// ── Wine List Analysis Types ──
+
+export interface WineListEntry {
+  entryId: string;
+  producer: string;
+  name: string;
+  vintage: number | null;
+  type: WineType | null;
+  priceGlass: number | null;
+  priceBottle: number | null;
+  currency: string;
+  section: string;
+  pageIndex: number;
+  asListed: string;
+}
+
+export type WineListPickType = 'top' | 'value' | 'adventurous' | 'pairing';
+
+export interface WineListPick {
+  entryId: string;
+  rank: number;
+  rankLabel: RankLabel;
+  rationale: string;
+  pickType: WineListPickType;
+  cellarMatchId: string | null;
+  cellarMatchNote: string | null;
+}
+
+export interface WineListAnalysis {
+  sessionId: string;
+  restaurantName: string | null;
+  entries: WineListEntry[];
+  sections: { name: string; pageIndices: number[]; entryIds: string[] }[];
+  picks: WineListPick[];
+  pageCount: number;
+  analysedAt: number;
 }
 
 // ── Recent Query Type ──

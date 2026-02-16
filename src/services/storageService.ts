@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
 import { storage } from '@/firebase';
 
 /**
@@ -20,6 +20,29 @@ export async function deleteLabelImage(wineId: string): Promise<void> {
     await deleteObject(storageRef);
   } catch (e: any) {
     // Ignore not-found errors (image may not have been uploaded yet)
+    if (e?.code !== 'storage/object-not-found') throw e;
+  }
+}
+
+/**
+ * Upload a wine list page image to Firebase Storage.
+ * Path: winelists/{sessionId}/page-{pageIndex}.jpg
+ */
+export async function uploadWineListPage(blob: Blob, sessionId: string, pageIndex: number): Promise<string> {
+  const storageRef = ref(storage, `winelists/${sessionId}/page-${pageIndex}.jpg`);
+  await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+  return getDownloadURL(storageRef);
+}
+
+/**
+ * Delete all images for a wine list session.
+ */
+export async function deleteWineListSession(sessionId: string): Promise<void> {
+  const folderRef = ref(storage, `winelists/${sessionId}`);
+  try {
+    const list = await listAll(folderRef);
+    await Promise.all(list.items.map(item => deleteObject(item)));
+  } catch (e: any) {
     if (e?.code !== 'storage/object-not-found') throw e;
   }
 }

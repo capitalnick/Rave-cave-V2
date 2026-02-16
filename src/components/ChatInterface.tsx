@@ -85,16 +85,46 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (!recommendContext || contextConsumedRef.current) return;
     contextConsumedRef.current = true;
 
-    const wineList = recommendContext.recommendations
-      .map(r => `${r.rank}. ${r.vintage} ${r.producer} ${r.name} (${r.type}) — ${r.rationale}`)
-      .join('\n');
+    let contextMessage: string;
 
-    const contextMessage = `${CONTEXT_PREFIX}
+    if (recommendContext.wineListAnalysis) {
+      const analysis = recommendContext.wineListAnalysis;
+      const entryMap = new Map(analysis.entries.map(e => [e.entryId, e]));
+
+      const wineListText = analysis.entries
+        .slice(0, 30)
+        .map(e => `- ${e.producer} ${e.name} ${e.vintage ?? 'NV'} (${e.type ?? '?'}) ${e.priceBottle != null ? `$${e.priceBottle}` : ''}`)
+        .join('\n');
+
+      const picksText = analysis.picks.map(p => {
+        const entry = entryMap.get(p.entryId);
+        if (!entry) return '';
+        return `${p.rank}. ${entry.producer} ${entry.name} ${entry.vintage ?? 'NV'} — ${p.rationale}`;
+      }).filter(Boolean).join('\n');
+
+      contextMessage = `${CONTEXT_PREFIX}
+The user just analysed a wine list${analysis.restaurantName ? ` from ${analysis.restaurantName}` : ''}.
+${analysis.entries.length} wines were extracted across ${analysis.pageCount} page${analysis.pageCount !== 1 ? 's' : ''}.
+
+Extracted wines (showing up to 30):
+${wineListText}
+
+Rémy's picks:
+${picksText}
+
+Greet the user warmly referencing the wine list analysis. Say something like "I've gone through the wine list — here are my thoughts. Want me to dive deeper into any of my picks, or help you decide based on what you're eating?" Keep it brief and conversational.`;
+    } else {
+      const wineList = recommendContext.recommendations
+        .map(r => `${r.rank}. ${r.vintage} ${r.producer} ${r.name} (${r.type}) — ${r.rationale}`)
+        .join('\n');
+
+      contextMessage = `${CONTEXT_PREFIX}
 The user just used the Recommend feature for: ${recommendContext.occasionTitle}.
 Here are the recommendations that were shown:
 ${wineList}
 
 Greet the user warmly referencing their ${recommendContext.occasionTitle.toLowerCase()} occasion. Say something like "I picked these based on your ${recommendContext.occasionTitle.toLowerCase()}. Want me to explain any of them in more detail, or should we look at alternatives?" Keep it brief and conversational.`;
+    }
 
     transcriptLenAtInjection.current = transcript.length;
     sendMessage(contextMessage);

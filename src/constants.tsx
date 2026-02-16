@@ -3,7 +3,7 @@
  * Rave Cave Constants & Configuration
  */
 
-import { UtensilsCrossed, PartyPopper, Gift, PocketKnife, Sparkles, ScanLine } from 'lucide-react';
+import { UtensilsCrossed, PartyPopper, Gift, PocketKnife, Sparkles, ScanLine, ListChecks } from 'lucide-react';
 import type { Occasion, RankLabel } from './types';
 
 export const COLORS = {
@@ -154,14 +154,17 @@ export const OCCASIONS: Occasion[] = [
   { id: 'party',     title: 'Wines for a Crowd',    description: 'Crowd-pleasing selections',        icon: PartyPopper,     accentToken: 'accent-acid' },
   { id: 'gift',      title: 'Choose a Gift',        description: 'Thoughtful wine gifts',            icon: Gift,            accentToken: 'accent-coral' },
   { id: 'cheese',    title: 'For Cheese',           description: 'Perfect cheese pairings',          icon: PocketKnife,     accentToken: 'accent-pink' },
-  { id: 'scan_menu', title: 'Scan a Wine List',     description: 'Photograph a menu, get picks',     icon: ScanLine,        accentToken: 'accent-coral',  primary: true },
-  { id: 'surprise',  title: 'Something Unexpected', description: 'Let Rémy decide',                  icon: Sparkles,        accentToken: 'accent-acid',   featured: true },
+  { id: 'scan_menu',        title: 'Scan a Menu',            description: 'Photograph a menu, get pairings',       icon: ScanLine,    accentToken: 'accent-coral',  primary: true },
+  { id: 'analyze_winelist', title: 'Analyse a Wine List',    description: 'Multi-page scan with deep analysis',    icon: ListChecks,  accentToken: 'accent-pink',   primary: true },
+  { id: 'surprise',         title: 'Something Unexpected',   description: 'Let Rémy decide',                       icon: Sparkles,    accentToken: 'accent-acid',   featured: true },
 ];
 
 export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {
   'best-match':   { text: 'BEST MATCH',       bgColor: 'var(--rc-accent-acid)',  textColor: 'var(--rc-ink-primary)' },
   'also-great':   { text: 'ALSO GREAT',       bgColor: 'var(--rc-accent-pink)',  textColor: 'var(--rc-ink-on-accent)' },
   'adventurous':  { text: 'ADVENTUROUS PICK', bgColor: 'var(--rc-accent-coral)', textColor: 'var(--rc-ink-on-accent)' },
+  'value':        { text: 'VALUE PICK',        bgColor: 'transparent',            textColor: 'var(--rc-accent-acid)' },
+  'pairing':      { text: 'PAIRING PICK',      bgColor: 'var(--rc-accent-pink)',  textColor: 'var(--rc-ink-on-accent)' },
 };
 
 export const REMYS_PICK_BADGE = { text: "RÉMY'S PICK", bgColor: 'var(--rc-accent-acid)', textColor: 'var(--rc-ink-primary)' };
@@ -172,4 +175,24 @@ export const RECOMMEND_FOLLOWUP_CHIPS = [
   'Something lighter',
   'Different region',
   'What about white instead?',
+];
+
+// ── Wine List Analysis ──
+
+export const WINELIST_MAX_PAGES = 10;
+
+export const WINELIST_STATUS_MESSAGES = [
+  'Reading the wine list\u2026',
+  'Identifying producers & vintages\u2026',
+  'Checking your cellar for matches\u2026',
+  'Selecting R\u00e9my\u2019s picks\u2026',
+  'Finalising analysis\u2026',
+];
+
+export const WINELIST_FOLLOWUP_CHIPS = [
+  'Why this pick?',
+  'Something cheaper',
+  'Best value on the list?',
+  'What pairs with my meal?',
+  'Any wines from my cellar?',
 ];
