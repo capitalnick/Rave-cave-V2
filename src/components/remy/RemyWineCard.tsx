@@ -12,11 +12,14 @@ interface RemyWineCardProps {
 }
 
 const RemyWineCard: React.FC<RemyWineCardProps> = ({ wine, index, onAddToCellar, cellarMatch, onViewWine }) => {
-  const displayName = wine.vintage
-    ? `${wine.name} ${wine.vintage}`
-    : wine.name;
+  const hasName = wine.name && wine.name.trim().length > 0;
+  const displayName = hasName
+    ? (wine.vintage ? `${wine.name} ${wine.vintage}` : wine.name)
+    : (wine.vintage ? `${wine.producer} ${wine.vintage}` : wine.producer);
 
-  const meta = [wine.producer, wine.region, wine.type].filter(Boolean).join(' / ');
+  const meta = hasName
+    ? [wine.producer, wine.region, wine.type].filter(Boolean).join(' / ')
+    : [wine.region, wine.type].filter(Boolean).join(' / ');
 
   return (
     <div

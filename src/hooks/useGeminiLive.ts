@@ -233,9 +233,20 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
           if (wines.length === 0) {
             results.push({ result: `No wines found matching those criteria. Total in cellar: ${data.total || 0}.` });
           } else {
-            const formatted = wines.map((w: any) =>
-              `${w.producer}${w.name ? ' ' + w.name : ''} ${w.vintage || 'NV'} — ${w.type || ''}, ${w.region || ''}${w.country ? ', ' + w.country : ''} — $${w.price || 0} — Qty: ${w.quantity || 1} — ${w.maturity || 'Unknown'}`
-            ).join('\n');
+            const formatted = wines.map((w: any) => {
+              const parts = [
+                `${w.producer}${w.name ? ' ' + w.name : ''} ${w.vintage || 'NV'}`,
+                `${w.type || ''}, ${w.region || ''}${w.country ? ', ' + w.country : ''}`,
+                `$${w.price || 0} — Qty: ${w.quantity || 1}`,
+                `Maturity: ${w.maturity || 'Unknown'}`,
+              ];
+              if (w.cepage) parts.push(`Grape: ${w.cepage}`);
+              if (w.tastingNotes) parts.push(`Notes: ${w.tastingNotes}`);
+              if (w.vivinoRating) parts.push(`Rating: ${w.vivinoRating}/100`);
+              if (w.drinkFrom || w.drinkUntil) parts.push(`Window: ${w.drinkFrom || '?'}–${w.drinkUntil || '?'}`);
+              if (w.appellation) parts.push(`Appellation: ${w.appellation}`);
+              return parts.join(' — ');
+            }).join('\n');
             results.push({ result: `Found ${data.total} wines (showing ${wines.length}):\n${formatted}` });
           }
         } catch (err) {
