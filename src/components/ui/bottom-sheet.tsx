@@ -6,6 +6,7 @@ import { getEffectiveSnapPoint, getEffectiveSnapPoints } from '@/lib/sheet-utils
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useSurfaceManager } from '@/context/SurfaceContext';
 import { useIsSheetMobile } from '@/components/ui/use-mobile';
+import { useScrollFieldIntoView } from '@/hooks/useScrollFieldIntoView';
 
 export type SheetSnapPoint = 'peek' | 'half' | 'full';
 
@@ -57,6 +58,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   const reducedMotion = useReducedMotion();
   const surfaceManager = useSurfaceManager();
   const isSheetMobile = useIsSheetMobile();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useScrollFieldIntoView(scrollRef);
 
   // Phase 0: Remap snap points on mobile (<1024px) — peek → half, dedup
   const effectiveSnap = getEffectiveSnapPoint(snapPoint, isSheetMobile);
@@ -152,6 +155,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 
           {/* Scrollable content — data-vaul-no-drag prevents content scroll from dismissing */}
           <div
+            ref={scrollRef}
             data-vaul-no-drag
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pb-[env(safe-area-inset-bottom)]"
           >

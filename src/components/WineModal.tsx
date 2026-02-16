@@ -8,6 +8,7 @@ import { RightPanel } from '@/components/ui/right-panel';
 import { Heading, MonoLabel, Body, Badge, Chip, Divider, Input, WineTypeIndicator } from '@/components/rc';
 import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
 import { useIsMobile } from '@/components/ui/use-mobile';
+import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { cn } from '@/lib/utils';
 import type { WineType } from '@/components/rc/WineTypeIndicator';
 
@@ -327,6 +328,7 @@ const WineDetailContent: React.FC<{
 
 const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
   const isMobile = useIsMobile();
+  const { keyboardVisible } = useKeyboardVisible();
 
   // Desktop: RightPanel (640px slide-in)
   if (!isMobile) {
@@ -347,17 +349,22 @@ const WineModal: React.FC<WineModalProps> = ({ wine, onClose, onUpdate }) => {
   const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
 
   const heroZone = (
-    <div className="h-60 bg-[var(--rc-ink-primary)] flex items-center justify-center overflow-hidden">
-      {displayImageUrl ? (
-        <ImageWithFallback
-          src={displayImageUrl}
-          alt={wine.name}
-          className="w-full h-full object-contain"
-          referrerPolicy="no-referrer"
-        />
-      ) : (
-        <WineIcon size={64} className="text-[var(--rc-ink-on-accent)] opacity-20" />
-      )}
+    <div className={cn(
+      "overflow-hidden transition-[max-height] duration-200 ease-out",
+      keyboardVisible ? "max-h-0" : "max-h-60"
+    )}>
+      <div className="h-60 bg-[var(--rc-ink-primary)] flex items-center justify-center overflow-hidden">
+        {displayImageUrl ? (
+          <ImageWithFallback
+            src={displayImageUrl}
+            alt={wine.name}
+            className="w-full h-full object-contain"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <WineIcon size={64} className="text-[var(--rc-ink-on-accent)] opacity-20" />
+        )}
+      </div>
     </div>
   );
 
