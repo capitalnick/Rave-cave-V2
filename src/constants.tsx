@@ -3,7 +3,7 @@
  * Rave Cave Constants & Configuration
  */
 
-import { UtensilsCrossed, PartyPopper, Gift, PocketKnife, Sparkles, ScanLine, ListChecks } from 'lucide-react';
+import { UtensilsCrossed, PartyPopper, Gift, Sparkles, ListChecks } from 'lucide-react';
 import type { Occasion, RankLabel } from './types';
 
 export const COLORS = {
@@ -150,13 +150,11 @@ export const SYSTEM_PROMPT = buildSystemPrompt("Inventory context unavailable.")
 // ── Phase 6: Recommend ──
 
 export const OCCASIONS: Occasion[] = [
-  { id: 'dinner',    title: 'Pair a Meal',          description: 'Perfect wines for your meal',      icon: UtensilsCrossed, accentToken: 'accent-pink' },
-  { id: 'party',     title: 'Wines for a Crowd',    description: 'Crowd-pleasing selections',        icon: PartyPopper,     accentToken: 'accent-acid' },
-  { id: 'gift',      title: 'Choose a Gift',        description: 'Thoughtful wine gifts',            icon: Gift,            accentToken: 'accent-coral' },
-  { id: 'cheese',    title: 'For Cheese',           description: 'Perfect cheese pairings',          icon: PocketKnife,     accentToken: 'accent-pink' },
-  { id: 'scan_menu',        title: 'Scan a Menu',            description: 'Photograph a menu, get pairings',       icon: ScanLine,    accentToken: 'accent-coral',  primary: true },
-  { id: 'analyze_winelist', title: 'Analyse a Wine List',    description: 'Multi-page scan with deep analysis',    icon: ListChecks,  accentToken: 'accent-pink',   primary: true },
-  { id: 'surprise',         title: 'Something Unexpected',   description: 'Let Rémy decide',                       icon: Sparkles,    accentToken: 'accent-acid',   featured: true },
+  { id: 'dinner',            title: 'Pair a Meal',            description: 'Perfect wines for your meal',         icon: UtensilsCrossed, accentToken: 'accent-pink' },
+  { id: 'party',             title: 'Wines for a Crowd',      description: 'Crowd-pleasing selections',           icon: PartyPopper,     accentToken: 'accent-acid' },
+  { id: 'gift',              title: 'Choose a Gift',          description: 'Thoughtful wine gifts',               icon: Gift,            accentToken: 'accent-coral' },
+  { id: 'surprise',          title: 'Something Unexpected',   description: 'Let Rémy decide',                     icon: Sparkles,        accentToken: 'accent-acid' },
+  { id: 'analyze_winelist',  title: 'Analyse a Wine List',    description: 'Multi-page scan with deep analysis',  icon: ListChecks,      accentToken: 'accent-pink',  primary: true },
 ];
 
 export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {

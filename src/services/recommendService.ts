@@ -5,10 +5,7 @@ import type {
   DinnerContext,
   PartyContext,
   GiftContext,
-  CheeseContext,
-  ScanMenuContext,
   Recommendation,
-  MenuScanRecommendation,
   Wine,
   RankLabel,
 } from '../types';
@@ -70,16 +67,8 @@ Their taste: ${c.theirTaste || 'Not specified'}
 Gift occasion: ${c.occasion}
 Budget: ${c.budget === 'any' ? 'No budget constraint' : c.budget.replace('-', ' to $').replace('under-', 'Under $').replace('plus', '+')}`;
     }
-    case 'cheese': {
-      const c = context as CheeseContext;
-      return `The user wants wine pairings for a cheese board.
-Cheeses: ${c.cheeses || 'Not specified'}
-Style: ${c.style}`;
-    }
     case 'surprise':
       return 'The user wants a surprise wine recommendation. Pick something interesting and unexpected.';
-    case 'scan_menu':
-      return 'The user is scanning a wine list for recommendations.';
     default:
       return '';
   }
@@ -241,130 +230,6 @@ export async function getSurpriseMe(
   const results = parseRecommendations(text, inventory);
   if (results.length === 0) throw new RecommendError('No surprise pick returned', 'EMPTY_RESULTS');
   return results[0];
-}
-
-// ── Menu Scan ──
-
-function formatBudget(ctx: ScanMenuContext): string {
-  if (ctx.budgetMin === null && ctx.budgetMax === null) return 'No limit';
-  if (ctx.budgetMin === null) return `Under ${ctx.currency} ${ctx.budgetMax} per ${ctx.budgetUnit}`;
-  if (ctx.budgetMax === null) return `${ctx.currency} ${ctx.budgetMin}+ per ${ctx.budgetUnit}`;
-  return `${ctx.currency} ${ctx.budgetMin}\u2013${ctx.budgetMax} per ${ctx.budgetUnit}`;
-}
-
-function buildMenuScanPrompt(ctx: ScanMenuContext, cellarSnapshot: string): string {
-  const budgetLine = formatBudget(ctx);
-  const mealLine = ctx.meal ? `Meal: ${ctx.meal}` : 'Meal: Not specified';
-  const prefLine = ctx.preferences ? `Preferences: ${ctx.preferences}` : '';
-
-  return `You are Rémy, an expert French sommelier for "Rave Cave".
-
-The user has photographed a wine list/menu. Analyse the image and recommend up to 3 wines from the list.
-
-Context:
-Budget: ${budgetLine}
-${mealLine}
-${prefLine}
-
-CELLAR INVENTORY (for reference — note if a recommendation matches):
-${cellarSnapshot}
-
-Respond with ONLY a valid JSON array of up to 3 wine recommendations. Each object must have these exact fields:
-{
-  "producer": "string",
-  "name": "string (varietal or cuvée name)",
-  "vintage": number or null,
-  "type": "Red" | "White" | "Rosé" | "Sparkling" | "Dessert" | "Fortified",
-  "price": number or null (if visible on menu),
-  "rank": 1 | 2 | 3,
-  "rankLabel": "best-match" | "also-great" | "adventurous",
-  "rationale": "string (one sentence explaining why this wine fits)",
-  "asListed": "string (exact text snippet from menu for this wine, short)",
-  "confidence": "high" | "medium" | "low"
-}
-
-Rules:
-- Rank 1 = best-match, Rank 2 = also-great, Rank 3 = adventurous
-- Return ONLY the JSON array, no markdown fences, no extra text
-- asListed should be the exact text from the menu image for that wine entry
-- confidence reflects how clearly you can read the menu item
-- Do NOT include maturity or rating fields — these cannot be inferred from a menu
-- Each rationale should be warm and conversational, like a sommelier speaking`;
-}
-
-function parseMenuScanRecommendations(rawText: string, inventory: Wine[]): MenuScanRecommendation[] {
-  let cleaned = rawText.trim();
-
-  // Strip markdown code fences
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-  }
-
-  // Find first [ to last ] to handle preamble/postamble text
-  const firstBracket = cleaned.indexOf('[');
-  const lastBracket = cleaned.lastIndexOf(']');
-  if (firstBracket === -1 || lastBracket === -1 || lastBracket <= firstBracket) {
-    throw new RecommendError('Could not find JSON array in AI response', 'PARSE_ERROR');
-  }
-  cleaned = cleaned.substring(firstBracket, lastBracket + 1);
-
-  let parsed: any[];
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new RecommendError('Failed to parse menu scan response as JSON', 'PARSE_ERROR');
-  }
-
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new RecommendError('AI returned no menu recommendations', 'EMPTY_RESULTS');
-  }
-
-  return parsed.map((rec): MenuScanRecommendation => {
-    if (!rec.producer || !rec.name) {
-      throw new RecommendError('Menu recommendation missing required fields', 'PARSE_ERROR');
-    }
-    const { wineId, isFromCellar } = matchToCellar(rec, inventory);
-    return {
-      producer: rec.producer,
-      name: rec.name,
-      vintage: rec.vintage != null ? Number(rec.vintage) : null,
-      type: rec.type || 'Red',
-      rank: rec.rank || 1,
-      rankLabel: (rec.rankLabel || 'best-match') as RankLabel,
-      rationale: rec.rationale || '',
-      price: rec.price != null ? Number(rec.price) : null,
-      asListed: rec.asListed || '',
-      confidence: (['high', 'medium', 'low'].includes(rec.confidence) ? rec.confidence : 'medium') as 'high' | 'medium' | 'low',
-      wineId,
-      isFromCellar,
-    };
-  });
-}
-
-export async function getMenuScanRecommendations(
-  imageBase64: string,
-  context: ScanMenuContext,
-  inventory: Wine[]
-): Promise<MenuScanRecommendation[]> {
-  const cellarSnapshot = buildCellarSnapshotForPrompt(inventory);
-  const systemInstruction = buildMenuScanPrompt(context, cellarSnapshot);
-
-  const response = await callGeminiProxy({
-    model: CONFIG.MODELS.TEXT,
-    systemInstruction,
-    contents: [{
-      role: 'user',
-      parts: [
-        { text: 'Analyse this wine list photo and recommend the best picks based on my context.' },
-        { inlineData: { data: imageBase64, mimeType: 'image/jpeg' } },
-      ],
-    }],
-  });
-
-  const text = response?.text;
-  if (!text) throw new RecommendError('Empty response from AI for menu scan', 'EMPTY_RESULTS');
-
-  return parseMenuScanRecommendations(text, inventory);
 }
 
 // ── Streaming API ──

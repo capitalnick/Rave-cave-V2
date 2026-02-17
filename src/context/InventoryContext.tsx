@@ -76,6 +76,10 @@ interface InventoryContextValue {
 
   // Refresh (for Pulse)
   triggerRefreshFeedback: () => void;
+
+  // Recommend reset (nav tab re-click → back to grid)
+  recommendResetKey: number;
+  bumpRecommendResetKey: () => void;
 }
 
 const InventoryContext = createContext<InventoryContextValue | null>(null);
@@ -128,6 +132,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // ── Recommend handoff ──
   const [recommendContext, setRecommendContext] = useState<RecommendChatContext | null>(null);
+
+  // ── Recommend reset key (bumped when nav tab re-clicked) ──
+  const [recommendResetKey, setRecommendResetKey] = useState(0);
+  const bumpRecommendResetKey = useCallback(() => setRecommendResetKey(k => k + 1), []);
 
   // ── Real-time Firestore listener ──
   useEffect(() => {
@@ -334,6 +342,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     mobileFiltersOpen,
     setMobileFiltersOpen,
     triggerRefreshFeedback,
+    recommendResetKey,
+    bumpRecommendResetKey,
   }), [
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
     sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
@@ -341,6 +351,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
     handleAddToCellarFromChat, mobileFiltersOpen, triggerRefreshFeedback,
+    recommendResetKey, bumpRecommendResetKey,
   ]);
 
   return (

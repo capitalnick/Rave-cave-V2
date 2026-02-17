@@ -9,8 +9,6 @@ import type {
   DinnerContext,
   PartyContext,
   GiftContext,
-  CheeseContext,
-  ScanMenuContext,
   WineListAnalysisContext,
 } from '@/types';
 
@@ -51,12 +49,6 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
         )}
         {occasionId === 'gift' && (
           <GiftForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
-        )}
-        {occasionId === 'cheese' && (
-          <CheeseForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
-        )}
-        {occasionId === 'scan_menu' && (
-          <ScanMenuForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
         )}
         {occasionId === 'analyze_winelist' && (
           <WineListForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
@@ -369,50 +361,7 @@ const GiftForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) 
   );
 };
 
-// ── Cheese Form ──
-
-const CheeseForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
-  const [cheeses, setCheeses] = useState('');
-  const [style, setStyle] = useState<'light-fresh' | 'bold-aged' | 'mixed'>('mixed');
-  const [cellarOnly, setCellarOnly] = useState(true);
-
-  const handleSubmit = () => {
-    setSubmitting(true);
-    const ctx: CheeseContext = { cheeses, style, cellarOnly };
-    onSubmit(ctx);
-  };
-
-  return (
-    <div className="space-y-6">
-      <Heading scale="subhead" colour="primary">TELL RÉMY ABOUT YOUR CHEESE BOARD</Heading>
-
-      <FieldGroup label="What cheeses?" hint={!cheeses ? 'The more detail, the better the pairing' : undefined}>
-        <Input
-          placeholder="e.g., Brie, aged Gruyère, blue cheese"
-          value={cheeses}
-          onChange={(e) => setCheeses(e.target.value)}
-        />
-      </FieldGroup>
-
-      <FieldGroup label="Style">
-        <SegmentedControl
-          options={[
-            { value: 'light-fresh' as const, label: 'Light & Fresh' },
-            { value: 'bold-aged' as const, label: 'Bold & Aged' },
-            { value: 'mixed' as const, label: 'Mixed' },
-          ]}
-          value={style}
-          onChange={setStyle}
-        />
-      </FieldGroup>
-
-      <CellarToggle value={cellarOnly} onChange={setCellarOnly} />
-      <SubmitRow submitting={submitting} onClick={handleSubmit} />
-    </div>
-  );
-};
-
-// ── Scan Menu Form ──
+// ── Wine List Form ──
 
 type BudgetPreset = 'any' | 'under-30' | '30-60' | '60-100' | '100-plus';
 
@@ -423,75 +372,6 @@ const BUDGET_RANGES: Record<BudgetPreset, { min: number | null; max: number | nu
   '60-100':    { min: 60,   max: 100 },
   '100-plus':  { min: 100,  max: null },
 };
-
-const ScanMenuForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
-  const [budgetPreset, setBudgetPreset] = useState<BudgetPreset>('any');
-  const [meal, setMeal] = useState('');
-  const [preferences, setPreferences] = useState('');
-
-  const handleSubmit = () => {
-    setSubmitting(true);
-    const range = BUDGET_RANGES[budgetPreset];
-    const ctx: ScanMenuContext = {
-      budgetMin: range.min,
-      budgetMax: range.max,
-      currency: 'AUD',
-      budgetUnit: 'bottle',
-      meal,
-      preferences,
-    };
-    onSubmit(ctx);
-  };
-
-  return (
-    <div className="space-y-6">
-      <Heading scale="subhead" colour="primary">TELL RÉMY WHAT YOU'RE AFTER</Heading>
-
-      <FieldGroup label="Budget per bottle">
-        <SegmentedControl
-          options={[
-            { value: 'any' as const,      label: 'Any' },
-            { value: 'under-30' as const, label: 'Under $30' },
-            { value: '30-60' as const,    label: '$30\u201360' },
-            { value: '60-100' as const,   label: '$60\u2013100' },
-            { value: '100-plus' as const, label: '$100+' },
-          ]}
-          value={budgetPreset}
-          onChange={setBudgetPreset}
-        />
-      </FieldGroup>
-
-      <FieldGroup label="What are you eating?" hint={!meal ? 'Helps Rémy match wines to your meal' : undefined}>
-        <Input
-          typeVariant="Textarea"
-          placeholder="e.g., Grilled lamb chops with mint..."
-          value={meal}
-          onChange={(e) => setMeal(e.target.value)}
-        />
-      </FieldGroup>
-
-      <FieldGroup label="Style preferences (optional)">
-        <Input
-          placeholder="e.g., French only, nothing too tannic..."
-          value={preferences}
-          onChange={(e) => setPreferences(e.target.value)}
-        />
-      </FieldGroup>
-
-      <div className="pt-6">
-        <Button
-          variantType="Primary"
-          label={submitting ? 'THINKING\u2026' : 'NEXT: SCAN MENU'}
-          onClick={handleSubmit}
-          disabled={submitting}
-          className={cn("w-full", submitting && "animate-pulse")}
-        />
-      </div>
-    </div>
-  );
-};
-
-// ── Wine List Form ──
 
 const WineListForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
   const [budgetPreset, setBudgetPreset] = useState<BudgetPreset>('any');

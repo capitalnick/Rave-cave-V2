@@ -89,7 +89,7 @@ export interface CellarFilters {
 }
 
 // ── Occasion Types ──
-export type OccasionId = 'dinner' | 'party' | 'gift' | 'cheese' | 'surprise' | 'scan_menu' | 'analyze_winelist';
+export type OccasionId = 'dinner' | 'party' | 'gift' | 'surprise' | 'analyze_winelist';
 
 export interface Occasion {
   id: OccasionId;
@@ -124,21 +124,6 @@ export interface GiftContext {
   cellarOnly: boolean;
 }
 
-export interface CheeseContext {
-  cheeses: string;
-  style: 'light-fresh' | 'bold-aged' | 'mixed';
-  cellarOnly: boolean;
-}
-
-export interface ScanMenuContext {
-  budgetMin: number | null;
-  budgetMax: number | null;
-  currency: 'AUD' | 'EUR' | 'USD' | 'GBP';
-  budgetUnit: 'bottle' | 'glass';
-  meal: string;
-  preferences: string;
-}
-
 export interface WineListAnalysisContext {
   budgetMin: number | null;
   budgetMax: number | null;
@@ -147,7 +132,7 @@ export interface WineListAnalysisContext {
   preferences: string;
 }
 
-export type OccasionContext = DinnerContext | PartyContext | GiftContext | CheeseContext | ScanMenuContext | WineListAnalysisContext | null;
+export type OccasionContext = DinnerContext | PartyContext | GiftContext | WineListAnalysisContext | null;
 
 // ── Recommendation Types ──
 export type RankLabel = 'best-match' | 'also-great' | 'adventurous' | 'value' | 'pairing';
@@ -164,21 +149,6 @@ export interface Recommendation {
   isFromCellar: boolean;
   maturity: string;
   rating: number | null;
-}
-
-export interface MenuScanRecommendation {
-  producer: string;
-  name: string;
-  vintage: number | null;
-  type: WineType;
-  rank: number;
-  rankLabel: RankLabel;
-  rationale: string;
-  price: number | null;
-  asListed: string;
-  confidence: 'high' | 'medium' | 'low';
-  wineId: string;
-  isFromCellar: boolean;
 }
 
 export interface RecommendChatContext {

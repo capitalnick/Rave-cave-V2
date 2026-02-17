@@ -89,9 +89,13 @@ function AppShell() {
     if (tab === 'remy' && isPinned) {
       toggleRemyPanel();
     } else {
+      // Re-clicking recommend while already on recommend → reset to grid
+      if (tab === 'recommend' && activeTab === 'recommend') {
+        ctx.bumpRecommendResetKey();
+      }
       navigate({ to: `/${tab}` });
     }
-  }, [isPinned, toggleRemyPanel, navigate]);
+  }, [isPinned, toggleRemyPanel, navigate, activeTab, ctx]);
 
   return (
     <>

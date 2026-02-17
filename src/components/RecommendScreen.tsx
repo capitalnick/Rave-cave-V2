@@ -1,50 +1,43 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Camera, ImageIcon } from 'lucide-react';
 import OccasionGrid from './recommend/OccasionGrid';
 import OccasionContextForm from './recommend/OccasionContextForm';
 import RecommendResults from './recommend/RecommendResults';
 import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
-import { MonoLabel, Heading, Body, IconButton } from '@/components/rc';
-import { getRecommendations, getRecommendationsStream, getSurpriseMe, getMenuScanRecommendations } from '@/services/recommendService';
+import { MonoLabel } from '@/components/rc';
+import { getRecommendations, getRecommendationsStream, getSurpriseMe } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
 import { SkeletonCard } from '@/components/rc';
 import type {
   OccasionId,
   OccasionContext,
-  ScanMenuContext,
   WineListAnalysisContext,
   Recommendation,
-  MenuScanRecommendation,
   RecommendChatContext,
   WineListAnalysis,
   Wine,
 } from '@/types';
 
 export type RecommendView =
-  | 'grid' | 'form' | 'scan-capture' | 'loading' | 'results'
+  | 'grid' | 'form' | 'loading' | 'results'
   | 'winelist-capture' | 'winelist-loading' | 'winelist-results';
 
 interface RecommendScreenProps {
   inventory: Wine[];
+  resetKey?: number;
   onHandoffToRemy?: (context: RecommendChatContext) => void;
   onAddToCellar?: (recommendation: Recommendation) => void;
   onViewWine?: (wine: Wine) => void;
 }
 
-const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffToRemy, onAddToCellar, onViewWine }) => {
+const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, onHandoffToRemy, onAddToCellar, onViewWine }) => {
   const [view, setView] = useState<RecommendView>('grid');
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [error, setError] = useState<string | null>(null);
-  // Scan menu state
-  const [menuImage, setMenuImage] = useState<string | null>(null);
-  const [menuResults, setMenuResults] = useState<MenuScanRecommendation[]>([]);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
   // Surprise Me state
   const [surpriseExcludeIds, setSurpriseExcludeIds] = useState<string[]>([]);
   const [surpriseRerollCount, setSurpriseRerollCount] = useState(0);
@@ -67,34 +60,23 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
   // Abort stream on unmount
   useEffect(() => () => { streamAbortRef.current?.abort(); }, []);
 
-  // ── AI Fetch Effect (existing occasions) ──
+  // ── Reset to grid when nav tab re-clicked ──
+  const resetKeyRef = useRef(resetKey);
+  useEffect(() => {
+    if (resetKey !== undefined && resetKey !== resetKeyRef.current) {
+      resetKeyRef.current = resetKey;
+      handleBack();
+    }
+  }, [resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── AI Fetch Effect ──
   useEffect(() => {
     if (view !== 'loading' || !selectedOccasion || fetchingRef.current) return;
     fetchingRef.current = true;
 
     const doFetch = async () => {
       try {
-        if (selectedOccasion === 'scan_menu' && menuImage) {
-          const scanResults = await getMenuScanRecommendations(menuImage, occasionContext as ScanMenuContext, inventory);
-          setMenuResults(scanResults);
-          // Convert to Recommendation[] for results view compatibility
-          const results: Recommendation[] = scanResults.map(r => ({
-            wineId: r.wineId,
-            producer: r.producer,
-            name: r.name,
-            vintage: r.vintage ?? new Date().getFullYear(),
-            type: r.type,
-            rank: r.rank as 1 | 2 | 3,
-            rankLabel: r.rankLabel,
-            rationale: r.rationale,
-            isFromCellar: r.isFromCellar,
-            maturity: 'DRINK_NOW',
-            rating: null,
-          }));
-          setRecommendations(results);
-          setError(null);
-          setView('results');
-        } else if (selectedOccasion === 'surprise') {
+        if (selectedOccasion === 'surprise') {
           const result = await getSurpriseMe(inventory, surpriseExcludeIds);
           setRecommendations([result]);
           setError(null);
@@ -143,7 +125,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     };
 
     doFetch();
-  }, [view, selectedOccasion, occasionContext, inventory, surpriseExcludeIds, menuImage]);
+  }, [view, selectedOccasion, occasionContext, inventory, surpriseExcludeIds]);
 
   // ── Wine List Analysis Effect ──
   useEffect(() => {
@@ -189,27 +171,12 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     setOccasionContext(context);
     setError(null);
     setRecommendations([]);
-    if (selectedOccasion === 'scan_menu') {
-      setView('scan-capture');
-      return;
-    }
     if (selectedOccasion === 'analyze_winelist') {
       setView('winelist-capture');
       return;
     }
     setView('loading');
   }, [selectedOccasion]);
-
-  const handleImageCapture = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      setMenuImage(base64);
-      fetchingRef.current = false;
-      setView('loading');
-    };
-    reader.readAsDataURL(file);
-  }, []);
 
   const handleWineListAnalyse = useCallback(() => {
     const images = wineListCapture.allBase64;
@@ -246,8 +213,6 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
     setSelectedOccasion(null);
     setOccasionContext(null);
     setRecommendations([]);
-    setMenuResults([]);
-    setMenuImage(null);
     setError(null);
     fetchingRef.current = false;
     // Wine list cleanup
@@ -307,63 +272,6 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, onHandoffT
           onSubmit={handleFormSubmit}
           onBack={handleBack}
         />
-      )}
-
-      {view === 'scan-capture' && (
-        <div className="flex flex-col h-full overflow-y-auto">
-          <div className="flex items-center gap-3 px-6 pt-6 pb-4">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-1 text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)] transition-colors"
-              aria-label="Back to occasions"
-            >
-              <ArrowLeft size={20} />
-              <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider">Back</span>
-            </button>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 pb-24">
-            <div className="text-center space-y-1">
-              <Heading scale="heading">SCAN A MENU</Heading>
-              <Body size="caption" colour="ghost">Photograph the menu</Body>
-            </div>
-
-            <div className="flex flex-col items-center gap-4">
-              <IconButton
-                icon={Camera}
-                aria-label="Take photo of menu"
-                onClick={() => cameraInputRef.current?.click()}
-                className="w-20 h-20 bg-[var(--rc-surface-secondary)] hover:bg-[var(--rc-accent-pink)] hover:text-white"
-              />
-              <MonoLabel size="label" colour="ghost">Take photo</MonoLabel>
-            </div>
-
-            <button
-              onClick={() => galleryInputRef.current?.click()}
-              className="flex items-center gap-2 text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)] transition-colors"
-            >
-              <ImageIcon size={16} />
-              <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider underline">
-                Choose from gallery
-              </span>
-            </button>
-
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleImageCapture(e.target.files[0])}
-            />
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleImageCapture(e.target.files[0])}
-            />
-          </div>
-        </div>
       )}
 
       {view === 'winelist-capture' && (
