@@ -31,7 +31,7 @@ export const Button: React.FC<ButtonProps> = ({
   
   // Base classes
   const baseClasses = cn(
-    "relative flex items-center justify-center transition-all duration-200 font-['Instrument_Sans'] font-semibold select-none",
+    "relative flex items-center justify-center transition-all duration-200 font-[var(--rc-font-body)] font-semibold select-none",
     isMobile ? "h-[var(--rc-button-height-mobile)] px-[var(--rc-button-padding-h-filled)] rounded-[var(--rc-button-radius)]" : 
                "h-[var(--rc-button-height-desktop)] px-[var(--rc-button-padding-h-filled-desktop)] rounded-[var(--rc-button-radius)]",
     isTertiary && "px-[var(--rc-button-padding-h-text)] h-auto min-h-0 bg-transparent"
