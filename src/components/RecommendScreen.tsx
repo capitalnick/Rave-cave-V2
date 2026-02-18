@@ -5,12 +5,11 @@ import RecommendResults from './recommend/RecommendResults';
 import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
-import { MonoLabel } from '@/components/rc';
+import { Heading, Spinner } from '@/components/rc';
 import { getRandomRemyState } from '@/constants';
 import { getRecommendations, getRecommendationsStream, getSurpriseMe } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
-import { SkeletonCard } from '@/components/rc';
 import type {
   OccasionId,
   OccasionContext,
@@ -319,27 +318,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
 
       {view === 'loading' && (
         <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
-          {isSurprise ? (
-            <>
-              <div className="w-full max-w-md">
-                <SkeletonCard />
-              </div>
-              <MonoLabel size="label" colour="secondary" align="centre" className="animate-pulse">
-                {getRandomRemyState()}
-              </MonoLabel>
-            </>
-          ) : (
-            <>
-              <div className="w-full max-w-md space-y-4">
-                <SkeletonCard />
-                <SkeletonCard />
-                <SkeletonCard />
-              </div>
-              <MonoLabel size="label" colour="secondary" align="centre" className="animate-pulse">
-                {getRandomRemyState()}
-              </MonoLabel>
-            </>
-          )}
+          <Spinner size="lg" tone="pink" />
+          <Heading scale="subhead" colour="secondary" align="centre">
+            {getRandomRemyState()}
+          </Heading>
         </div>
       )}
 
