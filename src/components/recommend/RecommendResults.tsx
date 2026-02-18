@@ -4,11 +4,13 @@ import RecommendResultCard from './RecommendResultCard';
 import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/components/rc';
 import { OCCASIONS } from '@/constants';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
-import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext } from '@/types';
+import { getDirectImageUrl } from '@/utils/imageUrl';
+import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext, Wine } from '@/types';
 
 interface RecommendResultsProps {
   occasionId: OccasionId;
   recommendations: Recommendation[];
+  inventory: Wine[];
   cellarOnly: boolean;
   error: string | null;
   isStreaming?: boolean;
@@ -28,6 +30,7 @@ interface RecommendResultsProps {
 const RecommendResults: React.FC<RecommendResultsProps> = ({
   occasionId,
   recommendations,
+  inventory,
   cellarOnly,
   error,
   isStreaming = false,
@@ -112,17 +115,22 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
 
       {/* Cards + skeleton placeholders */}
       <div className="grid grid-cols-1 gap-4">
-        {recommendations.map((rec, i) => (
-          <RecommendResultCard
-            key={`${rec.producer}-${rec.vintage}-${rec.rank}`}
-            recommendation={rec}
-            isSurprise={isSurprise}
-            isSingleResult={recommendations.length === 1 && !isStreaming}
-            index={i}
-            onAddToCellar={onAddToCellar}
-            onViewWine={onViewWine}
-          />
-        ))}
+        {recommendations.map((rec, i) => {
+          const matchedWine = rec.isFromCellar && rec.wineId ? inventory.find(w => w.id === rec.wineId) : undefined;
+          const imageUrl = matchedWine ? getDirectImageUrl(matchedWine.resolvedImageUrl || matchedWine.imageUrl) : undefined;
+          return (
+            <RecommendResultCard
+              key={`${rec.producer}-${rec.vintage}-${rec.rank}`}
+              recommendation={rec}
+              imageUrl={imageUrl}
+              isSurprise={isSurprise}
+              isSingleResult={recommendations.length === 1 && !isStreaming}
+              index={i}
+              onAddToCellar={onAddToCellar}
+              onViewWine={onViewWine}
+            />
+          );
+        })}
         {isStreaming && Array.from({ length: 3 - recommendations.length }, (_, i) => (
           <SkeletonCard key={`skeleton-${i}`} />
         ))}

@@ -335,6 +335,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
         <RecommendResults
           occasionId={selectedOccasion}
           recommendations={recommendations}
+          inventory={inventory}
           cellarOnly={cellarOnly}
           error={error}
           isStreaming={isStreaming}

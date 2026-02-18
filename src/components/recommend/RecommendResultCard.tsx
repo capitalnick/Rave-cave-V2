@@ -2,10 +2,13 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { RANK_BADGES, REMYS_PICK_BADGE } from '@/constants';
 import { MonoLabel, Body } from '@/components/rc';
+import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
+import WineIcon from '@/components/icons/WineIcon';
 import type { Recommendation } from '@/types';
 
 interface RecommendResultCardProps {
   recommendation: Recommendation;
+  imageUrl?: string;
   isSurprise?: boolean;
   isSingleResult?: boolean;
   index: number;
@@ -13,8 +16,12 @@ interface RecommendResultCardProps {
   onViewWine?: (wineId: string) => void;
 }
 
+const BADGE_W = 'w-[120px]';
+const BADGE_H = 'h-[44px]';
+
 const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
   recommendation,
+  imageUrl,
   isSurprise = false,
   isSingleResult = false,
   index,
@@ -40,100 +47,111 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
         animation: `slideInFromRight 400ms cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 60}ms both`,
       }}
     >
-      {/* Rank Badge — top-left */}
-      <div
-        className="absolute top-3 left-3 z-10 px-2 py-1 rounded-[4px]"
-        style={{ backgroundColor: badge.bgColor, color: badge.textColor }}
-      >
-        <span className="font-[var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-wider leading-none">
-          {badge.text}
-        </span>
-      </div>
-
-      <div className="flex gap-4 p-4 pt-12">
-        {/* Wine thumbnail placeholder */}
-        <div
-          className="w-20 h-20 rounded-[6px] shrink-0 flex items-center justify-center text-3xl"
-          style={{ backgroundColor: `${wineTypeColor}20` }}
-        >
-          🍷
-        </div>
-
-        {/* Wine info */}
-        <div className="flex-1 min-w-0 space-y-1">
-          <MonoLabel size="label" colour="secondary" className="w-auto" truncate>
-            {recommendation.producer}
-          </MonoLabel>
-          <p className="font-[var(--rc-font-display)] font-black text-[var(--rc-ink-primary)] leading-tight">
-            {recommendation.name}
-          </p>
-          <p className="font-[var(--rc-font-display)] font-black leading-tight" style={{ color: wineTypeColor }}>
-            {recommendation.vintage} · {recommendation.type}
-          </p>
-        </div>
-      </div>
-
-      {/* Rationale */}
-      <div className="px-4 pb-3">
-        <Body size="caption" colour="secondary" as="p" maxLines={isSurprise ? 4 : 2} className="italic">
-          {recommendation.rationale}
-        </Body>
-      </div>
-
-      {/* Metadata row */}
-      <div className="flex items-center flex-wrap gap-2 px-4 pb-4">
-        {/* Maturity chip */}
-        <span className={cn(
-          "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold font-[var(--rc-font-mono)] uppercase tracking-wider",
-          maturityLabel === 'DRINK NOW' && "bg-[rgba(255,0,110,0.1)] text-[var(--rc-accent-pink)]",
-          maturityLabel === 'HOLD' && "bg-[rgba(199,255,0,0.2)] text-[var(--rc-ink-primary)]",
-          maturityLabel === 'PAST PEAK' && "bg-[rgba(255,106,77,0.1)] text-[var(--rc-accent-coral)]"
-        )}>
-          {maturityLabel}
-        </span>
-
-        {/* Rating */}
-        {recommendation.rating != null && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--rc-badge-rating-bg,#f5f0e8)] text-[12px] font-bold font-[var(--rc-font-display)]">
-            ★ {recommendation.rating.toFixed(1)}
-          </span>
-        )}
-
-        {/* Cellar status */}
-        <span className={cn(
-          "text-[11px] font-[var(--rc-font-mono)] uppercase tracking-wider",
-          recommendation.isFromCellar ? "text-[var(--rc-ink-tertiary)]" : "text-[var(--rc-accent-coral)]"
-        )}>
-          {recommendation.isFromCellar ? 'From cellar' : 'Not in your cellar'}
-        </span>
-      </div>
-
-      {/* Bottom actions */}
-      {recommendation.isFromCellar && recommendation.wineId ? (
-        <div className="px-4 pb-4">
-          <button
-            onClick={() => onViewWine?.(recommendation.wineId)}
-            className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
+      <div className="flex gap-4 p-4">
+        {/* Left column: badge + thumbnail (card-within-card) */}
+        <div className="flex flex-col items-center gap-2 shrink-0">
+          {/* Rank badge — fixed size, centered text, wraps if needed */}
+          <div
+            className={cn(
+              BADGE_W, BADGE_H,
+              "flex items-center justify-center rounded-[6px] px-2 text-center"
+            )}
+            style={{ backgroundColor: badge.bgColor, color: badge.textColor }}
           >
-            Open bottle detail →
-          </button>
-        </div>
-      ) : (
-        <div className="px-4 pb-4">
-          <button
-            onClick={() => {
-              const q = [recommendation.producer, recommendation.name, recommendation.type, recommendation.vintage]
-                .map(v => String(v ?? '').trim())
-                .filter(Boolean)
-                .join(' ');
-              if (q) window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank');
-            }}
-            className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
+            <span className="font-[var(--rc-font-mono)] text-[10px] font-bold uppercase tracking-wider leading-tight">
+              {badge.text}
+            </span>
+          </div>
+
+          {/* Wine thumbnail — card within card */}
+          <div
+            className={cn(
+              BADGE_W, "aspect-[3/4] rounded-[6px] overflow-hidden",
+              "bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)]",
+              "flex items-center justify-center"
+            )}
           >
-            Search for wine →
-          </button>
+            {imageUrl ? (
+              <ImageWithFallback
+                src={imageUrl}
+                alt={`${recommendation.producer} ${recommendation.name}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <WineIcon size={32} className={`opacity-30`} style={{ color: wineTypeColor }} />
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Right column: wine info + rationale + metadata */}
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {/* Wine info */}
+          <div className="space-y-1">
+            <MonoLabel size="label" colour="secondary" className="w-auto" truncate>
+              {recommendation.producer}
+            </MonoLabel>
+            <p className="font-[var(--rc-font-display)] font-black text-[var(--rc-ink-primary)] leading-tight">
+              {recommendation.name}
+            </p>
+            <p className="font-[var(--rc-font-display)] font-black leading-tight" style={{ color: wineTypeColor }}>
+              {recommendation.vintage} · {recommendation.type}
+            </p>
+          </div>
+
+          {/* Rationale */}
+          <Body size="caption" colour="secondary" as="p" maxLines={isSurprise ? 4 : 2} className="italic">
+            {recommendation.rationale}
+          </Body>
+
+          {/* Metadata row */}
+          <div className="flex items-center flex-wrap gap-2">
+            <span className={cn(
+              "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold font-[var(--rc-font-mono)] uppercase tracking-wider",
+              maturityLabel === 'DRINK NOW' && "bg-[rgba(255,0,110,0.1)] text-[var(--rc-accent-pink)]",
+              maturityLabel === 'HOLD' && "bg-[rgba(199,255,0,0.2)] text-[var(--rc-ink-primary)]",
+              maturityLabel === 'PAST PEAK' && "bg-[rgba(255,106,77,0.1)] text-[var(--rc-accent-coral)]"
+            )}>
+              {maturityLabel}
+            </span>
+
+            {recommendation.rating != null && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--rc-badge-rating-bg,#f5f0e8)] text-[12px] font-bold font-[var(--rc-font-display)]">
+                ★ {recommendation.rating.toFixed(1)}
+              </span>
+            )}
+
+            <span className={cn(
+              "text-[11px] font-[var(--rc-font-mono)] uppercase tracking-wider",
+              recommendation.isFromCellar ? "text-[var(--rc-ink-tertiary)]" : "text-[var(--rc-accent-coral)]"
+            )}>
+              {recommendation.isFromCellar ? 'From cellar' : 'Not in your cellar'}
+            </span>
+          </div>
+
+          {/* Action link */}
+          {recommendation.isFromCellar && recommendation.wineId ? (
+            <button
+              onClick={() => onViewWine?.(recommendation.wineId)}
+              className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider text-left"
+            >
+              Open bottle detail →
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                const q = [recommendation.producer, recommendation.name, recommendation.type, recommendation.vintage]
+                  .map(v => String(v ?? '').trim())
+                  .filter(Boolean)
+                  .join(' ');
+                if (q) window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank');
+              }}
+              className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider text-left"
+            >
+              Search for wine →
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
