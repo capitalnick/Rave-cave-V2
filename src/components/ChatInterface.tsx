@@ -8,6 +8,7 @@ import { RemyMessage, UserMessage } from './remy';
 import { Wine, Message, RecommendChatContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
+import { getRandomRemyState } from '@/constants';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
 import type { RemyWineData } from '@/utils/remyParser';
 
@@ -259,8 +260,8 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
             );
           })}
           {isProcessing && (
-            <MonoLabel size="micro" colour="accent-acid" as="span" className="w-auto animate-pulse mt-6 block">
-              Let me think.
+            <MonoLabel size="micro" colour="secondary" as="span" className="w-auto animate-pulse mt-6 block">
+              {getRandomRemyState()}
             </MonoLabel>
           )}
         </div>

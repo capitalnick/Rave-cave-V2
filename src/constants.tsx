@@ -194,3 +194,34 @@ export const WINELIST_FOLLOWUP_CHIPS = [
   'What pairs with my meal?',
   'Any wines from my cellar?',
 ];
+
+// ── Rémy Thinking States ──
+
+export const REMY_THINKING_STATES = [
+  // Wine-related (~70%)
+  'Decanting thoughts\u2026',
+  'Aerating\u2026',
+  'Swirling the data\u2026',
+  'Checking the terroir\u2026',
+  'Sampling the vintage\u2026',
+  'Nosing the bouquet\u2026',
+  'Consulting the cellar\u2026',
+  'Letting it breathe\u2026',
+  'Uncorking ideas\u2026',
+  'Reading the legs\u2026',
+  'Fermenting ideas\u2026',
+  'Checking the oak\u2026',
+  'Tasting blind\u2026',
+  'Inspecting the robe\u2026',
+  // Deep thought (~30%)
+  'Ruminating\u2026',
+  'Cogitating\u2026',
+  'Deliberating\u2026',
+  'Pondering\u2026',
+  'Mulling it over\u2026',
+  'Contemplating\u2026',
+] as const;
+
+export function getRandomRemyState(): string {
+  return REMY_THINKING_STATES[Math.floor(Math.random() * REMY_THINKING_STATES.length)];
+}

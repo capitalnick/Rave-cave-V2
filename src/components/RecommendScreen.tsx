@@ -6,6 +6,7 @@ import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
 import { MonoLabel } from '@/components/rc';
+import { getRandomRemyState } from '@/constants';
 import { getRecommendations, getRecommendationsStream, getSurpriseMe } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
@@ -323,8 +324,8 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
               <div className="w-full max-w-md">
                 <SkeletonCard />
               </div>
-              <MonoLabel size="label" colour="accent-pink" align="centre" className="animate-pulse">
-                Let me think.
+              <MonoLabel size="label" colour="secondary" align="centre" className="animate-pulse">
+                {getRandomRemyState()}
               </MonoLabel>
             </>
           ) : (
@@ -334,8 +335,8 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
                 <SkeletonCard />
                 <SkeletonCard />
               </div>
-              <MonoLabel size="label" colour="accent-pink" align="centre" className="animate-pulse">
-                Let me think.
+              <MonoLabel size="label" colour="secondary" align="centre" className="animate-pulse">
+                {getRandomRemyState()}
               </MonoLabel>
             </>
           )}
