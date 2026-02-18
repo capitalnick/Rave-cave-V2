@@ -8,8 +8,8 @@ import { RemyMessage, UserMessage } from './remy';
 import { Wine, Message, RecommendChatContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
-import { getRandomRemyState } from '@/constants';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
+import { useRemyThinking } from '@/hooks/useRemyThinking';
 import type { RemyWineData } from '@/utils/remyParser';
 
 const CONTEXT_PREFIX = '[RECOMMEND_CONTEXT]';
@@ -31,6 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onAddToCellar,
   onViewWine,
 }) => {
+  const thinkingText = useRemyThinking();
   const cellarSnapshot = useMemo(() => inventoryService.buildCellarSummary(inventory), [inventory]);
 
   const {
@@ -261,7 +262,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
           })}
           {isProcessing && (
             <MonoLabel size="micro" colour="secondary" as="span" className="w-auto animate-pulse mt-6 block">
-              {getRandomRemyState()}
+              {thinkingText}
             </MonoLabel>
           )}
         </div>

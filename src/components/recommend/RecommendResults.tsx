@@ -2,7 +2,8 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import RecommendResultCard from './RecommendResultCard';
 import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/components/rc';
-import { OCCASIONS, getRandomRemyState } from '@/constants';
+import { OCCASIONS } from '@/constants';
+import { useRemyThinking } from '@/hooks/useRemyThinking';
 import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext } from '@/types';
 
 interface RecommendResultsProps {
@@ -41,6 +42,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   onAddToCellar,
   onViewWine,
 }) => {
+  const thinkingText = useRemyThinking();
   const occasion = OCCASIONS.find(o => o.id === occasionId);
   const occasionTitle = occasion?.title || 'Recommendation';
 
@@ -96,7 +98,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
         <Heading scale="heading">{occasionTitle}</Heading>
         <MonoLabel size="label" colour={isStreaming ? 'secondary' : 'ghost'} className={isStreaming ? 'animate-pulse' : ''}>
           {isStreaming
-            ? getRandomRemyState()
+            ? thinkingText
             : isSurprise
               ? "Rémy's surprise pick"
               : `Rémy's top ${recommendations.length} pick${recommendations.length !== 1 ? 's' : ''} ${cellarOnly ? 'from your cellar' : 'from the wine world'}`

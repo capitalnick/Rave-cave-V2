@@ -6,10 +6,10 @@ import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
 import { Heading, Spinner } from '@/components/rc';
-import { getRandomRemyState } from '@/constants';
 import { getRecommendations, getRecommendationsStream, getSurpriseMe } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
+import { useRemyThinking } from '@/hooks/useRemyThinking';
 import type {
   OccasionId,
   OccasionContext,
@@ -33,6 +33,7 @@ interface RecommendScreenProps {
 }
 
 const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, onHandoffToRemy, onAddToCellar, onViewWine }) => {
+  const thinkingText = useRemyThinking();
   const [view, setView] = useState<RecommendView>('grid');
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
@@ -320,7 +321,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
         <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
           <Spinner size="lg" tone="pink" />
           <Heading scale="subhead" colour="secondary" align="centre">
-            {getRandomRemyState()}
+            {thinkingText}
           </Heading>
         </div>
       )}
