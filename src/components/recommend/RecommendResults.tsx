@@ -42,7 +42,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   onAddToCellar,
   onViewWine,
 }) => {
-  const thinkingText = useRemyThinking();
+  const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
   const occasion = OCCASIONS.find(o => o.id === occasionId);
   const occasionTitle = occasion?.title || 'Recommendation';
 
@@ -96,7 +96,11 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
       {/* Header */}
       <div className="space-y-1">
         <Heading scale="heading">{occasionTitle}</Heading>
-        <MonoLabel size="label" colour={isStreaming ? 'secondary' : 'ghost'} className={isStreaming ? 'animate-pulse' : ''}>
+        <MonoLabel
+          size="label"
+          colour={isStreaming ? 'secondary' : 'ghost'}
+          className={`transition-opacity duration-300 ${isStreaming ? (thinkingFading ? 'opacity-0 animate-pulse' : 'opacity-100 animate-pulse') : ''}`}
+        >
           {isStreaming
             ? thinkingText
             : isSurprise

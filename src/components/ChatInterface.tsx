@@ -31,7 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onAddToCellar,
   onViewWine,
 }) => {
-  const thinkingText = useRemyThinking();
+  const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
   const cellarSnapshot = useMemo(() => inventoryService.buildCellarSummary(inventory), [inventory]);
 
   const {
@@ -261,7 +261,12 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
             );
           })}
           {isProcessing && (
-            <MonoLabel size="micro" colour="secondary" as="span" className="w-auto animate-pulse mt-6 block">
+            <MonoLabel
+              size="micro"
+              colour="secondary"
+              as="span"
+              className={`w-auto animate-pulse mt-6 block transition-opacity duration-300 ${thinkingFading ? 'opacity-0' : 'opacity-100'}`}
+            >
               {thinkingText}
             </MonoLabel>
           )}

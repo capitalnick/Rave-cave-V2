@@ -33,7 +33,7 @@ interface RecommendScreenProps {
 }
 
 const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, onHandoffToRemy, onAddToCellar, onViewWine }) => {
-  const thinkingText = useRemyThinking();
+  const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
   const [view, setView] = useState<RecommendView>('grid');
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
@@ -320,7 +320,12 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
       {view === 'loading' && (
         <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
           <Spinner size="lg" tone="pink" />
-          <Heading scale="subhead" colour="secondary" align="centre">
+          <Heading
+            scale="subhead"
+            colour="secondary"
+            align="centre"
+            className={`transition-opacity duration-300 ${thinkingFading ? 'opacity-0' : 'opacity-100'}`}
+          >
             {thinkingText}
           </Heading>
         </div>
