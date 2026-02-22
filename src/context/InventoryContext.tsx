@@ -4,7 +4,7 @@ import { inventoryService } from '@/services/inventoryService';
 import { deleteLabelImage } from '@/services/storageService';
 import { showToast } from '@/components/rc';
 import { getMaturityStatus } from '@/constants';
-import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey } from '@/types';
+import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey, WineBriefContext, WineDraft } from '@/types';
 import type { FiltersState, FacetOption } from '@/lib/faceted-filters';
 import {
   EMPTY_FILTERS,
@@ -70,6 +70,11 @@ interface InventoryContextValue {
   handleAddToCellarFromRecommend: (rec: Recommendation) => void;
   handleAddToCellarFromChat: (wine: Partial<Wine>) => void;
 
+  // Wine Brief (Scan → Remy handoff)
+  wineBriefContext: WineBriefContext | null;
+  setWineBriefContext: (ctx: WineBriefContext | null) => void;
+  handleAskRemyAboutWine: (draft: WineDraft) => void;
+
   // Mobile filter overlay
   mobileFiltersOpen: boolean;
   setMobileFiltersOpen: (open: boolean) => void;
@@ -132,6 +137,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // ── Recommend handoff ──
   const [recommendContext, setRecommendContext] = useState<RecommendChatContext | null>(null);
+
+  // ── Wine Brief (Scan → Remy) ──
+  const [wineBriefContext, setWineBriefContext] = useState<WineBriefContext | null>(null);
 
   // ── Recommend reset key (bumped when nav tab re-clicked) ──
   const [recommendResetKey, setRecommendResetKey] = useState(0);
@@ -302,6 +310,20 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setScanOpen(true);
   }, []);
 
+  // ── Wine Brief handoff ──
+  const handleAskRemyAboutWine = useCallback((draft: WineDraft) => {
+    setWineBriefContext({
+      briefId: crypto.randomUUID(),
+      fields: draft.fields,
+      source: draft.source,
+    });
+    setScanOpen(false);
+    const isPinned = window.matchMedia('(min-width: 1440px)').matches;
+    if (!isPinned) {
+      navigate({ to: '/remy' });
+    }
+  }, [navigate]);
+
   // ── Pulse refresh feedback ──
   const triggerRefreshFeedback = useCallback(() => {
     setIsSynced(false);
@@ -339,6 +361,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     handleHandoffToRemy,
     handleAddToCellarFromRecommend,
     handleAddToCellarFromChat,
+    wineBriefContext,
+    setWineBriefContext,
+    handleAskRemyAboutWine,
     mobileFiltersOpen,
     setMobileFiltersOpen,
     triggerRefreshFeedback,
@@ -350,7 +375,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     totalBottlesFiltered, heroWineIds, handleUpdate, scanOpen, prefillData,
     openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
-    handleAddToCellarFromChat, mobileFiltersOpen, triggerRefreshFeedback,
+    handleAddToCellarFromChat, wineBriefContext, handleAskRemyAboutWine,
+    mobileFiltersOpen, triggerRefreshFeedback,
     recommendResetKey, bumpRecommendResetKey,
   ]);
 

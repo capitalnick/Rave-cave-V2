@@ -151,6 +151,12 @@ export interface Recommendation {
   rating: number | null;
 }
 
+export interface WineBriefContext {
+  briefId: string;
+  fields: Partial<Wine>;
+  source: 'scan' | 'manual';
+}
+
 export interface RecommendChatContext {
   resultSetId: string;
   occasionId: OccasionId;

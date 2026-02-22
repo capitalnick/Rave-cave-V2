@@ -15,6 +15,7 @@ interface RegisterDraftProps {
   isCommitting: boolean;
   commitStage?: CommitStage;
   onCommitAnimationComplete?: () => void;
+  onAskRemy?: () => void;
   imageQualityWarning?: string | null;
   moreFieldsExpanded?: boolean;
   onToggleMoreFields?: () => void;
@@ -42,6 +43,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
   isCommitting,
   commitStage = 'idle',
   onCommitAnimationComplete,
+  onAskRemy,
   imageQualityWarning,
   moreFieldsExpanded,
   onToggleMoreFields,
@@ -317,13 +319,24 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
           {commitStage !== 'idle' && commitStage !== undefined ? (
             <CommitTransition stage={commitStage} onComplete={onCommitAnimationComplete ?? (() => {})} />
           ) : (
-            <Button
-              variantType="Primary"
-              label={isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
-              onClick={onConfirm}
-              disabled={!priceValid || isCommitting}
-              className="w-full"
-            />
+            <div className="flex flex-col gap-2">
+              <Button
+                variantType="Primary"
+                label={isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
+                onClick={onConfirm}
+                disabled={!priceValid || isCommitting}
+                className="w-full"
+              />
+              {onAskRemy && (
+                <button
+                  onClick={onAskRemy}
+                  disabled={isCommitting}
+                  className="w-full py-3 px-4 rounded-[var(--rc-radius-sm)] border border-[var(--rc-accent-acid)] bg-transparent font-[var(--rc-font-mono)] text-xs font-bold tracking-wider text-[var(--rc-accent-acid)] uppercase hover:bg-[var(--rc-accent-acid)]/10 transition-colors disabled:opacity-50"
+                >
+                  ✦ Ask Remy About This Wine
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

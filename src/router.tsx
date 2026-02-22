@@ -84,6 +84,13 @@ function AppShell() {
     }
   }, [isPinned, ctx.recommendContext, openRemyPanel]);
 
+  // Auto-open pinned panel when wine brief context is set
+  useEffect(() => {
+    if (isPinned && ctx.wineBriefContext) {
+      openRemyPanel();
+    }
+  }, [isPinned, ctx.wineBriefContext, openRemyPanel]);
+
   // Tab change handler — Remy nav toggles panel at >=1440px
   const handleTabChange = useCallback((tab: NavId) => {
     if (tab === 'remy' && isPinned) {
@@ -127,6 +134,7 @@ function AppShell() {
         onWineCommitted={ctx.handleWineCommitted}
         onViewWine={ctx.handleViewWine}
         prefillData={ctx.prefillData}
+        onAskRemy={ctx.handleAskRemyAboutWine}
       />
 
       {ctx.selectedWine && (

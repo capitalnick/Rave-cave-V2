@@ -8,6 +8,8 @@ const RemyPage: React.FC = () => {
     isSynced,
     recommendContext,
     setRecommendContext,
+    wineBriefContext,
+    setWineBriefContext,
     handleAddToCellarFromChat,
     setSelectedWine,
   } = useInventory();
@@ -18,6 +20,8 @@ const RemyPage: React.FC = () => {
       isSynced={isSynced}
       recommendContext={recommendContext}
       onRecommendContextConsumed={() => setRecommendContext(null)}
+      wineBriefContext={wineBriefContext}
+      onWineBriefContextConsumed={() => setWineBriefContext(null)}
       onAddToCellar={handleAddToCellarFromChat}
       onViewWine={setSelectedWine}
     />

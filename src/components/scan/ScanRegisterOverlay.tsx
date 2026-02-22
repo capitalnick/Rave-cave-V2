@@ -8,7 +8,7 @@ import RegisterDraft from './RegisterDraft';
 import DuplicateAlert from './DuplicateAlert';
 import SessionHeader from './SessionHeader';
 import DiscardConfirmation from './DiscardConfirmation';
-import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage, ExtractionErrorCode } from '@/types';
+import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage, ExtractionErrorCode, WineBriefContext } from '@/types';
 import { compressImageForExtraction, compressImageForStorage, createPreviewUrl } from '@/utils/imageCompression';
 import { extractWineFromLabel, ExtractionError } from '@/services/extractionService';
 import { analyseImageQuality } from '@/utils/imageQuality';
@@ -170,9 +170,10 @@ interface ScanRegisterOverlayProps {
   onWineCommitted?: (docId: string | string[]) => void;
   onViewWine?: (wine: Wine) => void;
   prefillData?: Partial<Wine> | null;
+  onAskRemy?: (draft: WineDraft) => void;
 }
 
-const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData }) => {
+const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy }) => {
   const isMobile = useIsMobile();
   const { keyboardVisible, viewportHeight } = useKeyboardVisible();
   const reducedMotion = useReducedMotion();
@@ -290,6 +291,10 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   const handleToggleMoreFields = useCallback(() => {
     setMoreFieldsExpanded(prev => !prev);
   }, []);
+
+  const handleAskRemy = useCallback(() => {
+    if (state.draft && onAskRemy) onAskRemy(state.draft);
+  }, [state.draft, onAskRemy]);
 
   // Image quality warning
   const imageQualityWarning = state.draft?.extraction?.imageQuality === 'low'
@@ -544,6 +549,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 isCommitting={state.stage === 'committing'}
                 commitStage={commitStage}
                 onCommitAnimationComplete={handleCommitAnimationComplete}
+                onAskRemy={onAskRemy ? handleAskRemy : undefined}
                 imageQualityWarning={imageQualityWarning}
                 moreFieldsExpanded={moreFieldsExpanded}
                 onToggleMoreFields={handleToggleMoreFields}

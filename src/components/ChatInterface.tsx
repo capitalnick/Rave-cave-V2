@@ -4,8 +4,8 @@ import { Mic, Send, VolumeX } from 'lucide-react';
 import { useGeminiLive } from '@/hooks/useGeminiLive';
 import VoiceWaveform from './VoiceWaveform';
 import FollowUpChips from './recommend/FollowUpChips';
-import { RemyMessage, UserMessage } from './remy';
-import { Wine, Message, RecommendChatContext } from '@/types';
+import { RemyMessage, UserMessage, WineBriefActions } from './remy';
+import { Wine, Message, RecommendChatContext, WineBriefContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
@@ -13,12 +13,15 @@ import { useRemyThinking } from '@/hooks/useRemyThinking';
 import type { RemyWineData } from '@/utils/remyParser';
 
 const CONTEXT_PREFIX = '[RECOMMEND_CONTEXT]';
+const WINE_BRIEF_PREFIX = '[WINE_BRIEF_CONTEXT]';
 
 interface ChatInterfaceProps {
   inventory: Wine[];
   isSynced: boolean;
   recommendContext?: RecommendChatContext | null;
   onRecommendContextConsumed?: () => void;
+  wineBriefContext?: WineBriefContext | null;
+  onWineBriefContextConsumed?: () => void;
   onAddToCellar?: (wine: Partial<Wine>) => void;
   onViewWine?: (wine: Wine) => void;
 }
@@ -28,6 +31,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isSynced,
   recommendContext,
   onRecommendContextConsumed,
+  wineBriefContext,
+  onWineBriefContextConsumed,
   onAddToCellar,
   onViewWine,
 }) => {
@@ -52,6 +57,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const contextConsumedRef = useRef(false);
   // Track transcript length to detect new assistant messages after context injection
   const transcriptLenAtInjection = useRef<number | null>(null);
+
+  // Wine Brief state
+  const briefConsumedRef = useRef(false);
+  const transcriptLenAtBriefInjection = useRef<number | null>(null);
+  const [showBriefActions, setShowBriefActions] = useState(false);
+  const [briefFields, setBriefFields] = useState<Partial<Wine> | null>(null);
 
   // Stable greeting — computed once on mount, displayed as synthetic first message
   const [greeting] = useState(() => getRandomGreeting());
@@ -152,11 +163,49 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
     }
   }, [recommendContext?.resultSetId]);
 
+  // ── Wine Brief Context Injection ──
+  useEffect(() => {
+    if (!wineBriefContext || briefConsumedRef.current) return;
+    briefConsumedRef.current = true;
+
+    const wineJson = JSON.stringify(wineBriefContext.fields, null, 2);
+    const briefMessage = `${WINE_BRIEF_PREFIX}
+The user just scanned a wine label and wants your expert assessment. Here is the staged wine data:
+
+${wineJson}
+
+Respond with a full Wine Brief (6 sections as described in your system prompt). End with a \`\`\`wine fence block containing the wine data.`;
+
+    transcriptLenAtBriefInjection.current = transcript.length;
+    setBriefFields(wineBriefContext.fields);
+    sendMessage(briefMessage);
+    onWineBriefContextConsumed?.();
+  }, [wineBriefContext]);
+
+  // Show brief actions after Rémy responds to brief injection
+  useEffect(() => {
+    if (transcriptLenAtBriefInjection.current === null) return;
+    const newMessages = transcript.slice(transcriptLenAtBriefInjection.current);
+    const hasAssistantReply = newMessages.some(m => m.role === 'assistant' && !m.content.startsWith(WINE_BRIEF_PREFIX));
+    if (hasAssistantReply) {
+      setShowBriefActions(true);
+      transcriptLenAtBriefInjection.current = null;
+    }
+  }, [transcript]);
+
+  // Reset brief consumed ref when briefId changes
+  useEffect(() => {
+    if (wineBriefContext) {
+      briefConsumedRef.current = false;
+    }
+  }, [wineBriefContext?.briefId]);
+
   const handleSend = () => {
     if (input.trim()) {
       sendMessage(input.trim());
       setInput('');
       setShowFollowUpChips(false);
+      setShowBriefActions(false);
     }
   };
 
@@ -197,7 +246,7 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
 
   // Filter out context injection messages from display
   const visibleTranscript = transcript.filter(
-    msg => !msg.content.startsWith(CONTEXT_PREFIX)
+    msg => !msg.content.startsWith(CONTEXT_PREFIX) && !msg.content.startsWith(WINE_BRIEF_PREFIX)
   );
 
   return (
@@ -273,8 +322,23 @@ Greet the user warmly referencing their ${recommendContext.occasionTitle.toLower
         </div>
       </div>
 
-      {/* Follow-up Chips */}
-      {showFollowUpChips && <FollowUpChips onChipClick={handleChipClick} />}
+      {/* Follow-up Chips (hidden when brief actions are showing) */}
+      {showFollowUpChips && !showBriefActions && <FollowUpChips onChipClick={handleChipClick} />}
+
+      {/* Wine Brief Actions */}
+      {showBriefActions && briefFields && (
+        <WineBriefActions
+          fields={briefFields}
+          onAddToCellar={(wine) => {
+            onAddToCellar?.(wine);
+            setShowBriefActions(false);
+          }}
+          onDismiss={() => {
+            setShowBriefActions(false);
+            setBriefFields(null);
+          }}
+        />
+      )}
 
       {/* Input Area */}
       <div className="px-6 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">

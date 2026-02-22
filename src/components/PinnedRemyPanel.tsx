@@ -14,6 +14,8 @@ const PinnedRemyPanel: React.FC<PinnedRemyPanelProps> = ({ open, onClose }) => {
     isSynced,
     recommendContext,
     setRecommendContext,
+    wineBriefContext,
+    setWineBriefContext,
     handleAddToCellarFromChat,
   } = useInventory();
 
@@ -31,6 +33,8 @@ const PinnedRemyPanel: React.FC<PinnedRemyPanelProps> = ({ open, onClose }) => {
         isSynced={isSynced}
         recommendContext={recommendContext}
         onRecommendContextConsumed={() => setRecommendContext(null)}
+        wineBriefContext={wineBriefContext}
+        onWineBriefContextConsumed={() => setWineBriefContext(null)}
         onAddToCellar={handleAddToCellarFromChat}
       />
     </RightPanel>
