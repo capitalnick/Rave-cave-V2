@@ -154,9 +154,7 @@ export const queryInventory = onRequest(
         // ── Structured search path ──
         // Single base query, all filters in-memory
         // (avoids composite index requirements)
-        const snapshot = await db.collection(WINES_COLLECTION)
-          .where(FIELD_MAP.producer, "!=", "")
-          .get();
+        const snapshot = await db.collection(WINES_COLLECTION).get();
         wines = snapshot.docs.map((d) => docToWine(d.id, d.data()));
       }
 

@@ -387,9 +387,18 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
 
       while (response.functionCalls?.length > 0 && response.candidateContent && toolRound < MAX_TOOL_ROUNDS) {
         toolRound++;
-        const toolResults = await handleToolCalls(response.functionCalls);
+        const calls = response.functionCalls;
+        const toolResults = await handleToolCalls(calls);
         historyRef.current.push(response.candidateContent);
-        historyRef.current.push({ role: 'user', parts: [{ text: `Tool Output: ${JSON.stringify(toolResults)}` }] });
+        historyRef.current.push({
+          role: 'function',
+          parts: calls.map((call: any, i: number) => ({
+            functionResponse: {
+              name: call.name,
+              response: toolResults![i],
+            },
+          })),
+        });
 
         response = await callGeminiProxy({
           model: CONFIG.MODELS.TEXT,
