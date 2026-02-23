@@ -67,4 +67,5 @@ export const RATE_LIMITS = {
   queryInventory: {maxRequests: 200, windowSeconds: 3600},
   tts: {maxRequests: 30, windowSeconds: 3600},
   backfill: {maxRequests: 5, windowSeconds: 3600},
+  checkout: {maxRequests: 10, windowSeconds: 3600},
 };

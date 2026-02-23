@@ -1,11 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User-scoped data: only the owning user can read/write
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // User profile: readable by owner, writable by owner
+    // BUT client cannot modify tier/subscription fields
+    // (only the Stripe webhook via Admin SDK can)
+    match /users/{userId}/profile {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+
+      // Initial create — block protected fields
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && !request.resource.data.keys().hasAny([
+                         'tier', 'stripeCustomerId',
+                         'subscriptionId', 'subscriptionStatus',
+                         'upgradedAt'
+                       ]);
+
+      // Update — block changes to protected fields
+      allow update: if request.auth != null
+                    && request.auth.uid == userId
+                    && !request.resource.data.diff(resource.data)
+                        .affectedKeys().hasAny([
+                          'tier', 'stripeCustomerId',
+                          'subscriptionId', 'subscriptionStatus',
+                          'upgradedAt'
+                        ]);
     }
-    // Block everything else (including old flat wines collection)
+
+    // Wines subcollection: full access for owner
+    match /users/{userId}/wines/{wineId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // Usage subcollection: read-only for owner
+    // (writes come from Cloud Functions via Admin SDK)
+    match /users/{userId}/usage/{monthId} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Block everything else
+    // (rateLimits, stripeCustomers — admin-only)
     match /{document=**} {
       allow read, write: if false;
     }

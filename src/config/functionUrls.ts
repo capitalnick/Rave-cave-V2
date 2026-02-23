@@ -9,4 +9,7 @@ export const FUNCTION_URLS = {
   queryInventory: `${BASE}/queryInventory`,
   tts: process.env.TTS_FUNCTION_URL || `${BASE}/tts`,
   backfillEmbeddings: `${BASE}/backfillEmbeddings`,
+  createCheckout: `${BASE}/createCheckoutSession`,
+  createPortal: `${BASE}/createPortalSession`,
+  cancelSubscription: `${BASE}/cancelSubscription`,
 } as const;
