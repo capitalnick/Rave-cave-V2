@@ -54,6 +54,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [input, setInput] = useState('');
   const [showFollowUpChips, setShowFollowUpChips] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contextConsumedRef = useRef(false);
   // Track transcript length to detect new assistant messages after context injection
   const transcriptLenAtInjection = useRef<number | null>(null);
@@ -200,12 +201,24 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
     }
   }, [wineBriefContext?.briefId]);
 
+  const resizeTextarea = () => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.min(ta.scrollHeight, 6 * 16)}px`; // max ~4 lines
+  };
+
   const handleSend = () => {
     if (input.trim()) {
       sendMessage(input.trim());
       setInput('');
       setShowFollowUpChips(false);
       setShowBriefActions(false);
+      // Reset textarea height to single line
+      requestAnimationFrame(() => {
+        const ta = textareaRef.current;
+        if (ta) ta.style.height = 'auto';
+      });
     }
   };
 
@@ -341,9 +354,9 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
       )}
 
       {/* Input Area */}
-      <div className="px-6 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
+      <div className="px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3">
+          <div className="flex items-end gap-3">
             {isRecording ? (
               <div className="flex-1 flex items-center bg-[var(--rc-ink-primary)] border border-[var(--rc-accent-acid)] px-4 py-3 rounded-[var(--rc-radius-md)]">
                 <VoiceWaveform />
@@ -356,12 +369,19 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
               </div>
             ) : (
               <div className="flex-1 relative">
-                <input
+                <textarea
+                  ref={textareaRef}
                   value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSend()}
+                  onChange={e => { setInput(e.target.value); resizeTextarea(); }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   placeholder="Message Rémy..."
-                  className="w-full bg-[var(--rc-ink-primary)] border border-[var(--rc-border-emphasis)] px-4 py-3 font-[var(--rc-font-mono)] text-sm text-[var(--rc-ink-on-accent)] placeholder:text-[var(--rc-ink-ghost)] focus:border-[var(--rc-accent-pink)] outline-none rounded-[var(--rc-radius-md)]"
+                  rows={1}
+                  className="w-full bg-[var(--rc-ink-primary)] border border-[var(--rc-border-emphasis)] px-4 py-3 pr-12 font-[var(--rc-font-mono)] text-sm text-[var(--rc-ink-on-accent)] placeholder:text-[var(--rc-ink-ghost)] focus:border-[var(--rc-accent-pink)] outline-none rounded-[var(--rc-radius-md)] resize-none overflow-y-auto"
                 />
                 <button
                   onClick={() => startRecording()}
