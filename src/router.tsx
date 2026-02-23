@@ -16,6 +16,7 @@ import SplashScreen from '@/components/SplashScreen';
 import LoginPage from '@/pages/LoginPage';
 import { RCToaster } from '@/components/rc';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ProfileProvider } from '@/context/ProfileContext';
 import { InventoryProvider, useInventory } from '@/context/InventoryContext';
 import { SurfaceProvider } from '@/context/SurfaceContext';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
@@ -163,9 +164,11 @@ function AuthGate() {
   if (loading) return <SplashScreen />;
   if (!user) return <LoginPage />;
   return (
-    <InventoryProvider>
-      <AppShell />
-    </InventoryProvider>
+    <ProfileProvider>
+      <InventoryProvider>
+        <AppShell />
+      </InventoryProvider>
+    </ProfileProvider>
   );
 }
 
