@@ -8,6 +8,7 @@ import { RemyMessage, UserMessage, WineBriefActions } from './remy';
 import { Wine, Message, RecommendChatContext, WineBriefContext } from '@/types';
 import { inventoryService } from '@/services/inventoryService';
 import { getRandomGreeting } from '@/greetings';
+import { CONFIG } from '@/constants';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
 import type { RemyWineData } from '@/utils/remyParser';
@@ -291,7 +292,7 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
         </div>
 
         {/* Stop Speaking Control */}
-        {isSpeaking && (
+        {CONFIG.FEATURES.TTS_ENABLED && isSpeaking && (
           <button
             onClick={stopSpeaking}
             className="flex items-center gap-2 bg-[var(--rc-accent-pink)] border border-[var(--rc-ink-primary)] px-3 py-1.5 hover:brightness-110 transition-all animate-pulse shadow-[2px_2px_0_rgba(0,0,0,1)] rounded-[var(--rc-radius-sm)]"

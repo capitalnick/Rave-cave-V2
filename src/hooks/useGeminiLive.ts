@@ -416,7 +416,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
        * SPEECH REQUIREMENT:
        * Speak ONLY when mic mode was used.
        */
-      if (isVoice && finalContent) {
+      if (CONFIG.FEATURES.TTS_ENABLED && isVoice && finalContent) {
         speak(finalContent);
       }
 
