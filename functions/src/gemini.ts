@@ -4,6 +4,7 @@ import * as logger from "firebase-functions/logger";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
+import {logUsage} from "./usageLog";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
@@ -124,6 +125,7 @@ export const gemini = onRequest(
         config,
       });
 
+      logUsage(uid, "geminiCalls");
       res.status(200).json({
         text: response.text ?? null,
         functionCalls: response.functionCalls ?? null,
@@ -235,6 +237,7 @@ export const geminiStream = onRequest(
           res.write(`data: ${JSON.stringify({_fallback: buffer})}\n\n`);
         }
 
+        logUsage(uid, "geminiStreamCalls");
         res.write("data: [DONE]\n\n");
         res.end();
       } catch (streamErr: unknown) {

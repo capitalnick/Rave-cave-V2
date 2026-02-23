@@ -5,6 +5,7 @@ import {Readable} from "stream";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
+import {logUsage} from "./usageLog";
 import type {ReadableStream as NodeWebReadableStream} from "stream/web";
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
@@ -147,6 +148,7 @@ export const tts = onRequest(
         return;
       }
 
+      logUsage(uid, "ttsCalls");
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Cache-Control", "no-store");
 

@@ -6,6 +6,7 @@ import {getApps, initializeApp} from "firebase-admin/app";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
+import {logUsage} from "./usageLog";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
@@ -281,6 +282,7 @@ export const queryInventory = onRequest(
       // Apply limit
       const results = wines.slice(0, limit);
 
+      logUsage(uid, "queryInventoryCalls");
       res.status(200).json({
         wines: results,
         total: wines.length,
