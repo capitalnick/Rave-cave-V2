@@ -234,10 +234,22 @@ export const queryInventory = onRequest(
           let va: number;
           let vb: number;
           switch (body.sortBy) {
-          case "vintage":
-            va = Number(a.vintage) || 0;
-            vb = Number(b.vintage) || 0;
-            return (va - vb) * order;
+          case "vintage": {
+            const vintA = a.vintage != null ? Number(a.vintage) : null;
+            const vintB = b.vintage != null ? Number(b.vintage) : null;
+
+            if (vintA === null && vintB === null) return 0;
+            if (vintA === null) return 1;
+            if (vintB === null) return -1;
+
+            const numA = isNaN(vintA) ? null : vintA;
+            const numB = isNaN(vintB) ? null : vintB;
+            if (numA === null && numB === null) return 0;
+            if (numA === null) return 1;
+            if (numB === null) return -1;
+
+            return (numA - numB) * order;
+          }
           case "price":
             va = Number(a.price) || 0;
             vb = Number(b.price) || 0;

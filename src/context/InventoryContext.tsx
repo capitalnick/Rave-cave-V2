@@ -168,9 +168,27 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         case 'maturity':
           return maturityRank(a) - maturityRank(b);
         case 'vintage-desc':
-          return (b.vintage || 0) - (a.vintage || 0);
-        case 'vintage-asc':
-          return (a.vintage || 0) - (b.vintage || 0);
+        case 'vintage-asc': {
+          const aV = a.vintage != null ? Number(a.vintage) : null;
+          const bV = b.vintage != null ? Number(b.vintage) : null;
+
+          // Push nulls (NV wines) to the end regardless of sort direction
+          if (aV === null && bV === null) return a.producer.localeCompare(b.producer);
+          if (aV === null) return 1;
+          if (bV === null) return -1;
+
+          // If NaN after coercion, also push to end
+          if (isNaN(aV) && isNaN(bV)) return a.producer.localeCompare(b.producer);
+          if (isNaN(aV)) return 1;
+          if (isNaN(bV)) return -1;
+
+          // Primary: vintage comparison
+          const direction = sortField === 'vintage-asc' ? 1 : -1;
+          const diff = (aV - bV) * direction;
+
+          // Secondary: stable sort by producer when vintages match
+          return diff !== 0 ? diff : a.producer.localeCompare(b.producer);
+        }
         case 'rating':
           return (b.vivinoRating || 0) - (a.vivinoRating || 0);
         case 'price-desc':
