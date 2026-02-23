@@ -458,12 +458,12 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     recognition.lang = 'en-US';
 
     recognition.onresult = (event: any) => {
-      let current = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        current += event.results[i][0].transcript;
+      let fullTranscript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        fullTranscript += event.results[i][0].transcript;
       }
-      liveTranscriptRef.current = current;
-      setLiveTranscript(current);
+      liveTranscriptRef.current = fullTranscript;
+      setLiveTranscript(fullTranscript);
 
       // Reset silence timer on every result
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
@@ -472,9 +472,14 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
 
     recognition.onend = () => {
       if (!hasSubmittedRef.current) {
-        setIsRecording(false);
-        setLiveTranscript('');
-        liveTranscriptRef.current = '';
+        const text = liveTranscriptRef.current.trim();
+        if (text) {
+          finalizeAndSubmitVoice();
+        } else {
+          setIsRecording(false);
+          setLiveTranscript('');
+          liveTranscriptRef.current = '';
+        }
       }
     };
 
@@ -495,8 +500,18 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       silenceTimerRef.current = null;
     }
 
-    if (liveTranscriptRef.current.trim()) {
-      finalizeAndSubmitVoice();
+    const currentText = liveTranscriptRef.current.trim();
+
+    if (currentText) {
+      hasSubmittedRef.current = true;
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsRecording(false);
+      sendMessage(currentText, undefined, true);
+      setLiveTranscript('');
+      liveTranscriptRef.current = '';
     } else {
       hasSubmittedRef.current = true;
       if (recognitionRef.current) {
@@ -508,7 +523,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       liveTranscriptRef.current = '';
       stopSpeaking();
     }
-  }, [finalizeAndSubmitVoice, stopSpeaking]);
+  }, [sendMessage, stopSpeaking]);
 
   return {
     transcript,
