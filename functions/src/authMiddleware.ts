@@ -4,6 +4,8 @@ import * as logger from "firebase-functions/logger";
 /**
  * Validates a Firebase Auth ID token from the Authorization header.
  * Returns the UID on success, throws AuthError on failure.
+ * @param {object} req The request object with headers.
+ * @return {Promise<string>} The authenticated user's UID.
  */
 export async function validateAuth(
   req: {headers: Record<string, string | string[] | undefined>}
@@ -27,7 +29,11 @@ export async function validateAuth(
   }
 }
 
+/** Custom error class for authentication failures. */
 export class AuthError extends Error {
+  /**
+   * @param {string} message The error message.
+   */
   constructor(message: string) {
     super(message);
     this.name = "AuthError";
