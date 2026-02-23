@@ -2,9 +2,6 @@ import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
-import {getApps, initializeApp} from "firebase-admin/app";
-
-if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");

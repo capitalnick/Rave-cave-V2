@@ -14,7 +14,10 @@ export function logUsage(uid: string, metric: string): void {
   const month = new Date().toISOString().slice(0, 7); // '2026-02'
   const ref = db.collection("users").doc(uid).collection("usage").doc(month);
   ref.set(
-    {[metric]: FieldValue.increment(1), lastUpdated: FieldValue.serverTimestamp()},
+    {
+      [metric]: FieldValue.increment(1),
+      lastUpdated: FieldValue.serverTimestamp(),
+    },
     {merge: true}
   ).catch((e) => {
     logger.warn("Usage log failed", {uid, metric, error: e});

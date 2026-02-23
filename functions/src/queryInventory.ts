@@ -2,15 +2,12 @@ import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
-import {getApps, initializeApp} from "firebase-admin/app";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 import {logUsage} from "./usageLog";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
-
-if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
 
@@ -122,7 +119,9 @@ export const queryInventory = onRequest(
         throw e;
       }
 
-      const allowed = await checkRateLimit(uid, "queryInventory", RATE_LIMITS.queryInventory);
+      const allowed = await checkRateLimit(
+        uid, "queryInventory", RATE_LIMITS.queryInventory
+      );
       if (!allowed) {
         res.status(429).json({error: "Rate limit exceeded. Try again later."});
         return;

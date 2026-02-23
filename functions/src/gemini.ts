@@ -154,7 +154,9 @@ export const geminiStream = onRequest(
       if (!result) return;
       const {body, apiKey, uid} = result;
 
-      const allowed = await checkRateLimit(uid, "geminiStream", RATE_LIMITS.geminiStream);
+      const allowed = await checkRateLimit(
+        uid, "geminiStream", RATE_LIMITS.geminiStream
+      );
       if (!allowed) {
         res.status(429).json({error: "Rate limit exceeded. Try again later."});
         return;

@@ -50,7 +50,9 @@ export const tts = onRequest(
         throw e;
       }
 
-      const rateLimitAllowed = await checkRateLimit(uid, "tts", RATE_LIMITS.tts);
+      const rateLimitAllowed = await checkRateLimit(
+        uid, "tts", RATE_LIMITS.tts
+      );
       if (!rateLimitAllowed) {
         res.status(429).json({error: "Rate limit exceeded. Try again later."});
         return;

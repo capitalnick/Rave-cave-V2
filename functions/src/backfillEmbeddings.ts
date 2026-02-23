@@ -2,12 +2,9 @@ import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
-import {getApps, initializeApp} from "firebase-admin/app";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
-
-if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
@@ -68,7 +65,9 @@ export const backfillEmbeddings = onRequest(
         throw e;
       }
 
-      const rateLimitAllowed = await checkRateLimit(uid, "backfill", RATE_LIMITS.backfill);
+      const rateLimitAllowed = await checkRateLimit(
+        uid, "backfill", RATE_LIMITS.backfill
+      );
       if (!rateLimitAllowed) {
         res.status(429).json({error: "Rate limit exceeded. Try again later."});
         return;

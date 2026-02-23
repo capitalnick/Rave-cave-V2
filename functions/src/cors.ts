@@ -9,9 +9,10 @@ const DEV_ORIGINS = [
   "http://localhost:5173",
 ];
 
-const isDev = process.env.FUNCTIONS_EMULATOR === "true"
-  || process.env.NODE_ENV === "development";
+const isDev =
+  process.env.FUNCTIONS_EMULATOR === "true" ||
+  process.env.NODE_ENV === "development";
 
-export const ALLOWED_ORIGINS: string[] = isDev
-  ? [...PROD_ORIGINS, ...DEV_ORIGINS]
-  : PROD_ORIGINS;
+export const ALLOWED_ORIGINS: string[] = isDev ?
+  [...PROD_ORIGINS, ...DEV_ORIGINS] :
+  PROD_ORIGINS;
