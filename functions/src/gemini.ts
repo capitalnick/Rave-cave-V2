@@ -2,13 +2,10 @@ import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {validateAuth, AuthError} from "./authMiddleware";
+import {ALLOWED_ORIGINS} from "./cors";
+import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
-
-const ALLOWED_ORIGINS = [
-  "https://rave-cave-v2.vercel.app",
-  "http://localhost:3000",
-];
 
 const MODEL_ALLOWLIST = new Set([
   "gemini-3-flash-preview",
@@ -31,14 +28,15 @@ type GeminiRequestBody = {
 async function parseAndValidate(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   req: any, res: any
-): Promise<{ body: GeminiRequestBody; apiKey: string } | null> {
+): Promise<{ body: GeminiRequestBody; apiKey: string; uid: string } | null> {
   if (req.method !== "POST") {
     res.status(405).send("Method not allowed");
     return null;
   }
 
+  let uid: string;
   try {
-    await validateAuth(req);
+    uid = await validateAuth(req);
   } catch (e) {
     if (e instanceof AuthError) {
       res.status(401).json({error: "Unauthorized"});
@@ -86,7 +84,7 @@ async function parseAndValidate(
     return null;
   }
 
-  return {body, apiKey};
+  return {body, apiKey, uid};
 }
 
 // ── Non-streaming endpoint (used by Remy chat, scan, enrichment) ──
@@ -97,13 +95,18 @@ export const gemini = onRequest(
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,
-    minInstances: 1,
   },
   async (req, res) => {
     try {
       const result = await parseAndValidate(req, res);
       if (!result) return;
-      const {body, apiKey} = result;
+      const {body, apiKey, uid} = result;
+
+      const allowed = await checkRateLimit(uid, "gemini", RATE_LIMITS.gemini);
+      if (!allowed) {
+        res.status(429).json({error: "Rate limit exceeded. Try again later."});
+        return;
+      }
       const {model, contents, systemInstruction, tools} = body;
 
       const {GoogleGenAI} = await import("@google/genai");
@@ -147,7 +150,13 @@ export const geminiStream = onRequest(
     try {
       const result = await parseAndValidate(req, res);
       if (!result) return;
-      const {body, apiKey} = result;
+      const {body, apiKey, uid} = result;
+
+      const allowed = await checkRateLimit(uid, "geminiStream", RATE_LIMITS.geminiStream);
+      if (!allowed) {
+        res.status(429).json({error: "Rate limit exceeded. Try again later."});
+        return;
+      }
       const {model, contents, systemInstruction} = body;
 
       const {GoogleGenAI} = await import("@google/genai");

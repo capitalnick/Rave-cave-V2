@@ -1,9 +1,5 @@
 import { authFetch } from '@/utils/authFetch';
-import { firebaseConfig } from '@/config/firebaseConfig';
-
-const TTS_URL =
-  process.env.TTS_FUNCTION_URL ||
-  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/tts`;
+import { FUNCTION_URLS } from '@/config/functionUrls';
 
 export const CHUNK_TIMEOUT_FIRST_MS = 8000;
 export const CHUNK_TIMEOUT_MS = 5000;
@@ -29,7 +25,7 @@ export async function fetchElevenLabsAudio(
   text: string,
   signal?: AbortSignal
 ): Promise<string> {
-  const response = await authFetch(TTS_URL, {
+  const response = await authFetch(FUNCTION_URLS.tts, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

@@ -3,6 +3,8 @@ import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {Readable} from "stream";
 import {validateAuth, AuthError} from "./authMiddleware";
+import {ALLOWED_ORIGINS} from "./cors";
+import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 import type {ReadableStream as NodeWebReadableStream} from "stream/web";
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
@@ -26,7 +28,7 @@ export const tts = onRequest(
   {
     region: "australia-southeast1",
     secrets: [ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID],
-    cors: true,
+    cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,
   },
   async (req, res) => {
@@ -36,14 +38,21 @@ export const tts = onRequest(
         return;
       }
 
+      let uid: string;
       try {
-        await validateAuth(req);
+        uid = await validateAuth(req);
       } catch (e) {
         if (e instanceof AuthError) {
           res.status(401).json({error: "Unauthorized"});
           return;
         }
         throw e;
+      }
+
+      const rateLimitAllowed = await checkRateLimit(uid, "tts", RATE_LIMITS.tts);
+      if (!rateLimitAllowed) {
+        res.status(429).json({error: "Rate limit exceeded. Try again later."});
+        return;
       }
 
       const apiKey = ELEVENLABS_API_KEY.value();

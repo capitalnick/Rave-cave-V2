@@ -11,16 +11,10 @@ import type {
 } from '../types';
 
 import { authFetch } from '@/utils/authFetch';
-import { firebaseConfig } from '@/config/firebaseConfig';
-
-const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
-  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/gemini`;
-
-const GEMINI_STREAM_URL =
-  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/geminiStream`;
+import { FUNCTION_URLS } from '@/config/functionUrls';
 
 export async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }) {
-  const res = await authFetch(GEMINI_PROXY_URL, {
+  const res = await authFetch(FUNCTION_URLS.gemini, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -241,7 +235,7 @@ async function callGeminiProxyStream(
   inventory: Wine[],
   signal?: AbortSignal
 ): Promise<void> {
-  const res = await authFetch(GEMINI_STREAM_URL, {
+  const res = await authFetch(FUNCTION_URLS.geminiStream, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

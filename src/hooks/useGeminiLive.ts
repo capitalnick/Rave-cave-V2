@@ -8,19 +8,13 @@ import { formatForSpeech } from '../services/ttsFormatter';
 import { enrichWine } from '@/services/enrichmentService';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
 import { authFetch } from '@/utils/authFetch';
-import { firebaseConfig } from '@/config/firebaseConfig';
+import { FUNCTION_URLS } from '@/config/functionUrls';
 import { useProfile } from '@/context/ProfileContext';
-
-const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
-  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/gemini`;
-
-const QUERY_INVENTORY_URL =
-  `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/queryInventory`;
 
 const MAX_TOOL_ROUNDS = 5;
 
 async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string; tools?: any[] }) {
-  const res = await authFetch(GEMINI_PROXY_URL, {
+  const res = await authFetch(FUNCTION_URLS.gemini, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -225,7 +219,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     for (const call of calls) {
       if (call.name === 'queryInventory') {
         try {
-          const res = await authFetch(QUERY_INVENTORY_URL, {
+          const res = await authFetch(FUNCTION_URLS.queryInventory, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(call.args),

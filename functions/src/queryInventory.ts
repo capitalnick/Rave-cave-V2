@@ -4,17 +4,14 @@ import * as logger from "firebase-functions/logger";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getApps, initializeApp} from "firebase-admin/app";
 import {validateAuth, AuthError} from "./authMiddleware";
+import {ALLOWED_ORIGINS} from "./cors";
+import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
-
-const ALLOWED_ORIGINS = [
-  "https://rave-cave-v2.vercel.app",
-  "http://localhost:3000",
-];
 
 // Firestore field mapping (copied from client src/types.ts — cannot import)
 const FIELD_MAP: Record<string, string> = {
@@ -122,6 +119,12 @@ export const queryInventory = onRequest(
           return;
         }
         throw e;
+      }
+
+      const allowed = await checkRateLimit(uid, "queryInventory", RATE_LIMITS.queryInventory);
+      if (!allowed) {
+        res.status(429).json({error: "Rate limit exceeded. Try again later."});
+        return;
       }
 
       const winesRef = db.collection("users").doc(uid).collection("wines");
