@@ -18,13 +18,15 @@ import { createRequire } from 'module';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-const require = createRequire(import.meta.url);
+// Resolve firebase-admin from functions/node_modules
+const functionsDir = resolve(new URL('.', import.meta.url).pathname, '../functions');
+const require = createRequire(functionsDir + '/index.js');
 let admin, FieldValue;
 try {
   admin = require('firebase-admin');
   FieldValue = admin.firestore.FieldValue;
 } catch {
-  console.error('firebase-admin not found. Run from project root or install it.');
+  console.error('firebase-admin not found. Ensure functions/node_modules is installed.');
   process.exit(1);
 }
 
