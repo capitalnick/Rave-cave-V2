@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig(({ mode }) => {
     const fileEnv = loadEnv(mode, '.', '');
@@ -37,7 +38,15 @@ export default defineConfig(({ mode }) => {
             navigateFallback: '/index.html',
           },
         }),
+        ...(e('SENTRY_AUTH_TOKEN') ? [sentryVitePlugin({
+          org: e('SENTRY_ORG'),
+          project: e('SENTRY_PROJECT'),
+          authToken: e('SENTRY_AUTH_TOKEN'),
+        })] : []),
       ],
+      build: {
+        sourcemap: true,
+      },
       define: {
         'process.env.VITE_FIREBASE_ENV': JSON.stringify(e('VITE_FIREBASE_ENV')),
         // DEV project
@@ -57,6 +66,7 @@ export default defineConfig(({ mode }) => {
         // Non-Firebase
         'process.env.TTS_FUNCTION_URL': JSON.stringify(e('TTS_FUNCTION_URL')),
         'process.env.GEMINI_PROXY_URL': JSON.stringify(e('GEMINI_PROXY_URL')),
+        'process.env.SENTRY_DSN': JSON.stringify(e('SENTRY_DSN')),
       },
       resolve: {
         alias: {

@@ -11,6 +11,7 @@ import {
   type AuthError,
 } from 'firebase/auth';
 import { auth } from '@/firebase';
+import { setSentryUser } from '@/config/sentry';
 
 // ── Error mapping ──
 
@@ -70,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      setSentryUser(firebaseUser?.uid ?? null, firebaseUser?.email);
       setLoading(false);
     });
     return () => unsubscribe();
