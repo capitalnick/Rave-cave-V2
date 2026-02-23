@@ -6,16 +6,19 @@ import { useAuth } from '@/context/AuthContext';
 // ── Types ──
 
 export type Currency = 'AUD' | 'USD' | 'EUR' | 'GBP';
+export type Tier = 'free' | 'premium';
 
 interface UserProfile {
   currency: Currency;
   onboardingComplete: boolean;
   createdAt: Timestamp | null;
+  tier: Tier;
 }
 
 interface ProfileContextValue {
   profile: UserProfile;
   profileLoading: boolean;
+  isPremium: boolean;
   updateCurrency: (currency: Currency) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
 }
@@ -24,6 +27,7 @@ const DEFAULT_PROFILE: UserProfile = {
   currency: 'AUD',
   onboardingComplete: false,
   createdAt: null,
+  tier: 'free',
 };
 
 // ── Context ──
@@ -59,12 +63,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           currency: data.currency ?? DEFAULT_PROFILE.currency,
           onboardingComplete: data.onboardingComplete ?? DEFAULT_PROFILE.onboardingComplete,
           createdAt: data.createdAt ?? null,
+          tier: data.tier ?? DEFAULT_PROFILE.tier,
         });
       } else {
         // New user — create default profile doc
         await setDoc(profileRef, {
           currency: DEFAULT_PROFILE.currency,
           onboardingComplete: DEFAULT_PROFILE.onboardingComplete,
+          tier: DEFAULT_PROFILE.tier,
           createdAt: serverTimestamp(),
         }, { merge: true });
       }
@@ -86,12 +92,15 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await updateDoc(profileRef, { onboardingComplete: true });
   }, [user]);
 
+  const isPremium = profile.tier === 'premium';
+
   const value = useMemo<ProfileContextValue>(() => ({
     profile,
     profileLoading,
+    isPremium,
     updateCurrency,
     markOnboardingComplete,
-  }), [profile, profileLoading, updateCurrency, markOnboardingComplete]);
+  }), [profile, profileLoading, isPremium, updateCurrency, markOnboardingComplete]);
 
   return (
     <ProfileContext.Provider value={value}>

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTierGate } from '@/hooks/useTierGate';
+import UpgradePrompt from '@/components/UpgradePrompt';
 import OccasionGrid from './recommend/OccasionGrid';
 import OccasionContextForm from './recommend/OccasionContextForm';
 import RecommendResults from './recommend/RecommendResults';
@@ -34,6 +36,7 @@ interface RecommendScreenProps {
 
 const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, onHandoffToRemy, onAddToCellar, onViewWine }) => {
   const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
+  const { requirePremium, upgradePromptOpen, upgradeFeature, closeUpgradePrompt } = useTierGate();
   const [view, setView] = useState<RecommendView>('grid');
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [occasionContext, setOccasionContext] = useState<OccasionContext>(null);
@@ -253,8 +256,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
   }, [recommendations]);
 
   const handleHandoffToRemy = useCallback((context: RecommendChatContext) => {
-    onHandoffToRemy?.(context);
-  }, [onHandoffToRemy]);
+    requirePremium('remy', () => {
+      onHandoffToRemy?.(context);
+    });
+  }, [onHandoffToRemy, requirePremium]);
 
   const cellarOnly = occasionContext ? (occasionContext as any).cellarOnly !== false : true;
 
@@ -353,6 +358,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
             if (wine) onViewWine?.(wine);
           }}
         />
+      )}
+
+      {upgradePromptOpen && (
+        <UpgradePrompt variant="modal" feature={upgradeFeature} onDismiss={closeUpgradePrompt} />
       )}
     </div>
   );

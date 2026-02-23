@@ -18,6 +18,9 @@ import { uploadLabelImage, deleteLabelImage } from '@/services/storageService';
 import { enrichWine } from '@/services/enrichmentService';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
 import { showToast, Heading, MonoLabel, Button } from '@/components/rc';
+import UpgradePrompt from '@/components/UpgradePrompt';
+import { useProfile } from '@/context/ProfileContext';
+import { CONFIG } from '@/constants';
 import { useScanSession } from '@/hooks/useScanSession';
 import { confirmProdWrite } from '@/components/ProdWriteGuard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -174,6 +177,8 @@ interface ScanRegisterOverlayProps {
 }
 
 const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy }) => {
+  const { isPremium } = useProfile();
+  const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
   const isMobile = useIsMobile();
   const { keyboardVisible, viewportHeight } = useKeyboardVisible();
   const reducedMotion = useReducedMotion();
@@ -306,6 +311,14 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     if (!state.draft) return;
     const draftFields = state.draft.fields;
 
+    // 0a. Bottle cap check
+    const addingQuantity = draftFields.quantity || 1;
+    const currentTotal = inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
+    if (!isPremium && currentTotal + addingQuantity > CONFIG.FREE_TIER.MAX_BOTTLES) {
+      setUpgradePromptOpen(true);
+      return;
+    }
+
     // 0. Production write guard
     const confirmed = await confirmProdWrite();
     if (!confirmed) return;
@@ -434,6 +447,15 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     if (!duplicateCandidate) return;
     const existing = duplicateCandidate.existingWine;
     const newQty = (existing.quantity || 1) + 1;
+
+    // Bottle cap check on merge
+    const delta = newQty - (Number(existing.quantity) || 0);
+    const currentTotal = inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
+    if (!isPremium && currentTotal + delta > CONFIG.FREE_TIER.MAX_BOTTLES) {
+      setUpgradePromptOpen(true);
+      return;
+    }
+
     await inventoryService.updateField(existing.id, 'quantity', newQty);
 
     setDuplicateCandidate(null);
@@ -598,6 +620,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
             onDiscard={handleDiscardConfirm}
             onKeep={handleDiscardKeep}
           />
+        )}
+
+        {/* Upgrade Prompt (bottle cap) */}
+        {upgradePromptOpen && (
+          <UpgradePrompt variant="modal" feature="bottles" onDismiss={() => setUpgradePromptOpen(false)} />
         )}
       </DialogContent>
     </Dialog>

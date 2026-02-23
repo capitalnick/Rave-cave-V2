@@ -3,7 +3,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { inventoryService } from '@/services/inventoryService';
 import { deleteLabelImage } from '@/services/storageService';
 import { showToast } from '@/components/rc';
-import { getMaturityStatus } from '@/constants';
+import { getMaturityStatus, CONFIG } from '@/constants';
+import { useProfile } from '@/context/ProfileContext';
 import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey, WineBriefContext, WineDraft } from '@/types';
 import type { FiltersState, FacetOption } from '@/lib/faceted-filters';
 import {
@@ -46,6 +47,10 @@ interface InventoryContextValue {
   heroWineIds: string[];
   sortField: SortField;
   setSortField: (f: SortField) => void;
+
+  // Bottle cap
+  totalBottles: number;
+  canAddBottles: (count?: number) => boolean;
 
   // Wine CRUD
   handleUpdate: (wine: Wine, key: string, value: string) => Promise<void>;
@@ -107,6 +112,7 @@ function maturityRank(wine: Wine): number {
 
 export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
+  const { isPremium } = useProfile();
 
   // ── Core state ──
   const [inventory, setInventory] = useState<Wine[]>([]);
@@ -249,8 +255,30 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [sortedInventory],
   );
 
+  // ── Bottle cap ──
+  const totalBottles = useMemo(
+    () => inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0),
+    [inventory],
+  );
+
+  const canAddBottles = useCallback((count: number = 1): boolean => {
+    if (isPremium) return true;
+    return totalBottles + count <= CONFIG.FREE_TIER.MAX_BOTTLES;
+  }, [isPremium, totalBottles]);
+
   // ── Wine update handler ──
   const handleUpdate = useCallback(async (wine: Wine, key: string, value: string) => {
+    // Bottle cap check on quantity increase
+    if (key === 'quantity') {
+      const newQty = Number(value);
+      const currentQty = Number(wine.quantity) || 0;
+      const delta = newQty - currentQty;
+      if (delta > 0 && !canAddBottles(delta)) {
+        showToast({ tone: 'warning', message: `Free plan is limited to ${CONFIG.FREE_TIER.MAX_BOTTLES} bottles. Upgrade to add more.` });
+        return;
+      }
+    }
+
     // Auto-delete when quantity reaches 0
     if (key === 'quantity' && Number(value) <= 0) {
       const wineName = `${wine.vintage || ''} ${wine.producer || 'Wine'}`.trim();
@@ -268,7 +296,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setInventory(prev => prev.map(w => w.id === wine.id ? { ...w, [key]: coerced } : w));
       setSelectedWine(prev => prev?.id === wine.id ? { ...prev, [key]: coerced } : prev);
     }
-  }, []);
+  }, [canAddBottles]);
 
   // ── Scan callbacks ──
   const openScan = useCallback((prefill?: Partial<Wine> | null) => {
@@ -364,6 +392,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     heroWineIds,
     sortField,
     setSortField,
+    totalBottles,
+    canAddBottles,
     handleUpdate,
     scanOpen,
     prefillData,
@@ -390,7 +420,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }), [
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
     sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
-    totalBottlesFiltered, heroWineIds, handleUpdate, scanOpen, prefillData,
+    totalBottlesFiltered, heroWineIds, totalBottles, canAddBottles, handleUpdate, scanOpen, prefillData,
     openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
     handleAddToCellarFromChat, wineBriefContext, handleAskRemyAboutWine,

@@ -1,8 +1,11 @@
 import React from 'react';
 import ChatInterface from '@/components/ChatInterface';
 import { useInventory } from '@/context/InventoryContext';
+import { useProfile } from '@/context/ProfileContext';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 const RemyPage: React.FC = () => {
+  const { isPremium } = useProfile();
   const {
     inventory,
     isSynced,
@@ -13,6 +16,10 @@ const RemyPage: React.FC = () => {
     handleAddToCellarFromChat,
     setSelectedWine,
   } = useInventory();
+
+  if (!isPremium) {
+    return <UpgradePrompt variant="fullscreen" feature="remy" />;
+  }
 
   return (
     <ChatInterface

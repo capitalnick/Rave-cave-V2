@@ -16,7 +16,8 @@ import SplashScreen from '@/components/SplashScreen';
 import LoginPage from '@/pages/LoginPage';
 import { RCToaster } from '@/components/rc';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { ProfileProvider } from '@/context/ProfileContext';
+import { ProfileProvider, useProfile } from '@/context/ProfileContext';
+import OnboardingFlow from '@/components/OnboardingFlow';
 import { InventoryProvider, useInventory } from '@/context/InventoryContext';
 import { SurfaceProvider } from '@/context/SurfaceContext';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
@@ -49,10 +50,30 @@ function useActiveTab(): NavId {
 // ── AppShell: bridges context + router → Layout props ──
 function AppShell() {
   const ctx = useInventory();
+  const { user } = useAuth();
+  const { isPremium, profile, profileLoading, markOnboardingComplete } = useProfile();
   const activeTab = useActiveTab();
   const navigate = useNavigate();
   const scrollWrapperRef = useScrollPreservation();
   useKeyboardShortcuts(navigate);
+
+  // ── Onboarding for new users ──
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (!profileLoading && !ctx.loading && !profile.onboardingComplete && ctx.inventory.length === 0) {
+      setShowOnboarding(true);
+    }
+  }, [profileLoading, ctx.loading, profile.onboardingComplete, ctx.inventory.length]);
+
+  const handleOnboardingComplete = useCallback(async () => {
+    setShowOnboarding(false);
+    await markOnboardingComplete();
+  }, [markOnboardingComplete]);
+
+  const handleOnboardingScan = useCallback(() => {
+    ctx.openScan();
+  }, [ctx]);
 
   const isPinned = usePinnedRemy();
 
@@ -79,21 +100,21 @@ function AppShell() {
     try { localStorage.setItem(LS_KEY, 'true'); } catch {}
   }, []);
 
-  const pinnedRemyVisible = isPinned && activeTab !== 'remy' && remyPanelOpen;
+  const pinnedRemyVisible = isPremium && isPinned && activeTab !== 'remy' && remyPanelOpen;
 
   // Auto-open pinned panel when recommend handoff sets context
   useEffect(() => {
-    if (isPinned && ctx.recommendContext) {
+    if (isPremium && isPinned && ctx.recommendContext) {
       openRemyPanel();
     }
-  }, [isPinned, ctx.recommendContext, openRemyPanel]);
+  }, [isPremium, isPinned, ctx.recommendContext, openRemyPanel]);
 
   // Auto-open pinned panel when wine brief context is set
   useEffect(() => {
-    if (isPinned && ctx.wineBriefContext) {
+    if (isPremium && isPinned && ctx.wineBriefContext) {
       openRemyPanel();
     }
-  }, [isPinned, ctx.wineBriefContext, openRemyPanel]);
+  }, [isPremium, isPinned, ctx.wineBriefContext, openRemyPanel]);
 
   // Tab change handler — Remy nav toggles panel at >=1440px
   const handleTabChange = useCallback((tab: NavId) => {
@@ -127,6 +148,7 @@ function AppShell() {
         pinnedRightOffset={pinnedRemyVisible ? 400 : 0}
         isPinnedRemy={isPinned}
         remyPanelOpen={remyPanelOpen}
+        isPremium={isPremium}
       >
         <Outlet />
       </Layout>
@@ -138,7 +160,7 @@ function AppShell() {
         onWineCommitted={ctx.handleWineCommitted}
         onViewWine={ctx.handleViewWine}
         prefillData={ctx.prefillData}
-        onAskRemy={ctx.handleAskRemyAboutWine}
+        onAskRemy={isPremium ? ctx.handleAskRemyAboutWine : undefined}
       />
 
       {ctx.selectedWine && (
@@ -153,6 +175,14 @@ function AppShell() {
 
       {pinnedRemyVisible && (
         <PinnedRemyPanel open={remyPanelOpen} onClose={closeRemyPanel} />
+      )}
+
+      {showOnboarding && (
+        <OnboardingFlow
+          displayName={user?.displayName ?? null}
+          onComplete={handleOnboardingComplete}
+          onScanFirst={handleOnboardingScan}
+        />
       )}
     </>
   );

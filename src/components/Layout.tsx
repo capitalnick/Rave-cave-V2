@@ -29,6 +29,7 @@ interface LayoutProps {
   pinnedRightOffset?: number;
   isPinnedRemy?: boolean;
   remyPanelOpen?: boolean;
+  isPremium?: boolean;
 }
 
 const navItems: { id: TabId; label: string; icon: typeof Database }[] = [
@@ -56,9 +57,15 @@ const Layout: React.FC<LayoutProps> = ({
   pinnedRightOffset = 0,
   isPinnedRemy = false,
   remyPanelOpen = false,
+  isPremium = false,
 }) => {
   const isRailExpanded = useRailExpanded();
   const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
+
+  const getTabLabel = (item: typeof navItems[0]) => {
+    if (item.id === 'remy' && !isPremium) return 'RÉMY ✦';
+    return item.label;
+  };
 
   const showFilters = activeTab === 'cellar' && filters && facetOptions && onToggleFacet && onClearFilters;
 
@@ -90,7 +97,7 @@ const Layout: React.FC<LayoutProps> = ({
                 key={item.id}
                 icon={<item.icon className="w-full h-full" />}
                 iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
-                label={item.label}
+                label={getTabLabel(item)}
                 state={isActive ? 'active' : 'inactive'}
                 context={railContext}
                 onClick={() => onTabChange(item.id)}
@@ -157,7 +164,7 @@ const Layout: React.FC<LayoutProps> = ({
             key={item.id}
             icon={<item.icon className="w-full h-full" />}
             iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
-            label={item.label}
+            label={getTabLabel(item)}
             state={activeTab === item.id ? 'active' : 'inactive'}
             context="tabbar"
             onClick={() => onTabChange(item.id)}
@@ -171,7 +178,7 @@ const Layout: React.FC<LayoutProps> = ({
             key={item.id}
             icon={<item.icon className="w-full h-full" />}
             iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
-            label={item.label}
+            label={getTabLabel(item)}
             state={activeTab === item.id ? 'active' : 'inactive'}
             context="tabbar"
             onClick={() => onTabChange(item.id)}

@@ -28,6 +28,9 @@ export const CONFIG = {
   TTS_SPEECH_RATE: 1.1,
   TTS_VOICE_LANG: 'fr-FR',
   INVENTORY_LIMIT: 40, // Prevent token bloat
+  FREE_TIER: {
+    MAX_BOTTLES: 24,
+  },
   FEATURES: {
     TTS_ENABLED: false, // Set to true to re-enable Rémy's voice output
   },

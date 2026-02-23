@@ -9,6 +9,7 @@ import { enrichWine } from '@/services/enrichmentService';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
 import { authFetch } from '@/utils/authFetch';
 import { firebaseConfig } from '@/config/firebaseConfig';
+import { useProfile } from '@/context/ProfileContext';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
   `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/gemini`;
@@ -62,6 +63,7 @@ const chunkText = (text: string): string[] => {
 };
 
 export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
+  const { isPremium } = useProfile();
   const [transcript, setTranscript] = useState<Message[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -267,26 +269,32 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
         if (!currentStaged) {
           results.push({ result: "Error: No wine staged." });
         } else {
-          const finalWine = {
-            ...currentStaged,
-            price: call.args.price,
-            quantity: call.args.quantity || 1,
-            name: currentStaged.name || ''
-          };
-          const id = await inventoryService.addWine(finalWine as any);
-          if (id) {
-            enrichWine(id, finalWine as Partial<Wine>).catch(err =>
-              console.error('Post-commit enrichment failed (non-blocking):', err));
+          // Defensive bottle cap check (Rémy is premium-only, but guard anyway)
+          const totalBottles = localCellar.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
+          if (!isPremium && totalBottles + (call.args.quantity || 1) > CONFIG.FREE_TIER.MAX_BOTTLES) {
+            results.push({ result: "Cannot add wine — cellar is full on the free plan. The user needs to upgrade to Premium." });
+          } else {
+            const finalWine = {
+              ...currentStaged,
+              price: call.args.price,
+              quantity: call.args.quantity || 1,
+              name: currentStaged.name || ''
+            };
+            const id = await inventoryService.addWine(finalWine as any);
+            if (id) {
+              enrichWine(id, finalWine as Partial<Wine>).catch(err =>
+                console.error('Post-commit enrichment failed (non-blocking):', err));
+            }
+            setIngestionState('COMMITTED');
+            stagedWineRef.current = null;
+            setStagedWine(null);
+            results.push({ result: `Success! Wine added to cellar with ID ${id}.` });
           }
-          setIngestionState('COMMITTED');
-          stagedWineRef.current = null;
-          setStagedWine(null);
-          results.push({ result: `Success! Wine added to cellar with ID ${id}.` });
         }
       }
     }
     return results;
-  }, [localCellar]);
+  }, [localCellar, isPremium]);
 
   const sendMessage = useCallback(async (text: string, imageBase64?: string, isVoice: boolean = false) => {
     if (!text && !imageBase64) return;
