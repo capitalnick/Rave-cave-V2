@@ -1,3 +1,4 @@
+import { authFetch } from '@/utils/authFetch';
 import { firebaseConfig } from '@/config/firebaseConfig';
 
 const TTS_URL =
@@ -28,7 +29,7 @@ export async function fetchElevenLabsAudio(
   text: string,
   signal?: AbortSignal
 ): Promise<string> {
-  const response = await fetch(TTS_URL, {
+  const response = await authFetch(TTS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

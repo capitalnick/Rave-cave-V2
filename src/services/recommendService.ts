@@ -10,6 +10,7 @@ import type {
   RankLabel,
 } from '../types';
 
+import { authFetch } from '@/utils/authFetch';
 import { firebaseConfig } from '@/config/firebaseConfig';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
@@ -19,7 +20,7 @@ const GEMINI_STREAM_URL =
   `https://australia-southeast1-${firebaseConfig.projectId}.cloudfunctions.net/geminiStream`;
 
 export async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }) {
-  const res = await fetch(GEMINI_PROXY_URL, {
+  const res = await authFetch(GEMINI_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -240,7 +241,7 @@ async function callGeminiProxyStream(
   inventory: Wine[],
   signal?: AbortSignal
 ): Promise<void> {
-  const res = await fetch(GEMINI_STREAM_URL, {
+  const res = await authFetch(GEMINI_STREAM_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

@@ -1,6 +1,7 @@
 import { CONFIG } from '@/constants';
 import { inventoryService } from './inventoryService';
 import type { Wine } from '@/types';
+import { authFetch } from '@/utils/authFetch';
 import { firebaseConfig } from '@/config/firebaseConfig';
 
 const GEMINI_PROXY_URL = process.env.GEMINI_PROXY_URL ||
@@ -66,7 +67,7 @@ export async function enrichWine(docId: string, wine: Partial<Wine>): Promise<vo
   await inventoryService.updateField(docId, 'processingStatus', 'pending');
 
   try {
-    const res = await fetch(GEMINI_PROXY_URL, {
+    const res = await authFetch(GEMINI_PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

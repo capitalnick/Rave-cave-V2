@@ -4,8 +4,15 @@ import { db } from "../firebase";
 import { Wine, FIRESTORE_FIELD_MAP } from '../types';
 // Fixed: Import CONFIG from constants instead of types
 import { CONFIG } from '../constants';
+import { requireUid } from '@/utils/authHelpers';
 
-const WINES_COLLECTION = 'wines';
+function userWinesCollection() {
+  return collection(db, 'users', requireUid(), 'wines');
+}
+
+function userWineDoc(docId: string) {
+  return doc(db, 'users', requireUid(), 'wines', docId);
+}
 
 function docToWine(docId: string, data: Record<string, any>): Wine {
   const wine: any = { id: docId };
@@ -27,20 +34,20 @@ function wineToDoc(wine: Partial<Wine>): Record<string, any> {
 
 export const inventoryService = {
   getInventory: async (): Promise<Wine[]> => {
-    const winesRef = collection(db, WINES_COLLECTION);
+    const winesRef = userWinesCollection();
     const snapshot = await getDocs(winesRef);
     return snapshot.docs.map(d => docToWine(d.id, d.data())).filter(w => !!w.producer);
   },
 
   onInventoryChange: (callback: (wines: Wine[]) => void): Unsubscribe => {
-    return onSnapshot(collection(db, WINES_COLLECTION), (snap) => {
+    return onSnapshot(userWinesCollection(), (snap) => {
       callback(snap.docs.map(d => docToWine(d.id, d.data())).filter(w => !!w.producer));
     });
   },
 
   addWine: async (wine: Omit<Wine, 'id'>): Promise<string | null> => {
     try {
-      const docRef = await addDoc(collection(db, WINES_COLLECTION), wineToDoc(wine));
+      const docRef = await addDoc(userWinesCollection(), wineToDoc(wine));
       return docRef.id;
     } catch (e) {
       console.error("Firestore Add Failed", e);
@@ -50,7 +57,7 @@ export const inventoryService = {
 
   deleteWine: async (docId: string): Promise<boolean> => {
     try {
-      await deleteDoc(doc(db, WINES_COLLECTION, docId));
+      await deleteDoc(userWineDoc(docId));
       return true;
     } catch (e) {
       console.error("Firestore Delete Failed", e);
@@ -61,7 +68,7 @@ export const inventoryService = {
   updateField: async (docId: string, field: string, value: any): Promise<boolean> => {
     const firestoreKey = FIRESTORE_FIELD_MAP[field] || field;
     try {
-      await updateDoc(doc(db, WINES_COLLECTION, docId), { [firestoreKey]: value });
+      await updateDoc(userWineDoc(docId), { [firestoreKey]: value });
       return true;
     } catch (e) {
       console.error("Firestore Update Failed", e);
@@ -75,7 +82,7 @@ export const inventoryService = {
       mapped[FIRESTORE_FIELD_MAP[key] || key] = value;
     }
     try {
-      await updateDoc(doc(db, WINES_COLLECTION, docId), mapped);
+      await updateDoc(userWineDoc(docId), mapped);
       return true;
     } catch (e) {
       console.error("Firestore Batch Update Failed", e);

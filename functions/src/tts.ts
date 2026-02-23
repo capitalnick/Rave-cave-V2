@@ -2,6 +2,7 @@ import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {Readable} from "stream";
+import {validateAuth, AuthError} from "./authMiddleware";
 import type {ReadableStream as NodeWebReadableStream} from "stream/web";
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
@@ -33,6 +34,16 @@ export const tts = onRequest(
       if (req.method !== "POST") {
         res.status(405).send("Method not allowed");
         return;
+      }
+
+      try {
+        await validateAuth(req);
+      } catch (e) {
+        if (e instanceof AuthError) {
+          res.status(401).json({error: "Unauthorized"});
+          return;
+        }
+        throw e;
       }
 
       const apiKey = ELEVENLABS_API_KEY.value();

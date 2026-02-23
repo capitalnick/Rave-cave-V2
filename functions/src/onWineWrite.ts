@@ -69,11 +69,12 @@ function needsReembedding(
 
 export const onWineWrite = onDocumentWritten(
   {
-    document: "wines/{wineId}",
+    document: "users/{userId}/wines/{wineId}",
     region: "australia-southeast1",
     secrets: [GEMINI_API_KEY],
   },
   async (event) => {
+    const userId = event.params.userId;
     const wineId = event.params.wineId;
     const beforeData = event.data?.before?.data();
     const afterData = event.data?.after?.data();
@@ -116,9 +117,10 @@ export const onWineWrite = onDocumentWritten(
         return;
       }
 
-      await db.collection("wines").doc(wineId).update({
-        embedding: FieldValue.vector(embedding),
-      });
+      await db.collection("users").doc(userId).collection("wines")
+        .doc(wineId).update({
+          embedding: FieldValue.vector(embedding),
+        });
 
       logger.info(
         `Wine ${wineId}: embedding generated` +

@@ -3,13 +3,13 @@ import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getApps, initializeApp} from "firebase-admin/app";
+import {validateAuth, AuthError} from "./authMiddleware";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
-const WINES_COLLECTION = "wines";
 
 const ALLOWED_ORIGINS = [
   "https://rave-cave-v2.vercel.app",
@@ -113,6 +113,19 @@ export const queryInventory = onRequest(
         return;
       }
 
+      let uid: string;
+      try {
+        uid = await validateAuth(req);
+      } catch (e) {
+        if (e instanceof AuthError) {
+          res.status(401).json({error: "Unauthorized"});
+          return;
+        }
+        throw e;
+      }
+
+      const winesRef = db.collection("users").doc(uid).collection("wines");
+
       const body: QueryParams = typeof req.body === "string" ?
         (JSON.parse(req.body || "{}") as QueryParams) :
         ((req.body ?? {}) as QueryParams);
@@ -141,7 +154,7 @@ export const queryInventory = onRequest(
         // Vector search: fetch extra candidates for
         // in-memory filtering
         const candidateLimit = Math.min(limit * 3, 60);
-        const vectorQuery = db.collection(WINES_COLLECTION)
+        const vectorQuery = winesRef
           .findNearest({
             vectorField: "embedding",
             queryVector: FieldValue.vector(queryVector),
@@ -154,7 +167,7 @@ export const queryInventory = onRequest(
         // ── Structured search path ──
         // Single base query, all filters in-memory
         // (avoids composite index requirements)
-        const snapshot = await db.collection(WINES_COLLECTION).get();
+        const snapshot = await winesRef.get();
         wines = snapshot.docs.map((d) => docToWine(d.id, d.data()));
       }
 

@@ -1,12 +1,14 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
 import { storage } from '@/firebase';
+import { requireUid } from '@/utils/authHelpers';
 
 /**
  * Upload a compressed label image to Firebase Storage.
  * Path: labels/{wineId}.jpg
  */
 export async function uploadLabelImage(blob: Blob, wineId: string): Promise<string> {
-  const storageRef = ref(storage, `labels/${wineId}.jpg`);
+  const uid = requireUid();
+  const storageRef = ref(storage, `users/${uid}/labels/${wineId}.jpg`);
   await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
   return getDownloadURL(storageRef);
 }
@@ -15,7 +17,8 @@ export async function uploadLabelImage(blob: Blob, wineId: string): Promise<stri
  * Delete a label image from Firebase Storage (used for undo).
  */
 export async function deleteLabelImage(wineId: string): Promise<void> {
-  const storageRef = ref(storage, `labels/${wineId}.jpg`);
+  const uid = requireUid();
+  const storageRef = ref(storage, `users/${uid}/labels/${wineId}.jpg`);
   try {
     await deleteObject(storageRef);
   } catch (e: any) {
@@ -29,7 +32,8 @@ export async function deleteLabelImage(wineId: string): Promise<void> {
  * Path: winelists/{sessionId}/page-{pageIndex}.jpg
  */
 export async function uploadWineListPage(blob: Blob, sessionId: string, pageIndex: number): Promise<string> {
-  const storageRef = ref(storage, `winelists/${sessionId}/page-${pageIndex}.jpg`);
+  const uid = requireUid();
+  const storageRef = ref(storage, `users/${uid}/winelists/${sessionId}/page-${pageIndex}.jpg`);
   await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
   return getDownloadURL(storageRef);
 }
@@ -38,7 +42,8 @@ export async function uploadWineListPage(blob: Blob, sessionId: string, pageInde
  * Delete all images for a wine list session.
  */
 export async function deleteWineListSession(sessionId: string): Promise<void> {
-  const folderRef = ref(storage, `winelists/${sessionId}`);
+  const uid = requireUid();
+  const folderRef = ref(storage, `users/${uid}/winelists/${sessionId}`);
   try {
     const list = await listAll(folderRef);
     await Promise.all(list.items.map(item => deleteObject(item)));

@@ -3,6 +3,7 @@ import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getApps, initializeApp} from "firebase-admin/app";
+import {validateAuth, AuthError} from "./authMiddleware";
 
 if (getApps().length === 0) initializeApp();
 
@@ -59,14 +60,24 @@ export const backfillEmbeddings = onRequest(
   },
   async (req, res) => {
     try {
+      let uid: string;
+      try {
+        uid = await validateAuth(req);
+      } catch (e) {
+        if (e instanceof AuthError) {
+          res.status(401).json({error: "Unauthorized"});
+          return;
+        }
+        throw e;
+      }
+
       const apiKey = GEMINI_API_KEY.value();
       const {GoogleGenAI} = await import("@google/genai");
       const ai = new GoogleGenAI({apiKey});
 
-      // Get all wines without embeddings
-      const snapshot = await db.collection("wines")
-        .where("Producer", "!=", "")
-        .get();
+      // Get all wines for this user
+      const snapshot = await db.collection("users").doc(uid)
+        .collection("wines").get();
 
       const needsEmbedding = snapshot.docs.filter((d) => {
         const data = d.data();

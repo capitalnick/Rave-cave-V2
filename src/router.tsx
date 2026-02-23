@@ -12,7 +12,10 @@ import Layout from '@/components/Layout';
 import ScanOverlay from '@/components/ScanOverlay';
 import WineModal from '@/components/WineModal';
 import PinnedRemyPanel from '@/components/PinnedRemyPanel';
+import SplashScreen from '@/components/SplashScreen';
+import LoginPage from '@/pages/LoginPage';
 import { RCToaster } from '@/components/rc';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { InventoryProvider, useInventory } from '@/context/InventoryContext';
 import { SurfaceProvider } from '@/context/SurfaceContext';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
@@ -154,14 +157,26 @@ function AppShell() {
   );
 }
 
+// ── AuthGate: shows splash → login → app based on auth state ──
+function AuthGate() {
+  const { user, loading } = useAuth();
+  if (loading) return <SplashScreen />;
+  if (!user) return <LoginPage />;
+  return (
+    <InventoryProvider>
+      <AppShell />
+    </InventoryProvider>
+  );
+}
+
 // ── Route tree ──
 
 const rootRoute = createRootRoute({
   component: () => (
     <SurfaceProvider>
-      <InventoryProvider>
-        <AppShell />
-      </InventoryProvider>
+      <AuthProvider>
+        <AuthGate />
+      </AuthProvider>
     </SurfaceProvider>
   ),
 });

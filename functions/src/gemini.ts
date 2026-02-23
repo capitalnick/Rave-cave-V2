@@ -1,6 +1,7 @@
 import {onRequest} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
+import {validateAuth, AuthError} from "./authMiddleware";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
@@ -27,13 +28,23 @@ type GeminiRequestBody = {
 
 // eslint-disable-next-line valid-jsdoc
 /** Shared validation + setup used by both gemini and geminiStream */
-function parseAndValidate(
+async function parseAndValidate(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   req: any, res: any
-): { body: GeminiRequestBody; apiKey: string } | null {
+): Promise<{ body: GeminiRequestBody; apiKey: string } | null> {
   if (req.method !== "POST") {
     res.status(405).send("Method not allowed");
     return null;
+  }
+
+  try {
+    await validateAuth(req);
+  } catch (e) {
+    if (e instanceof AuthError) {
+      res.status(401).json({error: "Unauthorized"});
+      return null;
+    }
+    throw e;
   }
 
   const apiKey = GEMINI_API_KEY.value();
@@ -90,7 +101,7 @@ export const gemini = onRequest(
   },
   async (req, res) => {
     try {
-      const result = parseAndValidate(req, res);
+      const result = await parseAndValidate(req, res);
       if (!result) return;
       const {body, apiKey} = result;
       const {model, contents, systemInstruction, tools} = body;
@@ -134,7 +145,7 @@ export const geminiStream = onRequest(
   },
   async (req, res) => {
     try {
-      const result = parseAndValidate(req, res);
+      const result = await parseAndValidate(req, res);
       if (!result) return;
       const {body, apiKey} = result;
       const {model, contents, systemInstruction} = body;
