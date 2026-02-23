@@ -10,6 +10,8 @@ import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
 import { useIsMobile } from '@/components/ui/use-mobile';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/formatPrice';
+import { useProfile } from '@/context/ProfileContext';
 import type { WineType } from '@/components/rc/WineTypeIndicator';
 
 interface WineModalProps {
@@ -35,6 +37,7 @@ const WineDetailContent: React.FC<{
   onUpdate?: (key: string, value: string) => Promise<void>;
   hideHeroImage?: boolean;
 }> = ({ wine, onUpdate, hideHeroImage }) => {
+  const { profile } = useProfile();
   const rcProps = toRCWineCardProps(wine);
   const vintageColour = wineTypeToHeadingColour[rcProps.type];
   const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
@@ -69,7 +72,7 @@ const WineDetailContent: React.FC<{
 
   const formatPriceLabel = (p: string | number) => {
     const val = typeof p === 'string' ? parseFloat(p) : p;
-    return !isNaN(val) && val > 0 ? `$${val.toFixed(0)}` : '';
+    return formatPrice(val, profile.currency);
   };
 
   const renderField = (label: string, key: string, value: string | number, fullWidth: boolean = false) => {

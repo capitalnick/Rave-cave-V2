@@ -7,9 +7,10 @@ interface KPIRowProps {
   bottlesNeedingAttention: number;
   readyToDrinkCount: number;
   averageBottleValue: number;
+  currencySymbol: string;
 }
 
-const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedingAttention, readyToDrinkCount, averageBottleValue }) => {
+const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedingAttention, readyToDrinkCount, averageBottleValue, currencySymbol }) => {
   const hasAttention = bottlesNeedingAttention > 0;
 
   return (
@@ -51,14 +52,14 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
           as="span"
           className="block"
         >
-          ${totalValue.toLocaleString()}
+          {currencySymbol}{totalValue.toLocaleString()}
         </Heading>
         <MonoLabel size="micro" colour="on-accent" className="mt-2 opacity-70">
           ESTIMATED
         </MonoLabel>
         {averageBottleValue > 0 && (
           <MonoLabel size="micro" colour="on-accent" className="mt-1 opacity-70">
-            ${Math.round(averageBottleValue)} AVG/BOTTLE
+            {currencySymbol}{Math.round(averageBottleValue)} AVG/BOTTLE
           </MonoLabel>
         )}
       </Card>

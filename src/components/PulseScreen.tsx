@@ -15,6 +15,8 @@ import DrinkingWindowTimeline from './pulse/DrinkingWindowTimeline';
 import DrinkingWindowBar from './pulse/DrinkingWindowBar';
 import TopProducers from './pulse/TopProducers';
 import { Loader2 } from 'lucide-react';
+import { useProfile } from '@/context/ProfileContext';
+import { getCurrencySymbol } from '@/lib/formatPrice';
 
 type PulseView = 'dashboard' | 'story' | 'drinking-window';
 
@@ -46,7 +48,10 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   const [pullDistance, setPullDistance] = useState(0);
   const savedScrollTop = useRef(0);
 
-  const stats = useMemo(() => computePulseStats(inventory), [inventory]);
+  const { profile } = useProfile();
+  const currencySymbol = getCurrencySymbol(profile.currency);
+
+  const stats = useMemo(() => computePulseStats(inventory, profile.currency), [inventory, profile.currency]);
 
   // Staleness check on tab visibility
   useEffect(() => {
@@ -291,6 +296,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
           bottlesNeedingAttention={stats.bottlesNeedingAttention}
           readyToDrinkCount={stats.readyToDrinkCount}
           averageBottleValue={stats.averageBottleValue}
+          currencySymbol={currencySymbol}
         />
 
         {/* Charts — masonry on desktop, single-column mobile */}

@@ -1,4 +1,6 @@
 import type { Wine, WineType, MaturityBreakdown, DrinkingWindow, StoryCard, PulseStats } from '@/types';
+import type { Currency } from '@/context/ProfileContext';
+import { formatPrice } from '@/lib/formatPrice';
 
 const currentYear = new Date().getFullYear();
 
@@ -55,7 +57,8 @@ export function generateStoryCards(
   inventory: Wine[],
   breakdown: MaturityBreakdown,
   mostValuable: Wine | null,
-  typeDistribution: Record<string, number>
+  typeDistribution: Record<string, number>,
+  currency: Currency = 'AUD',
 ): StoryCard[] {
   const cards: StoryCard[] = [];
 
@@ -92,7 +95,7 @@ export function generateStoryCards(
       type: 'most-valuable',
       icon: '$',
       headline: `${mostValuable.vintage} ${mostValuable.producer}`,
-      subtext: `Your most valuable bottle. $${Number(mostValuable.price).toLocaleString()}.`,
+      subtext: `Your most valuable bottle. ${formatPrice(Number(mostValuable.price), currency)}.`,
       accentColor: 'var(--rc-accent-pink)',
       cta: { label: 'View bottle', action: 'view-wine', payload: mostValuable.id },
     });
@@ -168,7 +171,7 @@ export function computeTimelineRange(windows: DrinkingWindow[]): { min: number; 
   return { min, max };
 }
 
-export function computePulseStats(inventory: Wine[]): PulseStats {
+export function computePulseStats(inventory: Wine[], currency: Currency = 'AUD'): PulseStats {
   const maturityBreakdown = computeMaturityBreakdown(inventory);
   const drinkingWindows = computeDrinkingWindows(inventory);
   const typeDistribution = computeTypeDistribution(inventory);
@@ -183,7 +186,7 @@ export function computePulseStats(inventory: Wine[]): PulseStats {
     ? inventory.reduce((best, w) => (Number(w.price) || 0) > (Number(best.price) || 0) ? w : best, inventory[0])
     : null;
 
-  const storyCards = generateStoryCards(inventory, maturityBreakdown, mostValuableWine, typeDistribution);
+  const storyCards = generateStoryCards(inventory, maturityBreakdown, mostValuableWine, typeDistribution, currency);
 
   return {
     totalBottles,

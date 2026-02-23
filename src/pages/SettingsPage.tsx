@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Download, Trash2 } from 'lucide-react';
+import { LogOut, Download, Trash2, Crown } from 'lucide-react';
 import { collection, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import { ref, listAll, deleteObject } from 'firebase/storage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -21,6 +21,7 @@ import {
   InlineMessage,
   showToast,
 } from '@/components/rc';
+import { CONFIG } from '@/constants';
 import type { Wine } from '@/types';
 
 // ── Constants ──
@@ -74,8 +75,8 @@ function exportCellarCSV(inventory: Wine[]): void {
 
 const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { profile, updateCurrency } = useProfile();
-  const { inventory } = useInventory();
+  const { profile, isPremium, updateCurrency } = useProfile();
+  const { inventory, totalBottles } = useInventory();
 
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -219,6 +220,55 @@ const SettingsPage: React.FC = () => {
           onClick={handleSignOut}
           divider={false}
         />
+      </Card>
+
+      <div className="h-8" />
+
+      {/* ── Plan Section ── */}
+      <Heading scale="subhead" className="mb-2">Plan</Heading>
+      <Card elevation="flat">
+        <div className="py-[var(--rc-row-padding-v)] px-[var(--rc-row-padding-h)]">
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center"
+              style={{
+                backgroundColor: isPremium ? 'var(--rc-accent-pink)' : 'var(--rc-surface-tertiary)',
+              }}
+            >
+              <Crown size={18} style={{ color: isPremium ? 'var(--rc-ink-on-accent)' : 'var(--rc-ink-tertiary)' }} />
+            </div>
+            <div>
+              <Body className="w-auto font-semibold">{isPremium ? 'Premium' : 'Free'}</Body>
+              <MonoLabel size="label" colour="ghost" className="w-auto">
+                {isPremium ? 'Unlimited bottles & full R\u00e9my access' : `${totalBottles} of ${CONFIG.FREE_TIER.MAX_BOTTLES} bottles used`}
+              </MonoLabel>
+            </div>
+          </div>
+          {!isPremium && (
+            <>
+              {/* Usage bar */}
+              <div className="mb-4">
+                <div className="h-2 rounded-full bg-[var(--rc-surface-tertiary)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min((totalBottles / CONFIG.FREE_TIER.MAX_BOTTLES) * 100, 100)}%`,
+                      backgroundColor: totalBottles >= CONFIG.FREE_TIER.MAX_BOTTLES
+                        ? 'var(--rc-accent-coral)'
+                        : 'var(--rc-accent-pink)',
+                    }}
+                  />
+                </div>
+              </div>
+              <Button
+                variantType="Primary"
+                label="Upgrade to Premium"
+                onClick={() => showToast({ tone: 'neutral', message: 'Premium coming soon! Contact support for early access.' })}
+                className="w-full"
+              />
+            </>
+          )}
+        </div>
       </Card>
 
       <div className="h-8" />

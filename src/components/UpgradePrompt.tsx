@@ -18,7 +18,7 @@ const FEATURE_COPY = {
   bottles: {
     title: 'Your Cellar is Full',
     description:
-      'Free accounts can store up to 24 bottles. Upgrade to Premium for unlimited cellar space.',
+      'Free accounts can store up to 50 bottles. Upgrade to Premium for unlimited cellar space.',
   },
 };
 

@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Chip, MonoLabel, Divider, Heading, Input, Checkbox, Button } from '@/components/rc';
+import { useProfile } from '@/context/ProfileContext';
+import { formatPriceBucketLabel } from '@/lib/formatPrice';
 import type { ChipState, MaturityValue } from '@/components/rc/Chip';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';
 
@@ -130,6 +132,8 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   onClearFilters,
   onClose,
 }) => {
+  const { profile } = useProfile();
+
   // ── Chip helpers ──
   const chipState = (facetKey: FacetKey, value: string, count: number): ChipState => {
     const facet = filters[facetKey];
@@ -208,7 +212,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
               key={opt.value}
               variant="Filter"
               state={chipState('price', opt.value, opt.count)}
-              label={`${opt.value} (${opt.count})`}
+              label={`${formatPriceBucketLabel(opt.value, profile.currency)} (${opt.count})`}
               onClick={() => opt.count > 0 || filters.price.include.includes(opt.value)
                 ? onToggleFacet('price', opt.value) : undefined}
             />
