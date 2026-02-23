@@ -5,7 +5,7 @@ service cloud.firestore {
     // User profile: readable by owner, writable by owner
     // BUT client cannot modify tier/subscription fields
     // (only the Stripe webhook via Admin SDK can)
-    match /users/{userId}/profile {
+    match /users/{userId}/profile/{docId} {
       allow read: if request.auth != null
                   && request.auth.uid == userId;
 

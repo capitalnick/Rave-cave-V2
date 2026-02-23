@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import WineIcon from '@/components/icons/WineIcon';
-import { Card, Heading, Body, MonoLabel, Button, showToast } from '@/components/rc';
+import { Card, Heading, Body, MonoLabel, Button, InlineMessage } from '@/components/rc';
+import { authFetch } from '@/utils/authFetch';
+import { FUNCTION_URLS } from '@/config/functionUrls';
 
 interface UpgradePromptProps {
   variant: 'fullscreen' | 'modal';
@@ -22,12 +24,34 @@ const FEATURE_COPY = {
   },
 };
 
-function handleUpgrade() {
-  showToast({ tone: 'neutral', message: 'Premium coming soon! Contact support for early access.' });
-}
-
 const UpgradePrompt: React.FC<UpgradePromptProps> = ({ variant, feature, onDismiss }) => {
   const copy = FEATURE_COPY[feature];
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpgrade = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await authFetch(FUNCTION_URLS.createCheckout, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to start checkout');
+      }
+      const { url } = await res.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (e: any) {
+      setError(e.message || 'Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  };
 
   if (variant === 'fullscreen') {
     return (
@@ -39,9 +63,21 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ variant, feature, onDismi
           <div className="h-3" />
           <Body className="w-auto text-center">{copy.description}</Body>
           <div className="h-8" />
-          <Button variantType="Primary" label="Upgrade to Premium" onClick={handleUpgrade} className="w-full max-w-[280px]" />
+          <Button
+            variantType="Primary"
+            label={loading ? 'Redirecting...' : 'Upgrade to Premium'}
+            onClick={handleUpgrade}
+            disabled={loading}
+            className="w-full max-w-[280px]"
+          />
+          {error && (
+            <>
+              <div className="h-3" />
+              <InlineMessage tone="error" message={error} />
+            </>
+          )}
           <div className="h-3" />
-          <MonoLabel size="label" colour="ghost" className="w-auto">Free during early access</MonoLabel>
+          <MonoLabel size="label" colour="ghost" className="w-auto">$4.99/month — cancel anytime</MonoLabel>
         </div>
       </div>
     );
@@ -54,7 +90,7 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ variant, feature, onDismi
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4"
-        onClick={(e) => { if (e.target === e.currentTarget) onDismiss?.(); }}
+        onClick={(e) => { if (e.target === e.currentTarget && !loading) onDismiss?.(); }}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -67,10 +103,16 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ variant, feature, onDismi
             <Heading scale="heading" colour="accent-pink">{copy.title}</Heading>
             <div className="h-3" />
             <Body className="w-auto">{copy.description}</Body>
+            {error && (
+              <>
+                <div className="h-3" />
+                <InlineMessage tone="error" message={error} />
+              </>
+            )}
             <div className="h-6" />
             <div className="flex gap-3">
-              <Button variantType="Secondary" label="Maybe Later" onClick={() => onDismiss?.()} className="flex-1" />
-              <Button variantType="Primary" label="Upgrade" onClick={handleUpgrade} className="flex-1" />
+              <Button variantType="Secondary" label="Maybe Later" onClick={() => onDismiss?.()} disabled={loading} className="flex-1" />
+              <Button variantType="Primary" label={loading ? 'Redirecting...' : 'Upgrade'} onClick={handleUpgrade} disabled={loading} className="flex-1" />
             </div>
           </Card>
         </motion.div>

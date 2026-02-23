@@ -30,6 +30,7 @@ interface LayoutProps {
   isPinnedRemy?: boolean;
   remyPanelOpen?: boolean;
   isPremium?: boolean;
+  subscriptionStatus?: string | null;
 }
 
 const navItems: { id: TabId; label: string; icon: typeof Database }[] = [
@@ -58,6 +59,7 @@ const Layout: React.FC<LayoutProps> = ({
   isPinnedRemy = false,
   remyPanelOpen = false,
   isPremium = false,
+  subscriptionStatus = null,
 }) => {
   const isRailExpanded = useRailExpanded();
   const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
@@ -214,6 +216,14 @@ const Layout: React.FC<LayoutProps> = ({
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
         <EnvBadge className="fixed top-2 right-2 z-40 md:hidden" />
+        {subscriptionStatus === 'past_due' && (
+          <div
+            className="px-4 py-2 text-center text-sm font-medium shrink-0"
+            style={{ backgroundColor: 'var(--rc-accent-coral)', color: 'var(--rc-ink-on-accent)' }}
+          >
+            Your payment is past due. Please update your card in Settings to keep Premium.
+          </div>
+        )}
         {children}
       </main>
       <ProdWriteGuard />

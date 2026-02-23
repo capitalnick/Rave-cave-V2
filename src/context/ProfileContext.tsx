@@ -13,12 +13,17 @@ interface UserProfile {
   onboardingComplete: boolean;
   createdAt: Timestamp | null;
   tier: Tier;
+  stripeCustomerId: string | null;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
+  upgradedAt: Timestamp | null;
 }
 
 interface ProfileContextValue {
   profile: UserProfile;
   profileLoading: boolean;
   isPremium: boolean;
+  hasSubscription: boolean;
   updateCurrency: (currency: Currency) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
 }
@@ -28,6 +33,10 @@ const DEFAULT_PROFILE: UserProfile = {
   onboardingComplete: false,
   createdAt: null,
   tier: 'free',
+  stripeCustomerId: null,
+  subscriptionId: null,
+  subscriptionStatus: null,
+  upgradedAt: null,
 };
 
 // ── Context ──
@@ -64,6 +73,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           onboardingComplete: data.onboardingComplete ?? DEFAULT_PROFILE.onboardingComplete,
           createdAt: data.createdAt ?? null,
           tier: data.tier ?? DEFAULT_PROFILE.tier,
+          stripeCustomerId: data.stripeCustomerId ?? null,
+          subscriptionId: data.subscriptionId ?? null,
+          subscriptionStatus: data.subscriptionStatus ?? null,
+          upgradedAt: data.upgradedAt ?? null,
         });
       } else {
         // New user — create default profile doc
@@ -93,14 +106,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [user]);
 
   const isPremium = profile.tier === 'premium';
+  const hasSubscription = !!profile.subscriptionId;
 
   const value = useMemo<ProfileContextValue>(() => ({
     profile,
     profileLoading,
     isPremium,
+    hasSubscription,
     updateCurrency,
     markOnboardingComplete,
-  }), [profile, profileLoading, isPremium, updateCurrency, markOnboardingComplete]);
+  }), [profile, profileLoading, isPremium, hasSubscription, updateCurrency, markOnboardingComplete]);
 
   return (
     <ProfileContext.Provider value={value}>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LogOut, Download, Trash2, Crown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LogOut, Download, Trash2, Crown, CreditCard } from 'lucide-react';
 import { collection, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import { ref, listAll, deleteObject } from 'firebase/storage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useProfile, type Currency } from '@/context/ProfileContext';
 import { useInventory } from '@/context/InventoryContext';
 import { db, storage, auth } from '@/firebase';
+import { authFetch } from '@/utils/authFetch';
+import { FUNCTION_URLS } from '@/config/functionUrls';
 import {
   PageHeader,
   Card,
@@ -75,7 +77,7 @@ function exportCellarCSV(inventory: Wine[]): void {
 
 const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { profile, isPremium, updateCurrency } = useProfile();
+  const { profile, isPremium, hasSubscription, updateCurrency } = useProfile();
   const { inventory, totalBottles } = useInventory();
 
   const [currencyOpen, setCurrencyOpen] = useState(false);
@@ -83,6 +85,17 @@ const SettingsPage: React.FC = () => {
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [manageLoading, setManageLoading] = useState(false);
+
+  // Show success toast when returning from Stripe Checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upgrade') === 'success') {
+      showToast({ tone: 'success', message: 'Welcome to Premium! Your upgrade is active.' });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // ── Handlers ──
 
@@ -93,6 +106,44 @@ const SettingsPage: React.FC = () => {
   const handleCurrencySelect = async (c: Currency) => {
     await updateCurrency(c);
     setCurrencyOpen(false);
+  };
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true);
+    try {
+      const res = await authFetch(FUNCTION_URLS.createCheckout, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to start checkout');
+      }
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch (e: any) {
+      showToast({ tone: 'error', message: e.message || 'Something went wrong' });
+      setUpgradeLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setManageLoading(true);
+    try {
+      const res = await authFetch(FUNCTION_URLS.createPortal, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to open subscription portal');
+      }
+      const { url } = await res.json();
+      if (url) window.location.href = url;
+    } catch (e: any) {
+      showToast({ tone: 'error', message: e.message || 'Something went wrong' });
+      setManageLoading(false);
+    }
   };
 
   const handleExport = () => {
@@ -110,6 +161,18 @@ const SettingsPage: React.FC = () => {
     const uid = currentUser.uid;
 
     try {
+      // Step 0: Cancel Stripe subscription if active
+      if (hasSubscription) {
+        try {
+          await authFetch(FUNCTION_URLS.cancelSubscription, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (e) {
+          console.warn('Subscription cancel during delete:', e);
+        }
+      }
+
       // Step 1: Delete all wine documents (user still authenticated for security rules)
       const winesRef = collection(db, 'users', uid, 'wines');
       const snapshot = await getDocs(winesRef);
@@ -242,9 +305,22 @@ const SettingsPage: React.FC = () => {
               <MonoLabel size="label" colour="ghost" className="w-auto">
                 {isPremium ? 'Unlimited bottles & full R\u00e9my access' : `${totalBottles} of ${CONFIG.FREE_TIER.MAX_BOTTLES} bottles used`}
               </MonoLabel>
+              {profile.subscriptionStatus === 'past_due' && (
+                <MonoLabel size="label" className="w-auto text-[var(--rc-accent-coral)]">
+                  Payment past due — please update your card
+                </MonoLabel>
+              )}
             </div>
           </div>
-          {!isPremium && (
+          {isPremium && hasSubscription ? (
+            <Button
+              variantType="Secondary"
+              label={manageLoading ? 'Opening...' : 'Manage Subscription'}
+              onClick={handleManageSubscription}
+              disabled={manageLoading}
+              className="w-full"
+            />
+          ) : !isPremium ? (
             <>
               {/* Usage bar */}
               <div className="mb-4">
@@ -262,12 +338,13 @@ const SettingsPage: React.FC = () => {
               </div>
               <Button
                 variantType="Primary"
-                label="Upgrade to Premium"
-                onClick={() => showToast({ tone: 'neutral', message: 'Premium coming soon! Contact support for early access.' })}
+                label={upgradeLoading ? 'Redirecting...' : 'Upgrade to Premium'}
+                onClick={handleUpgrade}
+                disabled={upgradeLoading}
                 className="w-full"
               />
             </>
-          )}
+          ) : null}
         </div>
       </Card>
 

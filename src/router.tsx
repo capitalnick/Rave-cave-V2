@@ -149,6 +149,7 @@ function AppShell() {
         isPinnedRemy={isPinned}
         remyPanelOpen={remyPanelOpen}
         isPremium={isPremium}
+        subscriptionStatus={profile.subscriptionStatus}
       >
         <Outlet />
       </Layout>

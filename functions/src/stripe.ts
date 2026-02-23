@@ -79,7 +79,7 @@ export const createCheckoutSession = onRequest(
 
     try {
       const profileDoc = await db
-        .doc(`users/${uid}/profile`).get();
+        .doc(`users/${uid}/profile/preferences`).get();
       const existing =
         profileDoc.data()?.stripeCustomerId;
 
@@ -162,7 +162,7 @@ export const createPortalSession = onRequest(
 
     try {
       const profileDoc = await db
-        .doc(`users/${uid}/profile`).get();
+        .doc(`users/${uid}/profile/preferences`).get();
       const custId =
         profileDoc.data()?.stripeCustomerId;
 
@@ -225,7 +225,7 @@ export const cancelSubscription = onRequest(
 
     try {
       const profileDoc = await db
-        .doc(`users/${uid}/profile`).get();
+        .doc(`users/${uid}/profile/preferences`).get();
       const subId =
         profileDoc.data()?.subscriptionId;
 
@@ -325,7 +325,7 @@ async function handleCheckoutCompleted(
     return;
   }
 
-  const profileRef = db.doc(`users/${uid}/profile`);
+  const profileRef = db.doc(`users/${uid}/profile/preferences`);
   await profileRef.set({
     tier: "premium",
     stripeCustomerId: custId,
@@ -359,7 +359,7 @@ async function handleSubscriptionUpdated(
   const tier = premiumStatuses.includes(status) ?
     "premium" : "free";
 
-  const profileRef = db.doc(`users/${uid}/profile`);
+  const profileRef = db.doc(`users/${uid}/profile/preferences`);
   await profileRef.set({
     tier,
     subscriptionStatus: status,
@@ -381,7 +381,7 @@ async function handleSubscriptionDeleted(
   const uid = await getUidFromSubscription(subscription);
   if (!uid) return;
 
-  const profileRef = db.doc(`users/${uid}/profile`);
+  const profileRef = db.doc(`users/${uid}/profile/preferences`);
   await profileRef.set({
     tier: "free",
     subscriptionStatus: "canceled",
@@ -418,7 +418,7 @@ async function handlePaymentFailed(
 
   // Don't downgrade — Stripe retries payment.
   // Just update status for warning banner.
-  const profileRef = db.doc(`users/${uid}/profile`);
+  const profileRef = db.doc(`users/${uid}/profile/preferences`);
   await profileRef.set({
     subscriptionStatus: "past_due",
   }, {merge: true});
