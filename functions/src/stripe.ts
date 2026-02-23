@@ -22,7 +22,11 @@ const db = getFirestore();
  * @return {Stripe} Stripe client instance.
  */
 function getStripe(key: string): Stripe {
-  return new Stripe(key);
+  return new Stripe(key, {
+    httpClient: Stripe.createNodeHttpClient(),
+    timeout: 30000,
+    maxNetworkRetries: 3,
+  });
 }
 
 // Protected fields that only the webhook (Admin SDK) may write
