@@ -200,7 +200,7 @@ export const mapImportFields = onRequest(
       const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY.value()});
 
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
           temperature: 0.1,
