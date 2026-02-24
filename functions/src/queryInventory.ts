@@ -80,7 +80,7 @@ function docToWine(
     const legacyCepage = data["Cépage"] as string | undefined;
     if (legacyCepage) {
       wine.grapeVarieties = legacyCepage
-        .split(/[\/,]/)
+        .split(/[/,]/)
         .map((s: string) => s.trim())
         .filter(Boolean)
         .map((name: string) => ({name, pct: null}));
@@ -208,10 +208,10 @@ export const queryInventory = onRequest(
       if (body.grapeVarieties && body.grapeVarieties.length > 0) {
         const grapes = body.grapeVarieties.map((g) => g.toLowerCase());
         wines = wines.filter((w) => {
-          const varieties = Array.isArray(w.grapeVarieties)
-            ? (w.grapeVarieties as Array<{name?: string}>)
-                .map((v) => String(v.name || "").toLowerCase())
-            : [];
+          const varieties = Array.isArray(w.grapeVarieties) ?
+            (w.grapeVarieties as Array<{name?: string}>)
+              .map((v) => String(v.name || "").toLowerCase()) :
+            [];
           // Fallback to legacy Cépage field
           if (varieties.length === 0) {
             const legacy = String(
@@ -259,10 +259,10 @@ export const queryInventory = onRequest(
       if (body.query) {
         const q = body.query.toLowerCase();
         wines = wines.filter((w) => {
-          const grapeStr = Array.isArray(w.grapeVarieties)
-            ? (w.grapeVarieties as Array<{name?: string}>)
-                .map((v) => String(v.name || "")).join(" ").toLowerCase()
-            : "";
+          const grapeStr = Array.isArray(w.grapeVarieties) ?
+            (w.grapeVarieties as Array<{name?: string}>)
+              .map((v) => String(v.name || "")).join(" ").toLowerCase() :
+            "";
           return (
             String(w.producer || "").toLowerCase().includes(q) ||
             String(w.name || "").toLowerCase().includes(q) ||
