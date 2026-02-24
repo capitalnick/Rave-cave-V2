@@ -2,6 +2,7 @@
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, Unsubscribe } from "firebase/firestore";
 import { db } from "../firebase";
 import { Wine, FIRESTORE_FIELD_MAP } from '../types';
+import { migrateLegacyFields } from '../utils/grapeUtils';
 // Fixed: Import CONFIG from constants instead of types
 import { CONFIG } from '../constants';
 import { requireUid } from '@/utils/authHelpers';
@@ -20,6 +21,10 @@ function docToWine(docId: string, data: Record<string, any>): Wine {
     const firestoreKey = FIRESTORE_FIELD_MAP[key];
     wine[key] = data[firestoreKey];
   });
+  // Fallback: legacy docs may have 'Cépage' / 'Blend %' instead of 'Grape Varieties'
+  if (!wine.grapeVarieties || !Array.isArray(wine.grapeVarieties) || wine.grapeVarieties.length === 0) {
+    wine.grapeVarieties = migrateLegacyFields(data['Cépage'], data['Blend %']);
+  }
   return wine as Wine;
 }
 

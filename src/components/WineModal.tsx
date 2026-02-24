@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Wine } from '@/types';
+import { Wine, GrapeVariety } from '@/types';
 import { Star, Wine as WineIcon, Plus, Minus, MapPin, ExternalLink } from 'lucide-react';
 import { getDirectImageUrl } from '@/utils/imageUrl';
 import { toRCWineCardProps } from '@/lib/adapters';
@@ -11,6 +11,8 @@ import { useIsMobile } from '@/components/ui/use-mobile';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/formatPrice';
+import { GrapeVarietiesEditor } from '@/components/GrapeVarietiesEditor';
+import { formatGrapeDisplay, formatGrapeDetailed } from '@/utils/grapeUtils';
 import { useProfile } from '@/context/ProfileContext';
 import type { WineType } from '@/components/rc/WineTypeIndicator';
 
@@ -44,6 +46,7 @@ const WineDetailContent: React.FC<{
 
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [editGrapes, setEditGrapes] = useState<GrapeVariety[]>([]);
   const [updating, setUpdating] = useState(false);
 
   const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
@@ -61,7 +64,12 @@ const WineDetailContent: React.FC<{
     if (!onUpdate) return;
     setUpdating(true);
     try {
-      await onUpdate(key, editValue);
+      if (key === 'grapeVarieties') {
+        const cleaned = editGrapes.filter(g => g.name.trim());
+        await onUpdate(key, JSON.stringify(cleaned));
+      } else {
+        await onUpdate(key, editValue);
+      }
       setEditingField(null);
     } catch (e) {
       console.error('Update failed', e);
@@ -91,25 +99,48 @@ const WineDetailContent: React.FC<{
         <dd>
           <Body size="caption" colour="primary" as="span" className="w-auto">
             {isEditing ? (
-              <div className="flex gap-2">
-                <Input
-                  value={editValue}
-                  onChange={e => setEditValue(e.target.value)}
-                  className="flex-1"
-                  autoFocus
-                  onKeyDown={e => e.key === 'Enter' && handleUpdate(key)}
-                />
-                <button
-                  onClick={() => handleUpdate(key)}
-                  disabled={updating}
-                  className="bg-[var(--rc-accent-acid)] px-3 py-0.5 border border-[var(--rc-ink-primary)] font-[var(--rc-font-mono)] font-bold uppercase text-[9px] rounded-[var(--rc-radius-sm)]"
-                >
-                  {updating ? '...' : 'SAVE'}
-                </button>
-              </div>
+              key === 'grapeVarieties' ? (
+                <div className="space-y-2">
+                  <GrapeVarietiesEditor
+                    value={editGrapes}
+                    onChange={setEditGrapes}
+                  />
+                  <button
+                    onClick={() => handleUpdate(key)}
+                    disabled={updating}
+                    className="bg-[var(--rc-accent-acid)] px-3 py-1 border border-[var(--rc-ink-primary)] font-[var(--rc-font-mono)] font-bold uppercase text-[9px] rounded-[var(--rc-radius-sm)]"
+                  >
+                    {updating ? '...' : 'SAVE'}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    className="flex-1"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && handleUpdate(key)}
+                  />
+                  <button
+                    onClick={() => handleUpdate(key)}
+                    disabled={updating}
+                    className="bg-[var(--rc-accent-acid)] px-3 py-0.5 border border-[var(--rc-ink-primary)] font-[var(--rc-font-mono)] font-bold uppercase text-[9px] rounded-[var(--rc-radius-sm)]"
+                  >
+                    {updating ? '...' : 'SAVE'}
+                  </button>
+                </div>
+              )
             ) : (
               <span
-                onClick={() => { setEditingField(label); setEditValue(strValue); }}
+                onClick={() => {
+                  setEditingField(label);
+                  if (key === 'grapeVarieties') {
+                    setEditGrapes(wine.grapeVarieties ?? []);
+                  } else {
+                    setEditValue(strValue);
+                  }
+                }}
                 className="cursor-pointer hover:bg-[var(--rc-surface-secondary)] block min-h-[1rem] rounded-[var(--rc-radius-sm)] transition-colors"
               >
                 {displayValue || ''}
@@ -213,7 +244,7 @@ const WineDetailContent: React.FC<{
           <div className="flex items-center gap-2 mt-1">
             <WineTypeIndicator wineType={rcProps.type as WineType} format="pill" />
             <MonoLabel size="micro" weight="bold" colour="ghost">
-              {wine.cepage || ''}
+              {formatGrapeDisplay(wine.grapeVarieties)}
             </MonoLabel>
           </div>
         </div>
@@ -318,7 +349,7 @@ const WineDetailContent: React.FC<{
           {renderField('Producer', 'producer', wine.producer)}
           {renderField('Appellation', 'appellation', wine.appellation || '')}
           {renderField('Vintage', 'vintage', wine.vintage)}
-          {renderField('Cépage', 'cepage', wine.cepage)}
+          {renderField('Cépage', 'grapeVarieties', formatGrapeDetailed(wine.grapeVarieties))}
           {renderField('Personal Note', 'personalNote', wine.personalNote || '', true)}
           {renderLinkField('Link to Wine', 'linkToWine', wine.linkToWine)}
         </dl>

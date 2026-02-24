@@ -17,7 +17,7 @@ const FIELD_MAP: Record<string, string> = {
   name: "Wine name",
   vintage: "Vintage",
   type: "Wine type",
-  cepage: "Cépage",
+  grapeVarieties: "Grape Varieties",
   appellation: "Appellation",
   region: "Region",
   country: "Country",
@@ -72,6 +72,21 @@ function docToWine(
   const wine: Record<string, unknown> = {id: docId};
   for (const [appKey, fsKey] of Object.entries(FIELD_MAP)) {
     if (data[fsKey] !== undefined) wine[appKey] = data[fsKey];
+  }
+  // Fallback: legacy docs may have Cépage / Blend % instead of Grape Varieties
+  if (!wine.grapeVarieties ||
+      !Array.isArray(wine.grapeVarieties) ||
+      (wine.grapeVarieties as unknown[]).length === 0) {
+    const legacyCepage = data["Cépage"] as string | undefined;
+    if (legacyCepage) {
+      wine.grapeVarieties = legacyCepage
+        .split(/[\/,]/)
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+        .map((name: string) => ({name, pct: null}));
+    } else {
+      wine.grapeVarieties = [];
+    }
   }
   return wine;
 }
@@ -193,8 +208,19 @@ export const queryInventory = onRequest(
       if (body.grapeVarieties && body.grapeVarieties.length > 0) {
         const grapes = body.grapeVarieties.map((g) => g.toLowerCase());
         wines = wines.filter((w) => {
-          const cepage = String(w.cepage || "").toLowerCase();
-          return grapes.some((g) => cepage.includes(g));
+          const varieties = Array.isArray(w.grapeVarieties)
+            ? (w.grapeVarieties as Array<{name?: string}>)
+                .map((v) => String(v.name || "").toLowerCase())
+            : [];
+          // Fallback to legacy Cépage field
+          if (varieties.length === 0) {
+            const legacy = String(
+              (w as Record<string, unknown>)["Cépage"] ||
+              w.cepage || ""
+            ).toLowerCase();
+            return grapes.some((g) => legacy.includes(g));
+          }
+          return grapes.some((g) => varieties.some((v) => v.includes(g)));
         });
       }
       if (body.vintageMin) {
@@ -232,13 +258,19 @@ export const queryInventory = onRequest(
       }
       if (body.query) {
         const q = body.query.toLowerCase();
-        wines = wines.filter((w) =>
-          String(w.producer || "").toLowerCase().includes(q) ||
-          String(w.name || "").toLowerCase().includes(q) ||
-          String(w.cepage || "").toLowerCase().includes(q) ||
-          String(w.region || "").toLowerCase().includes(q) ||
-          String(w.appellation || "").toLowerCase().includes(q)
-        );
+        wines = wines.filter((w) => {
+          const grapeStr = Array.isArray(w.grapeVarieties)
+            ? (w.grapeVarieties as Array<{name?: string}>)
+                .map((v) => String(v.name || "")).join(" ").toLowerCase()
+            : "";
+          return (
+            String(w.producer || "").toLowerCase().includes(q) ||
+            String(w.name || "").toLowerCase().includes(q) ||
+            grapeStr.includes(q) ||
+            String(w.region || "").toLowerCase().includes(q) ||
+            String(w.appellation || "").toLowerCase().includes(q)
+          );
+        });
       }
 
       // Sort

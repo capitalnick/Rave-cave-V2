@@ -1,4 +1,4 @@
-import type { Wine } from '@/types';
+import type { Wine, GrapeVariety } from '@/types';
 import { getMaturityStatus } from '@/constants';
 
 // ── Types ──
@@ -50,11 +50,9 @@ export const EMPTY_FILTERS: FiltersState = {
 
 const norm = (s: string) => s.trim().toLowerCase();
 
-const GRAPE_SPLIT_RE = /[\/&+,]|(?:\s+and\s+)/i;
-
-export function parseGrapes(cepage: string | undefined): string[] {
-  if (!cepage || cepage.trim() === '') return [];
-  return cepage.split(GRAPE_SPLIT_RE).map(g => g.trim()).filter(g => g.length > 0);
+export function parseGrapes(varieties: GrapeVariety[] | undefined): string[] {
+  if (!varieties?.length) return [];
+  return varieties.map(g => g.name).filter(Boolean);
 }
 
 export function computeMaturity(wine: Wine): string {
@@ -93,7 +91,7 @@ function matchesSearch(wine: Wine, query: string): boolean {
     norm(wine.country).includes(q) ||
     norm(wine.region).includes(q) ||
     norm(wine.appellation ?? '').includes(q) ||
-    norm(wine.cepage ?? '').includes(q)
+    (wine.grapeVarieties ?? []).some(g => norm(g.name).includes(q))
   );
 }
 
@@ -135,7 +133,7 @@ function wineMatchesFacet(wine: Wine, key: FacetKey, filters: FiltersState): boo
     case 'producer':
       return matchesMulti(wine.producer, filters.producer);
     case 'grapeVariety':
-      return matchesMultiArray(parseGrapes(wine.cepage), filters.grapeVariety);
+      return matchesMultiArray(parseGrapes(wine.grapeVarieties), filters.grapeVariety);
     case 'vintage':
       return matchesMulti(String(wine.vintage), filters.vintage);
     case 'rating':
@@ -177,7 +175,7 @@ function extractFacetValue(wine: Wine, key: FacetKey): string[] {
     case 'producer':
       return wine.producer ? [wine.producer] : [];
     case 'grapeVariety':
-      return parseGrapes(wine.cepage);
+      return parseGrapes(wine.grapeVarieties);
     case 'vintage':
       return wine.vintage ? [String(wine.vintage)] : [];
     case 'rating':

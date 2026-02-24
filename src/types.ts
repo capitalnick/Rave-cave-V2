@@ -7,14 +7,18 @@ export type WineType = 'Red' | 'White' | 'Rosé' | 'Sparkling' | 'Dessert' | 'Fo
 export type AccentToken = 'accent-pink' | 'accent-acid' | 'accent-coral';
 export type MaturityStatus = 'Hold' | 'Drink Now' | 'Past Peak';
 
+export interface GrapeVariety {
+  name: string;        // e.g. "Shiraz"
+  pct?: number | null; // e.g. 85 — optional, integer 1–100
+}
+
 export interface Wine {
   id: string;
   producer: string;
   name: string;
   vintage: number;
   type: WineType;
-  cepage: string;
-  blendPercent?: string;
+  grapeVarieties: GrapeVariety[];
   appellation?: string;
   region: string;
   country: string;
@@ -80,7 +84,7 @@ export interface CellarStats {
 export interface CellarFilters {
   vintage: number[];
   type: WineType[];
-  cepage: string[];
+  grapeVarieties: string[];
   producer: string[];
   region: string[];
   country: string[];
@@ -343,8 +347,7 @@ export const FIRESTORE_FIELD_MAP: Record<string, string> = {
   name: 'Wine name',
   vintage: 'Vintage',
   type: 'Wine type',
-  cepage: 'Cépage',
-  blendPercent: 'Blend %',
+  grapeVarieties: 'Grape Varieties',
   appellation: 'Appellation',
   region: 'Region',
   country: 'Country',

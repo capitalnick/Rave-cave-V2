@@ -3,6 +3,7 @@ import { inventoryService } from './inventoryService';
 import type { Wine } from '@/types';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
+import { formatGrapeDisplay, cepageStringToVarieties } from '@/utils/grapeUtils';
 
 function computeMaturity(drinkFrom: number | null, drinkUntil: number | null): Wine['maturity'] {
   const year = new Date().getFullYear();
@@ -18,7 +19,7 @@ function buildEnrichmentPrompt(wine: Partial<Wine>): string {
     wine.name && `Name/Cuvee: ${wine.name}`,
     wine.vintage && `Vintage: ${wine.vintage}`,
     wine.type && `Type: ${wine.type}`,
-    wine.cepage && `Cepage: ${wine.cepage}`,
+    wine.grapeVarieties?.length && `Cepage: ${formatGrapeDisplay(wine.grapeVarieties)}`,
     wine.region && `Region: ${wine.region}`,
     wine.country && `Country: ${wine.country}`,
     wine.appellation && `Appellation: ${wine.appellation}`,
@@ -52,7 +53,7 @@ export async function enrichWine(docId: string, wine: Partial<Wine>): Promise<vo
   const needsTastingNotes = !wine.tastingNotes;
   const needsDrinkFrom = !wine.drinkFrom || wine.drinkFrom === 0;
   const needsDrinkUntil = !wine.drinkUntil || wine.drinkUntil === 0;
-  const needsCepage = !wine.cepage;
+  const needsCepage = !wine.grapeVarieties?.length;
   const needsRating = !wine.vivinoRating;
 
   // Nothing to enrich
@@ -91,7 +92,7 @@ export async function enrichWine(docId: string, wine: Partial<Wine>): Promise<vo
       updates.drinkUntil = parsed.drinkUntil;
     }
     if (needsCepage && parsed.cepage) {
-      updates.cepage = parsed.cepage;
+      updates.grapeVarieties = cepageStringToVarieties(parsed.cepage);
     }
     if (needsRating && typeof parsed.vivinoRating === 'number') {
       updates.vivinoRating = parsed.vivinoRating;

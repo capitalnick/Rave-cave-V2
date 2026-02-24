@@ -290,9 +290,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
 
-    const success = await inventoryService.updateField(wine.id, key, value);
+    // grapeVarieties is passed as JSON string from WineModal — parse back to array
+    const actualValue = key === 'grapeVarieties' ? JSON.parse(value) : value;
+    const success = await inventoryService.updateField(wine.id, key, actualValue);
     if (success) {
-      const coerced: any = NUMERIC_WINE_FIELDS.has(key) ? Number(value) : value;
+      const coerced: any = key === 'grapeVarieties' ? actualValue : NUMERIC_WINE_FIELDS.has(key) ? Number(value) : value;
       setInventory(prev => prev.map(w => w.id === wine.id ? { ...w, [key]: coerced } : w));
       setSelectedWine(prev => prev?.id === wine.id ? { ...prev, [key]: coerced } : prev);
     }

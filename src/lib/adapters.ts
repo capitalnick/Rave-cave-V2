@@ -1,4 +1,5 @@
 import type { Wine } from '@/types';
+import { formatGrapeDisplay } from '@/utils/grapeUtils';
 
 /**
  * Wine type mapping: existing PascalCase -> RC UI Set lowercase.
@@ -44,7 +45,7 @@ export function toRCWineCardProps(wine: Wine) {
   return {
     id: wine.id,
     producer: wine.producer,
-    varietal: wine.cepage || wine.type,
+    varietal: formatGrapeDisplay(wine.grapeVarieties) || wine.type,
     vintage: String(wine.vintage),
     type: toRCWineType(wine.type),
     maturity: computeMaturity(wine.drinkFrom, wine.drinkUntil),

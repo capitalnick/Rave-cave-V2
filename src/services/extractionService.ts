@@ -1,6 +1,7 @@
 import { CONFIG } from '@/constants';
 import type { Wine, ExtractionResult, ExtractionConfidence, ExtractedField } from '@/types';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
+import { cepageStringToVarieties } from '@/utils/grapeUtils';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
 
@@ -100,7 +101,17 @@ function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: Ex
     }
   }
 
-  // Sanitize name (remove if it duplicates producer or cepage)
+  // Convert extracted cepage string to grapeVarieties array
+  if ((wineFields as any).cepage) {
+    wineFields.grapeVarieties = cepageStringToVarieties((wineFields as any).cepage);
+    delete (wineFields as any).cepage;
+  }
+  // Copy cepage confidence to grapeVarieties for UI indicator
+  if (extractionFields.cepage) {
+    extractionFields.grapeVarieties = extractionFields.cepage;
+  }
+
+  // Sanitize name (remove if it duplicates producer or grape variety)
   const sanitized = sanitizeWineName(wineFields);
   Object.assign(wineFields, sanitized);
 

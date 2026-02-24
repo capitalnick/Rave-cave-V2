@@ -4,6 +4,7 @@ import { Wine as WineIcon, Plus, Minus } from 'lucide-react';
 import { Card, Heading, MonoLabel, Chip, WineTypeIndicator } from '@/components/rc';
 import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
 import { toRCWineCardProps } from '@/lib/adapters';
+import { formatGrapeDisplay } from '@/utils/grapeUtils';
 import { getDirectImageUrl } from '@/utils/imageUrl';
 import { cn } from '@/lib/utils';
 import type { WineType } from '@/components/rc/WineTypeIndicator';
@@ -119,7 +120,7 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
 
         {/* Cepage / Varietal */}
         <Heading scale="heading" truncate maxLines={1} className="mb-[var(--rc-card-gap-text-lines)]">
-          {wine.cepage}
+          {formatGrapeDisplay(wine.grapeVarieties)}
         </Heading>
 
         {/* Vintage */}

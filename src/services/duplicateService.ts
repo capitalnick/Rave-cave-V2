@@ -1,4 +1,5 @@
 import type { Wine, DuplicateCandidate } from '@/types';
+import { formatGrapeDisplay } from '@/utils/grapeUtils';
 
 /**
  * Normalised Levenshtein similarity: 1.0 = identical, 0.0 = completely different.
@@ -37,7 +38,7 @@ function fuzzyMatch(a: string, b: string): number {
 // Weighted scoring: Producer (0.35) + Varietal (0.25) + Vintage (0.20) + Name (0.15) + Region (0.05)
 const WEIGHTS = {
   producer: 0.35,
-  cepage: 0.25,
+  grapeVarieties: 0.25,
   vintage: 0.20,
   name: 0.15,
   region: 0.05,
@@ -78,12 +79,14 @@ export function findDuplicates(draft: Partial<Wine>, inventory: Wine[]): Duplica
       }
     }
 
-    // Varietal/Cepage (fuzzy)
-    if (draft.cepage && existing.cepage) {
-      const sim = fuzzyMatch(draft.cepage, existing.cepage);
+    // Varietal/Grape (fuzzy)
+    const draftGrapes = formatGrapeDisplay(draft.grapeVarieties ?? []);
+    const existingGrapes = formatGrapeDisplay(existing.grapeVarieties ?? []);
+    if (draftGrapes && existingGrapes) {
+      const sim = fuzzyMatch(draftGrapes, existingGrapes);
       if (sim > 0.5) {
-        score += sim * WEIGHTS.cepage;
-        matchedFields.push('cepage');
+        score += sim * WEIGHTS.grapeVarieties;
+        matchedFields.push('grapeVarieties');
       }
     }
 

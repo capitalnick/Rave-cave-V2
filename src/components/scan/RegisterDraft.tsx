@@ -4,8 +4,9 @@ import { Heading, MonoLabel, Button, Input, Divider, Chip, InlineMessage } from 
 import ConfidenceIndicator from './ConfidenceIndicator';
 import MoreFieldsSection from './MoreFieldsSection';
 import CommitTransition from './CommitTransition';
+import { GrapeVarietiesEditor } from '@/components/GrapeVarietiesEditor';
 import { useScrollFieldIntoView } from '@/hooks/useScrollFieldIntoView';
-import type { Wine, WineType, WineDraft, ExtractionConfidence, CommitStage } from '@/types';
+import type { Wine, WineType, WineDraft, ExtractionConfidence, CommitStage, GrapeVariety } from '@/types';
 
 interface RegisterDraftProps {
   draft: WineDraft;
@@ -29,7 +30,7 @@ const PRIMARY_FIELDS: { key: keyof Wine; label: string; placeholder: string }[] 
   { key: 'producer', label: 'Producer', placeholder: 'e.g. Domaine de la Romanée-Conti' },
   { key: 'name', label: 'Wine Name', placeholder: 'e.g. Grands Échezeaux' },
   { key: 'vintage', label: 'Vintage', placeholder: 'e.g. 2019' },
-  { key: 'cepage', label: 'Grape / Cépage', placeholder: 'e.g. Pinot Noir' },
+  { key: 'grapeVarieties', label: 'Grape / Cépage', placeholder: 'e.g. Pinot Noir' },
   { key: 'region', label: 'Region', placeholder: 'e.g. Burgundy' },
   { key: 'country', label: 'Country', placeholder: 'e.g. France' },
   { key: 'format', label: 'Format', placeholder: 'e.g. 750ml' },
@@ -218,7 +219,10 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
               const value = fields[key] ?? '';
               const confidence = getConfidence(key);
               const isNumeric = key === 'vintage';
-              const isEmpty = value === '' || value === 0;
+              const isGrapes = key === 'grapeVarieties';
+              const isEmpty = isGrapes
+                ? !(fields.grapeVarieties as GrapeVariety[] | undefined)?.some(g => g.name.trim())
+                : value === '' || value === 0;
 
               return (
                 <div key={key} className="space-y-1">
@@ -234,16 +238,23 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
                     </MonoLabel>
                     <ConfidenceIndicator confidence={confidence} />
                   </div>
-                  <Input
-                    type={isNumeric ? 'number' : 'text'}
-                    value={String(value)}
-                    onChange={(e) =>
-                      handleFieldChange(key, isNumeric ? Number(e.target.value) : e.target.value)
-                    }
-                    placeholder={placeholder}
-                    className={isEmpty ? 'border-[var(--rc-accent-coral)]' : ''}
-                    autoFocus={key === 'producer' && !isMobile}
-                  />
+                  {isGrapes ? (
+                    <GrapeVarietiesEditor
+                      value={(fields.grapeVarieties as GrapeVariety[] | undefined) ?? []}
+                      onChange={(val) => onUpdateFields({ grapeVarieties: val })}
+                    />
+                  ) : (
+                    <Input
+                      type={isNumeric ? 'number' : 'text'}
+                      value={String(value)}
+                      onChange={(e) =>
+                        handleFieldChange(key, isNumeric ? Number(e.target.value) : e.target.value)
+                      }
+                      placeholder={placeholder}
+                      className={isEmpty ? 'border-[var(--rc-accent-coral)]' : ''}
+                      autoFocus={key === 'producer' && !isMobile}
+                    />
+                  )}
                 </div>
               );
             })}

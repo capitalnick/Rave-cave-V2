@@ -341,7 +341,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
         name: cleanedFields.name || '',
         vintage: cleanedFields.vintage || 0,
         type: cleanedFields.type || 'Red',
-        cepage: cleanedFields.cepage || '',
+        grapeVarieties: cleanedFields.grapeVarieties ?? [],
         region: cleanedFields.region || '',
         country: cleanedFields.country || '',
         quantity: cleanedFields.quantity || 1,

@@ -229,6 +229,12 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
   };
 
   const handleWineCardAddToCellar = (wine: RemyWineData) => {
+    // Handle both new grapeVarieties array and legacy cepage string from model output
+    const grapeVarieties = wine.grapeVarieties?.length
+      ? wine.grapeVarieties
+      : wine.cepage
+        ? wine.cepage.split(/[\/,&]/).map(s => ({ name: s.trim(), pct: null })).filter(g => g.name)
+        : [];
     onAddToCellar?.({
       producer: wine.producer,
       name: wine.name,
@@ -236,7 +242,7 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
       type: wine.type as Wine['type'],
       region: wine.region,
       country: wine.country,
-      cepage: wine.cepage,
+      grapeVarieties,
       tastingNotes: wine.tastingNotes || wine.note || '',
       drinkFrom: wine.drinkFrom,
       drinkUntil: wine.drinkUntil,

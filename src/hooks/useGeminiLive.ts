@@ -237,7 +237,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
                 `$${w.price || 0} — Qty: ${w.quantity || 1}`,
                 `Maturity: ${w.maturity || 'Unknown'}`,
               ];
-              if (w.cepage) parts.push(`Grape: ${w.cepage}`);
+              if (w.grapeVarieties?.length) parts.push(`Grape: ${w.grapeVarieties.map((g: any) => g.name).join(', ')}`);
               if (w.tastingNotes) parts.push(`Notes: ${w.tastingNotes}`);
               if (w.vivinoRating) parts.push(`Rating: ${w.vivinoRating}/100`);
               if (w.drinkFrom || w.drinkUntil) parts.push(`Window: ${w.drinkFrom || '?'}–${w.drinkUntil || '?'}`);
@@ -349,7 +349,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
             priceMin: { type: "NUMBER", description: "Minimum price" },
             priceMax: { type: "NUMBER", description: "Maximum price" },
             maturityStatus: { type: "STRING", description: "Maturity filter: HOLD, DRINK_NOW, or PAST_PEAK" },
-            query: { type: "STRING", description: "Free text search across producer, name, cepage, region, appellation" },
+            query: { type: "STRING", description: "Free text search across producer, name, grape varieties, region, appellation" },
             sortBy: { type: "STRING", description: "Sort field: vintage, price, or rating" },
             sortOrder: { type: "STRING", description: "Sort direction: asc or desc" },
             limit: { type: "NUMBER", description: "Max results to return (default 10, max 20)" },
@@ -362,8 +362,8 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
             producer: { type: "STRING", description: "Wine producer/house name" },
             vintage: { type: "NUMBER", description: "Vintage year" },
             type: { type: "STRING", description: "Wine type: Red, White, Rosé, Sparkling, Dessert, Fortified" },
-            name: { type: "STRING", description: "Cuvee/bottling name only — must NOT duplicate producer or cepage" },
-            cepage: { type: "STRING", description: "Grape variety or blend" },
+            name: { type: "STRING", description: "Cuvee/bottling name only — must NOT duplicate producer or grape variety" },
+            grapeVarieties: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING", description: "Variety name, e.g. Shiraz" }, pct: { type: "NUMBER", description: "Percentage (optional). Integer 1-100." } }, required: ["name"] }, description: "Grape varieties, ordered by dominance. Max 5." },
             region: { type: "STRING", description: "Wine region" },
             country: { type: "STRING", description: "Country of origin" },
             appellation: { type: "STRING", description: "Appellation or classification" },

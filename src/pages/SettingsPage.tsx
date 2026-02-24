@@ -25,6 +25,7 @@ import {
 } from '@/components/rc';
 import { CONFIG } from '@/constants';
 import type { Wine } from '@/types';
+import { formatGrapeDisplay } from '@/utils/grapeUtils';
 
 // ── Constants ──
 
@@ -57,7 +58,7 @@ function exportCellarCSV(inventory: Wine[]): void {
   };
 
   const rows = inventory.map(w => [
-    w.producer, w.name, w.vintage || '', w.type || '', w.cepage || '',
+    w.producer, w.name, w.vintage || '', w.type || '', formatGrapeDisplay(w.grapeVarieties) || '',
     w.region || '', w.country || '', w.appellation || '', w.quantity || '',
     w.price || '', w.vivinoRating || '', w.maturity || '', w.drinkFrom || '',
     w.drinkUntil || '', w.tastingNotes || '', w.personalNote || '', w.format || '',
@@ -301,9 +302,19 @@ const SettingsPage: React.FC = () => {
               <Crown size={18} style={{ color: isPremium ? 'var(--rc-ink-on-accent)' : 'var(--rc-ink-tertiary)' }} />
             </div>
             <div>
-              <Body className="w-auto font-semibold">{isPremium ? 'Premium' : 'Free'}</Body>
+              <Body className="w-auto font-semibold">
+                {isPremium
+                  ? profile.cancelAtPeriodEnd
+                    ? `Premium (expires ${profile.cancelAt ? new Date(profile.cancelAt).toLocaleDateString() : 'soon'})`
+                    : 'Premium'
+                  : 'Free'}
+              </Body>
               <MonoLabel size="label" colour="ghost" className="w-auto">
-                {isPremium ? 'Unlimited bottles & full R\u00e9my access' : `${totalBottles} of ${CONFIG.FREE_TIER.MAX_BOTTLES} bottles used`}
+                {isPremium
+                  ? profile.cancelAtPeriodEnd
+                    ? 'Your subscription will not renew'
+                    : 'Unlimited bottles & full R\u00e9my access'
+                  : `${totalBottles} of ${CONFIG.FREE_TIER.MAX_BOTTLES} bottles used`}
               </MonoLabel>
               {profile.subscriptionStatus === 'past_due' && (
                 <MonoLabel size="label" className="w-auto text-[var(--rc-accent-coral)]">

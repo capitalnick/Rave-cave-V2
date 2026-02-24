@@ -15,7 +15,8 @@ export interface RemyWineData {
   region?: string;
   country?: string;
   type?: string;
-  cepage?: string;
+  grapeVarieties?: { name: string; pct?: number | null }[];
+  cepage?: string; // legacy fallback from model output
   rating?: number;
   tastingNotes?: string;
   drinkFrom?: number;
