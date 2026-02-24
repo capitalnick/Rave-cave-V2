@@ -4,7 +4,7 @@
  */
 
 import { UtensilsCrossed, PartyPopper, Gift, Sparkles, ListChecks } from 'lucide-react';
-import type { Occasion, RankLabel } from './types';
+import type { Occasion, RankLabel, WinePerPerson } from './types';
 
 export const COLORS = {
   bg: '#FAFAF9',        // --rc-surface-primary
@@ -16,6 +16,13 @@ export const COLORS = {
   coral: '#FF6A4D',     // --rc-accent-coral (was #FF6B9D)
 };
 
+
+export const WINE_PER_PERSON_MULTIPLIER: Record<WinePerPerson, number> = {
+  light: 0.25,
+  moderate: 0.5,
+  generous: 0.75,
+  full: 1.0,
+};
 
 export const CONFIG = {
   MODELS: {

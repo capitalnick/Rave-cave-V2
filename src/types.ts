@@ -114,9 +114,18 @@ export interface DinnerContext {
   cellarOnly: boolean;
 }
 
+export type PartyVibe =
+  | 'summer-brunch' | 'garden-party' | 'bbq' | 'cocktail-party'
+  | 'celebration' | 'casual-dinner' | 'wine-lovers-dinner'
+  | 'holiday-feast' | 'late-night';
+
+export type WinePerPerson = 'light' | 'moderate' | 'generous' | 'full';
+
 export interface PartyContext {
   guests: number;
-  vibe: 'casual' | 'cocktail' | 'celebration';
+  winePerPerson: WinePerPerson;
+  totalBottles: number;
+  vibe: PartyVibe;
   budgetPerBottle: 'any' | 'under-20' | '20-50' | '50-plus';
   cellarOnly: boolean;
 }
@@ -218,6 +227,34 @@ export interface RecentQuery {
   resultSetId: string;
   timestamp: number;
   contextInputs: OccasionContext;
+}
+
+// ── Crowd Allocation Types ──
+
+export interface CrowdAllocationItem {
+  wineId: string | null;
+  producer: string;
+  wineName: string;
+  vintage: number;
+  wineType: WineType;
+  region: string;
+  bottles: number;
+  role: string;
+  rationale: string;
+  inCellar: boolean;
+}
+
+export interface CrowdAllocation {
+  totalBottles: number;
+  items: CrowdAllocationItem[];
+  remyNote: string;
+  vibeLabel: string;
+}
+
+export interface CrowdShortfall {
+  needed: number;
+  available: number;
+  originalContext: PartyContext;
 }
 
 // ── Pulse Dashboard Types ──

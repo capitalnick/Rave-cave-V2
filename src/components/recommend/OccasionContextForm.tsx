@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button, Input, Switch, Heading, MonoLabel } from '@/components/rc';
-import { OCCASIONS } from '@/constants';
+import { OCCASIONS, WINE_PER_PERSON_MULTIPLIER } from '@/constants';
 import { cn } from '@/lib/utils';
 import type {
   OccasionId,
   OccasionContext,
   DinnerContext,
   PartyContext,
+  PartyVibe,
+  WinePerPerson,
   GiftContext,
   WineListAnalysisContext,
 } from '@/types';
@@ -239,15 +241,37 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }
 
 // ── Party Form ──
 
+const PARTY_VIBES: { value: PartyVibe; label: string; hint: string }[] = [
+  { value: 'summer-brunch',      label: 'Summer Brunch',       hint: 'Light, bright, easy-drinking' },
+  { value: 'garden-party',       label: 'Garden Party',        hint: 'Elegant outdoors, varied styles' },
+  { value: 'bbq',                label: 'BBQ',                 hint: 'Bold reds, crisp whites, rosé' },
+  { value: 'cocktail-party',     label: 'Cocktail Party',      hint: 'Sparkling-forward, crowd pleasers' },
+  { value: 'celebration',        label: 'Celebration',         hint: 'Premium picks, fizz to start' },
+  { value: 'casual-dinner',      label: 'Casual Dinner',       hint: 'Relaxed, food-friendly, approachable' },
+  { value: 'wine-lovers-dinner', label: 'Wine Lovers\' Dinner', hint: 'Showcase bottles, diversity of regions' },
+  { value: 'holiday-feast',      label: 'Holiday Feast',       hint: 'Rich reds, aromatic whites, festive' },
+  { value: 'late-night',         label: 'Late Night',          hint: 'Fun, easy, nothing too serious' },
+];
+
+const WINE_PER_PERSON_OPTIONS: { value: WinePerPerson; label: string; hint: string }[] = [
+  { value: 'light',    label: 'Light',    hint: '¼ bottle pp' },
+  { value: 'moderate', label: 'Moderate', hint: '½ bottle pp' },
+  { value: 'generous', label: 'Generous', hint: '¾ bottle pp' },
+  { value: 'full',     label: 'Full',     hint: '1 bottle pp' },
+];
+
 const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
   const [guests, setGuests] = useState(8);
-  const [vibe, setVibe] = useState<'casual' | 'cocktail' | 'celebration'>('casual');
+  const [winePerPerson, setWinePerPerson] = useState<WinePerPerson>('moderate');
+  const [vibe, setVibe] = useState<PartyVibe>('casual-dinner');
   const [budgetPerBottle, setBudgetPerBottle] = useState<'any' | 'under-20' | '20-50' | '50-plus'>('any');
   const [cellarOnly, setCellarOnly] = useState(true);
 
+  const totalBottles = Math.ceil(guests * WINE_PER_PERSON_MULTIPLIER[winePerPerson]);
+
   const handleSubmit = () => {
     setSubmitting(true);
-    const ctx: PartyContext = { guests, vibe, budgetPerBottle, cellarOnly };
+    const ctx: PartyContext = { guests, winePerPerson, totalBottles, vibe, budgetPerBottle, cellarOnly };
     onSubmit(ctx);
   };
 
@@ -255,22 +279,86 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
     <div className="space-y-6">
       <Heading scale="subhead" colour="primary">TELL RÉMY ABOUT YOUR PARTY</Heading>
 
+      {/* Guest stepper */}
       <FieldGroup label="How many guests?">
-        <Stepper value={guests} min={2} max={50} onChange={setGuests} />
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setGuests(Math.max(2, guests - 1))}
+            disabled={guests <= 2}
+            className="w-12 h-12 rounded-full border-2 border-[var(--rc-border-subtle)] flex items-center justify-center text-xl font-bold disabled:opacity-30 hover:bg-[var(--rc-surface-secondary)] transition-colors"
+          >
+            −
+          </button>
+          <span className="font-[var(--rc-font-display)] font-black text-5xl min-w-[3ch] text-center tabular-nums">
+            {guests}
+          </span>
+          <button
+            type="button"
+            onClick={() => setGuests(Math.min(100, guests + 1))}
+            disabled={guests >= 100}
+            className="w-12 h-12 rounded-full border-2 border-[var(--rc-border-subtle)] flex items-center justify-center text-xl font-bold disabled:opacity-30 hover:bg-[var(--rc-surface-secondary)] transition-colors"
+          >
+            +
+          </button>
+        </div>
       </FieldGroup>
 
+      {/* Wine per person — 2×2 grid */}
+      <FieldGroup label="Wine per person">
+        <div className="grid grid-cols-2 gap-2">
+          {WINE_PER_PERSON_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setWinePerPerson(opt.value)}
+              className={cn(
+                "flex flex-col items-start px-4 py-3 rounded-lg border-2 transition-all duration-150 text-left",
+                winePerPerson === opt.value
+                  ? "border-[var(--rc-accent-acid)] bg-[var(--rc-accent-acid)]/10"
+                  : "border-[var(--rc-border-subtle)] bg-white hover:bg-[var(--rc-surface-secondary)]"
+              )}
+            >
+              <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider font-bold">{opt.label}</span>
+              <span className="text-[10px] text-[var(--rc-ink-ghost)] font-[var(--rc-font-body)]">{opt.hint}</span>
+            </button>
+          ))}
+        </div>
+      </FieldGroup>
+
+      {/* Live bottle count */}
+      <div className="flex items-center gap-3 rounded-lg bg-[var(--rc-surface-secondary)] border-l-4 border-[var(--rc-accent-acid)] px-4 py-3">
+        <span className="font-[var(--rc-font-display)] font-black text-3xl text-[var(--rc-ink-primary)] tabular-nums">
+          {totalBottles}
+        </span>
+        <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider text-[var(--rc-ink-secondary)]">
+          bottles needed
+        </span>
+      </div>
+
+      {/* Vibe — vertical list */}
       <FieldGroup label="Vibe">
-        <SegmentedControl
-          options={[
-            { value: 'casual' as const, label: 'Casual' },
-            { value: 'cocktail' as const, label: 'Cocktail' },
-            { value: 'celebration' as const, label: 'Celebration' },
-          ]}
-          value={vibe}
-          onChange={setVibe}
-        />
+        <div className="flex flex-col gap-1.5">
+          {PARTY_VIBES.map((v) => (
+            <button
+              key={v.value}
+              type="button"
+              onClick={() => setVibe(v.value)}
+              className={cn(
+                "flex flex-col items-start px-4 py-2.5 rounded-lg border transition-all duration-150 text-left",
+                vibe === v.value
+                  ? "border-[var(--rc-accent-pink)] bg-[var(--rc-accent-pink)]/10"
+                  : "border-[var(--rc-border-subtle)] bg-white hover:bg-[var(--rc-surface-secondary)]"
+              )}
+            >
+              <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider font-bold">{v.label}</span>
+              <span className="text-[10px] text-[var(--rc-ink-ghost)] font-[var(--rc-font-body)]">{v.hint}</span>
+            </button>
+          ))}
+        </div>
       </FieldGroup>
 
+      {/* Budget */}
       <FieldGroup label="Budget per bottle">
         <SegmentedControl
           options={[

@@ -8,23 +8,28 @@ import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
 import { Heading, Spinner } from '@/components/rc';
-import { getRecommendations, getRecommendationsStream, getSurpriseMe } from '@/services/recommendService';
+import { getRecommendations, getRecommendationsStream, getSurpriseMe, getPartyRecommendation } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
+import CrowdShortfallError from './recommend/CrowdShortfallError';
 import type {
   OccasionId,
   OccasionContext,
+  PartyContext,
   WineListAnalysisContext,
   Recommendation,
   RecommendChatContext,
   WineListAnalysis,
   Wine,
+  CrowdAllocation,
+  CrowdShortfall,
 } from '@/types';
 
 export type RecommendView =
   | 'grid' | 'form' | 'loading' | 'results'
-  | 'winelist-capture' | 'winelist-loading' | 'winelist-results';
+  | 'winelist-capture' | 'winelist-loading' | 'winelist-results'
+  | 'crowd-shortfall';
 
 interface RecommendScreenProps {
   inventory: Wine[];
@@ -52,6 +57,9 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
   const [wineListImages, setWineListImages] = useState<string[]>([]);
   const [isReanalysing, setIsReanalysing] = useState(false);
   const wineListCapture = useWineListCapture();
+  // Crowd allocation state
+  const [crowdAllocation, setCrowdAllocation] = useState<CrowdAllocation | null>(null);
+  const [crowdShortfall, setCrowdShortfall] = useState<CrowdShortfall | null>(null);
 
   const cellarEmpty = inventory.length === 0;
   const isSurprise = selectedOccasion === 'surprise';
@@ -83,6 +91,12 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
         if (selectedOccasion === 'surprise') {
           const result = await getSurpriseMe(inventory, surpriseExcludeIds);
           setRecommendations([result]);
+          setError(null);
+          setView('results');
+        } else if (selectedOccasion === 'party') {
+          // Party uses non-streaming crowd allocation
+          const allocation = await getPartyRecommendation(occasionContext as PartyContext, inventory);
+          setCrowdAllocation(allocation);
           setError(null);
           setView('results');
         } else {
@@ -175,12 +189,33 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
     setOccasionContext(context);
     setError(null);
     setRecommendations([]);
+    setCrowdAllocation(null);
+    setCrowdShortfall(null);
+
     if (selectedOccasion === 'analyze_winelist') {
       setView('winelist-capture');
       return;
     }
+
+    // Pre-flight cellar check for party
+    if (selectedOccasion === 'party') {
+      const partyCtx = context as PartyContext;
+      if (partyCtx.cellarOnly) {
+        const totalCellarBottles = inventory.reduce((sum, w) => sum + w.quantity, 0);
+        if (totalCellarBottles < partyCtx.totalBottles) {
+          setCrowdShortfall({
+            needed: partyCtx.totalBottles,
+            available: totalCellarBottles,
+            originalContext: partyCtx,
+          });
+          setView('crowd-shortfall');
+          return;
+        }
+      }
+    }
+
     setView('loading');
-  }, [selectedOccasion]);
+  }, [selectedOccasion, inventory]);
 
   const handleWineListAnalyse = useCallback(() => {
     const images = wineListCapture.allBase64;
@@ -210,6 +245,18 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
     }
   }, [wineListAnalysis, occasionContext, inventory]);
 
+  const handleSearchOutsideCellar = useCallback(() => {
+    if (!crowdShortfall) return;
+    const updatedContext: PartyContext = { ...crowdShortfall.originalContext, cellarOnly: false };
+    setOccasionContext(updatedContext);
+    setCrowdShortfall(null);
+    setCrowdAllocation(null);
+    setError(null);
+    setRecommendations([]);
+    fetchingRef.current = false;
+    setView('loading');
+  }, [crowdShortfall]);
+
   const handleBack = useCallback(() => {
     streamAbortRef.current?.abort();
     setIsStreaming(false);
@@ -224,6 +271,9 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
     setWineListImages([]);
     setIsReanalysing(false);
     wineListCapture.clear();
+    // Crowd cleanup
+    setCrowdAllocation(null);
+    setCrowdShortfall(null);
   }, [wineListCapture]);
 
   const handleRetry = useCallback(() => {
@@ -322,6 +372,15 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
         />
       )}
 
+      {view === 'crowd-shortfall' && crowdShortfall && (
+        <CrowdShortfallError
+          needed={crowdShortfall.needed}
+          available={crowdShortfall.available}
+          onSearchOutside={handleSearchOutsideCellar}
+          onAdjust={() => { setCrowdShortfall(null); setView('form'); }}
+        />
+      )}
+
       {view === 'loading' && (
         <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
           <Spinner size="lg" tone="pink" />
@@ -357,6 +416,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
             const wine = inventory.find(w => w.id === wineId);
             if (wine) onViewWine?.(wine);
           }}
+          crowdAllocation={crowdAllocation}
         />
       )}
 

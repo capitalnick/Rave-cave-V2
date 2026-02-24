@@ -1,11 +1,12 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import RecommendResultCard from './RecommendResultCard';
+import CrowdAllocationResults from './CrowdAllocationResults';
 import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/components/rc';
 import { OCCASIONS } from '@/constants';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
 import { getDirectImageUrl } from '@/utils/imageUrl';
-import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext, Wine } from '@/types';
+import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext, Wine, CrowdAllocation } from '@/types';
 
 interface RecommendResultsProps {
   occasionId: OccasionId;
@@ -25,6 +26,7 @@ interface RecommendResultsProps {
   onSurpriseReroll: () => void;
   onAddToCellar?: (recommendation: Recommendation) => void;
   onViewWine?: (wineId: string) => void;
+  crowdAllocation?: CrowdAllocation | null;
 }
 
 const RecommendResults: React.FC<RecommendResultsProps> = ({
@@ -44,6 +46,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   onSurpriseReroll,
   onAddToCellar,
   onViewWine,
+  crowdAllocation,
 }) => {
   const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
   const occasion = OCCASIONS.find(o => o.id === occasionId);
@@ -59,6 +62,18 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
     };
     onHandoffToRemy(ctx);
   };
+
+  // Party → crowd allocation results
+  if (occasionId === 'party' && crowdAllocation) {
+    return (
+      <CrowdAllocationResults
+        allocation={crowdAllocation}
+        cellarOnly={cellarOnly}
+        onStartOver={onStartOver}
+        onHandoffToRemy={handleAskRemy}
+      />
+    );
+  }
 
   // Error state
   if (error) {

@@ -8,7 +8,12 @@ import type {
   Recommendation,
   Wine,
   RankLabel,
+  CrowdAllocation,
+  CrowdAllocationItem,
+  PartyVibe,
 } from '../types';
+
+import { WINE_PER_PERSON_MULTIPLIER } from '../constants';
 
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
@@ -49,10 +54,7 @@ Vibe: ${c.vibe}`;
     }
     case 'party': {
       const c = context as PartyContext;
-      return `The user is planning a party.
-Guests: ${c.guests}
-Vibe: ${c.vibe}
-Budget per bottle: ${c.budgetPerBottle === 'any' ? 'No budget constraint' : c.budgetPerBottle.replace('-', ' to $').replace('under-', 'Under $').replace('plus', '+')}`;
+      return buildPartyPromptBlock(c);
     }
     case 'gift': {
       const c = context as GiftContext;
@@ -67,6 +69,71 @@ Budget: ${c.budget === 'any' ? 'No budget constraint' : c.budget.replace('-', ' 
     default:
       return '';
   }
+}
+
+// ── Party / Crowd Allocation ──
+
+const vibeStyleGuide: Record<PartyVibe, string> = {
+  'summer-brunch':      'Lean white & rosé, one sparkling, minimal red.',
+  'garden-party':       'Mix of rosé, white, light reds. Sparkling welcome.',
+  'bbq':                'Bold reds dominant, one crisp white or rosé for balance.',
+  'cocktail-party':     'Sparkling-forward, aromatic whites, minimal red.',
+  'celebration':        'Lead with sparkling/champagne, then premium reds & whites.',
+  'casual-dinner':      'Even red/white split, food-friendly, approachable.',
+  'wine-lovers-dinner': 'Diverse regions & styles, showcase interesting bottles.',
+  'holiday-feast':      'Rich reds, aromatic whites, one festive sparkling.',
+  'late-night':         'Easy-drinking, fun, nothing too serious. Sparkling & light reds.',
+};
+
+function buildPartyPromptBlock(c: PartyContext): string {
+  const budgetLabel = c.budgetPerBottle === 'any'
+    ? 'No budget constraint'
+    : c.budgetPerBottle.replace('-', ' to $').replace('under-', 'Under $').replace('plus', '+');
+
+  return `The user is planning a party ("Wines for a Crowd").
+
+CROWD DETAILS:
+- Guests: ${c.guests}
+- Wine per person: ${c.winePerPerson} (${WINE_PER_PERSON_MULTIPLIER[c.winePerPerson]} bottles pp)
+- Total bottles needed: ${c.totalBottles}
+- Vibe: ${c.vibe}
+- Budget per bottle: ${budgetLabel}
+- Cellar only: ${c.cellarOnly}
+
+VIBE STYLE GUIDE for "${c.vibe}": ${vibeStyleGuide[c.vibe]}
+
+ALLOCATION INSTRUCTIONS:
+- Recommend 3–6 different wines, each with a specific bottle count.
+- The sum of all bottle counts MUST equal exactly ${c.totalBottles}.
+- Each wine gets a "role" label (e.g., "The Crowd Pleaser", "The Conversation Starter", "The Dark Horse").
+- Include a short rationale per wine explaining why it fits the vibe and role.
+- Vary by type, region, and price to create an interesting spread.
+
+${c.cellarOnly
+  ? `CELLAR-ONLY MODE: Every wine MUST come from the cellar. Each item must have a valid wineId and inCellar: true. If you cannot fill ${c.totalBottles} bottles from the cellar, return as many as you can.`
+  : `OPEN MODE: Prefer cellar wines where possible. For cellar wines, set wineId to the cellar ID and inCellar: true. For wines not in the cellar, set wineId to null and inCellar: false.`
+}
+
+Return ONLY a valid JSON object (no markdown fences, no extra text) with this exact shape:
+{
+  "totalBottles": ${c.totalBottles},
+  "vibeLabel": "string (a short editorial label for this vibe, e.g. 'Summer Brunch Spread')",
+  "remyNote": "string (1-2 sentences framing the collection — warm, sommelier voice)",
+  "items": [
+    {
+      "wineId": "string | null",
+      "producer": "string",
+      "wineName": "string",
+      "vintage": number,
+      "wineType": "Red" | "White" | "Rosé" | "Sparkling" | "Dessert" | "Fortified",
+      "region": "string",
+      "bottles": number,
+      "role": "string",
+      "rationale": "string",
+      "inCellar": boolean
+    }
+  ]
+}`;
 }
 
 function buildRecommendPrompt(
@@ -225,6 +292,87 @@ export async function getSurpriseMe(
   const results = parseRecommendations(text, inventory);
   if (results.length === 0) throw new RecommendError('No surprise pick returned', 'EMPTY_RESULTS');
   return results[0];
+}
+
+// ── Crowd Allocation API ──
+
+function parseCrowdAllocation(rawText: string, inventory: Wine[], cellarOnly: boolean): CrowdAllocation {
+  let cleaned = rawText.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new RecommendError('Failed to parse crowd allocation response as JSON', 'PARSE_ERROR');
+  }
+
+  if (!parsed || !Array.isArray(parsed.items) || parsed.items.length === 0) {
+    throw new RecommendError('AI returned no crowd allocation items', 'EMPTY_RESULTS');
+  }
+
+  let items: CrowdAllocationItem[] = parsed.items.map((item: any): CrowdAllocationItem => {
+    // Try to match to cellar
+    const { wineId, isFromCellar } = matchToCellar(item, inventory);
+    const resolvedWineId = isFromCellar ? wineId : (item.wineId || null);
+    const resolvedInCellar = isFromCellar || (item.inCellar === true);
+
+    return {
+      wineId: resolvedInCellar ? resolvedWineId : null,
+      producer: item.producer || 'Unknown',
+      wineName: item.wineName || item.name || '',
+      vintage: Number(item.vintage) || new Date().getFullYear(),
+      wineType: item.wineType || item.type || 'Red',
+      region: item.region || '',
+      bottles: Number(item.bottles) || 1,
+      role: item.role || '',
+      rationale: item.rationale || '',
+      inCellar: resolvedInCellar,
+    };
+  });
+
+  // In cellarOnly mode, filter out any non-cellar items
+  if (cellarOnly) {
+    const before = items.length;
+    items = items.filter(i => i.inCellar);
+    if (items.length < before) {
+      console.warn(`[CrowdAllocation] Filtered ${before - items.length} non-cellar items in cellarOnly mode`);
+    }
+  }
+
+  return {
+    totalBottles: Number(parsed.totalBottles) || items.reduce((sum, i) => sum + i.bottles, 0),
+    items,
+    remyNote: parsed.remyNote || '',
+    vibeLabel: parsed.vibeLabel || '',
+  };
+}
+
+export async function getPartyRecommendation(
+  context: PartyContext,
+  inventory: Wine[]
+): Promise<CrowdAllocation> {
+  const cellarSnapshot = buildCellarSnapshotForPrompt(inventory);
+  const occasionDetails = buildPartyPromptBlock(context);
+
+  const cellarInstruction = context.cellarOnly
+    ? `You MUST only recommend wines from the user's cellar inventory below.\n\nCELLAR INVENTORY:\n${cellarSnapshot}`
+    : `You may recommend any wine. The user's cellar is provided for reference.\n\nCELLAR INVENTORY (for reference):\n${cellarSnapshot}`;
+
+  const systemInstruction = `You are Rémy, an expert French sommelier for "Rave Cave".\n\n${occasionDetails}\n\n${cellarInstruction}`;
+
+  const response = await callGeminiProxy({
+    model: CONFIG.MODELS.TEXT,
+    systemInstruction,
+    contents: [{ role: 'user', parts: [{ text: 'Please build my crowd wine allocation based on the context above.' }] }],
+  });
+
+  const text = response?.text;
+  if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
+
+  return parseCrowdAllocation(text, inventory, context.cellarOnly);
 }
 
 // ── Streaming API ──
