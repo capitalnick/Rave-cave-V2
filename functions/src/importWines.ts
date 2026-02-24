@@ -133,52 +133,68 @@ export const mapImportFields = onRequest(
         ),
       ].join("\n");
 
-      const prompt = `You are mapping columns from a wine collection CSV file to a wine database schema.
-
-Here are the target fields you can map to:
-${IMPORTABLE_FIELDS.map((f) => `- ${f}`).join("\n")}
-
-Here is the CSV data (headers + first 3 rows):
-
-${sampleTable}
-
-For each CSV column, determine which target field it maps to (or null if it should be skipped).
-Also rate your confidence: "high" (obvious match), "medium" (likely but ambiguous), "low" (guess).
-
-Common mappings to watch for:
-- "Wine" or "Wine Name" or "Label" → name
-- "Winery" or "Producer" or "Estate" → producer
-- "Varietal" or "Grape" or "Variety" or "Grape Variety" → cepage
-- "Color" or "Wine Type" or "Category" → type (normalise to: Red, White, Rosé, Sparkling, Dessert, Fortified)
-- "Size" or "Bottle Size" or "Format" → format
-- "Qty" or "Quantity" or "Bottles" or "Count" or "User cellar count" → quantity
-- "BeginConsume" or "Drink From" or "Start Drinking" → drinkFrom
-- "EndConsume" or "Drink To" or "Drink Until" or "Drink By" → drinkUntil
-- "Drinking Window" with range values like "2024-2030" → map to BOTH drinkFrom AND drinkUntil (two entries for same column)
-- "Locale" or "Country" → country
-- "Location" → skip (storage location, not origin)
-- "CT" or "CT Score" or "Wine ratings count" → skip
-- "Average rating" → vivinoRating (when Vivino source) or skip
-- "Price" or "Cost" or "Valuation" → price
-- "My Score" or "My Rating" or "Your rating" → myRating
-- "Notes" or "Tasting Notes" or "Your review" → tastingNotes
-- "Private Note" or "My Notes" or "Personal Note" → personalNote
-- "Appellation" or "Sub-Region" → appellation
-- "Link to wine" → linkToWine
-- "Label image" → imageUrl
-- "Scan date" or "Wishlisted date" or "Scan/Review Location" → skip
-
-IMPORTANT: If a column contains date ranges like "2024-2030", map it as TWO entries: one for drinkFrom and one for drinkUntil with the same csvColumn.
-
-Respond ONLY with valid JSON, no markdown backticks:
-{
-  "mappings": [
-    { "csvColumn": "Wine", "raveCaveField": "name", "confidence": "high" },
-    { "csvColumn": "StorageLocation", "raveCaveField": null, "confidence": "high" }
-  ],
-  "detectedSource": "cellartracker" | "vivino" | "generic",
-  "notes": "Brief notes about the detected format"
-}`;
+      const fieldList = IMPORTABLE_FIELDS
+        .map((f) => `- ${f}`)
+        .join("\n");
+      const prompt = [
+        "You are mapping columns from a wine CSV " +
+        "to a wine database schema.",
+        "",
+        "Target fields:",
+        fieldList,
+        "",
+        "CSV data (headers + first 3 rows):",
+        "",
+        sampleTable,
+        "",
+        "For each CSV column, determine which " +
+        "target field it maps to (or null to skip).",
+        "Rate confidence: high, medium, or low.",
+        "",
+        "Common mappings:",
+        "- Wine/Wine Name/Label -> name",
+        "- Winery/Producer/Estate -> producer",
+        "- Varietal/Grape/Variety -> cepage",
+        "- Color/Wine Type/Category -> type " +
+        "(Red/White/Rosé/Sparkling/Dessert/Fortified)",
+        "- Size/Bottle Size/Format -> format",
+        "- Qty/Quantity/Bottles/Count -> quantity",
+        "- BeginConsume/Drink From -> drinkFrom",
+        "- EndConsume/Drink To/Drink Until -> drinkUntil",
+        "- Drinking Window (range like 2024-2030) " +
+        "-> TWO entries: drinkFrom AND drinkUntil",
+        "- Locale/Country -> country",
+        "- Location -> skip (storage, not origin)",
+        "- CT/CT Score/Wine ratings count -> skip",
+        "- Average rating -> vivinoRating (Vivino)",
+        "- Price/Cost/Valuation -> price",
+        "- My Score/My Rating/Your rating -> myRating",
+        "- Notes/Tasting Notes/Your review -> tastingNotes",
+        "- Private Note/My Notes -> personalNote",
+        "- Appellation/Sub-Region -> appellation",
+        "- Link to wine -> linkToWine",
+        "- Label image -> imageUrl",
+        "- Scan date/Wishlisted date -> skip",
+        "",
+        "IMPORTANT: If a column has date ranges " +
+        "like 2024-2030, map as TWO entries: " +
+        "drinkFrom AND drinkUntil.",
+        "",
+        "Respond ONLY with valid JSON, no backticks:",
+        "{",
+        "  \"mappings\": [",
+        "    { \"csvColumn\": \"Wine\", " +
+        "\"raveCaveField\": \"name\", " +
+        "\"confidence\": \"high\" },",
+        "    { \"csvColumn\": \"Loc\", " +
+        "\"raveCaveField\": null, " +
+        "\"confidence\": \"high\" }",
+        "  ],",
+        "  \"detectedSource\": " +
+        "\"cellartracker\"|\"vivino\"|\"generic\",",
+        "  \"notes\": \"Brief notes\"",
+        "}",
+      ].join("\n");
 
       const {GoogleGenAI} = await import("@google/genai");
       const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY.value()});
@@ -395,7 +411,7 @@ export const commitImport = onRequest(
         for (const m of activeMapping) {
           const rawValue = row[m.csvColumn]?.trim() || "";
           if (!rawValue) continue;
-          const field = m.raveCaveField!;
+          const field = m.raveCaveField as string;
           wine[field] = coerceValue(field, rawValue);
         }
 
@@ -500,6 +516,9 @@ export const commitImport = onRequest(
 
 /**
  * Coerce CSV string values to correct types for Wine fields.
+ * @param {string} field The target Wine field name.
+ * @param {string} raw The raw CSV string value.
+ * @return {unknown} The coerced value.
  */
 function coerceValue(field: string, raw: string): unknown {
   switch (field) {
@@ -582,6 +601,9 @@ function coerceValue(field: string, raw: string): unknown {
 /**
  * Find a duplicate in existing wines.
  * Match: normalised producer + name + vintage.
+ * @param {Record<string, unknown>} wine The imported wine.
+ * @param {Record<string, unknown>[]} existing Existing cellar wines.
+ * @return {{ id: string } | null} The duplicate match or null.
  */
 function findDuplicate(
   wine: Record<string, unknown>,
