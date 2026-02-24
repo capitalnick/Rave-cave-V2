@@ -17,9 +17,11 @@ function extractDriveFileId(url: string): string | null {
   return null;
 }
 
+import { auth } from '@/firebase';
+
 /**
  * Convert Google Drive URLs to embeddable thumbnail URLs.
- * Strip revoked tokens from legacy Firebase Storage URLs.
+ * Rewrite legacy Firebase Storage label URLs to the correct user-scoped path.
  */
 export function getDirectImageUrl(url: string | undefined): string | undefined {
   if (!url) return url;
@@ -31,15 +33,16 @@ export function getDirectImageUrl(url: string | undefined): string | undefined {
     }
   }
 
-  // Legacy Firebase Storage URLs at /labels/ (pre user-scoping) have revoked
-  // tokens. Strip the token so Firebase falls back to rule-based access.
+  // Legacy Firebase Storage URLs point to labels/{id}.jpg but files live at
+  // users/{uid}/labels/{id}.jpg. Rewrite the path and drop the stale token.
   if (url.includes('/o/labels%2F') && !url.includes('/o/users%2F')) {
-    try {
-      const u = new URL(url);
-      u.searchParams.delete('token');
-      return u.toString();
-    } catch {
-      // URL parse failed — return as-is
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      const fileMatch = url.match(/labels%2F([^?&]+)/);
+      if (fileMatch) {
+        const bucket = url.match(/\/b\/([^/]+)\//)?.[1] || 'rave-cave-prod.firebasestorage.app';
+        return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/users%2F${uid}%2Flabels%2F${fileMatch[1]}?alt=media`;
+      }
     }
   }
 

@@ -6,9 +6,9 @@ service firebase.storage {
       allow read: if true;
     }
 
-    // Label images: authenticated user, JPEG only, max 5MB
+    // Label images: public read (loaded via <img> tags), write requires auth
     match /users/{userId}/labels/{imageFile} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if true;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.size < 5 * 1024 * 1024
