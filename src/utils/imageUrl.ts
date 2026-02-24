@@ -19,7 +19,7 @@ function extractDriveFileId(url: string): string | null {
 
 /**
  * Convert Google Drive URLs to embeddable thumbnail URLs.
- * The /thumbnail endpoint is the most reliable for cross-origin display.
+ * Strip revoked tokens from legacy Firebase Storage URLs.
  */
 export function getDirectImageUrl(url: string | undefined): string | undefined {
   if (!url) return url;
@@ -28,6 +28,18 @@ export function getDirectImageUrl(url: string | undefined): string | undefined {
     const fileId = extractDriveFileId(url);
     if (fileId) {
       return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+    }
+  }
+
+  // Legacy Firebase Storage URLs at /labels/ (pre user-scoping) have revoked
+  // tokens. Strip the token so Firebase falls back to rule-based access.
+  if (url.includes('/o/labels%2F') && !url.includes('/o/users%2F')) {
+    try {
+      const u = new URL(url);
+      u.searchParams.delete('token');
+      return u.toString();
+    } catch {
+      // URL parse failed — return as-is
     }
   }
 

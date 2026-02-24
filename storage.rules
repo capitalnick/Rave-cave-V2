@@ -1,6 +1,11 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Legacy label images (pre user-scoping) — public read so old URLs work
+    match /labels/{imageFile} {
+      allow read: if true;
+    }
+
     // Label images: authenticated user, JPEG only, max 5MB
     match /users/{userId}/labels/{imageFile} {
       allow read: if request.auth != null && request.auth.uid == userId;
