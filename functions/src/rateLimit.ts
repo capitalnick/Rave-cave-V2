@@ -68,4 +68,6 @@ export const RATE_LIMITS = {
   tts: {maxRequests: 30, windowSeconds: 3600},
   backfill: {maxRequests: 5, windowSeconds: 3600},
   checkout: {maxRequests: 10, windowSeconds: 3600},
+  mapImportFields: {maxRequests: 10, windowSeconds: 3600},
+  commitImport: {maxRequests: 5, windowSeconds: 3600},
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, Download, Trash2, Crown, CreditCard } from 'lucide-react';
+import { LogOut, Download, Upload, Trash2, Crown, CreditCard } from 'lucide-react';
 import { collection, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import { ref, listAll, deleteObject } from 'firebase/storage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -27,6 +27,7 @@ import { CONFIG } from '@/constants';
 import type { Wine } from '@/types';
 import { formatGrapeDisplay } from '@/utils/grapeUtils';
 import { trackEvent } from '@/config/analytics';
+import ImportFlow from '@/components/import/ImportFlow';
 
 // ── Constants ──
 
@@ -89,6 +90,7 @@ const SettingsPage: React.FC = () => {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [manageLoading, setManageLoading] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   // Show success toast when returning from Stripe Checkout
   useEffect(() => {
@@ -429,6 +431,13 @@ const SettingsPage: React.FC = () => {
       <Heading scale="subhead" className="mb-2">Data</Heading>
       <Card elevation="flat">
         <Row
+          title="Import Wines"
+          subtitle="From CellarTracker, Vivino, or CSV"
+          leadingIcon={<Upload size={20} />}
+          trailingAction="chevron"
+          onClick={() => setShowImport(true)}
+        />
+        <Row
           title="Export Cellar (CSV)"
           leadingIcon={<Download size={20} />}
           trailingAction="chevron"
@@ -508,6 +517,8 @@ const SettingsPage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showImport && <ImportFlow onClose={() => setShowImport(false)} />}
     </div>
   );
 };

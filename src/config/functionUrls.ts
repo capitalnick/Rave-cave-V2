@@ -12,4 +12,6 @@ export const FUNCTION_URLS = {
   createCheckout: `${BASE}/createCheckoutSession`,
   createPortal: `${BASE}/createPortalSession`,
   cancelSubscription: `${BASE}/cancelSubscription`,
+  mapImportFields: `${BASE}/mapImportFields`,
+  commitImport: `${BASE}/commitImport`,
 } as const;
