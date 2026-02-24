@@ -12,6 +12,7 @@ import { CONFIG } from '@/constants';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
 import type { RemyWineData } from '@/utils/remyParser';
+import { trackEvent } from '@/config/analytics';
 
 const CONTEXT_PREFIX = '[RECOMMEND_CONTEXT]';
 const WINE_BRIEF_PREFIX = '[WINE_BRIEF_CONTEXT]';
@@ -211,6 +212,7 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
 
   const handleSend = () => {
     if (input.trim()) {
+      trackEvent('remy_message_sent');
       sendMessage(input.trim());
       setInput('');
       setShowFollowUpChips(false);

@@ -3,6 +3,7 @@ import { Camera, Database, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import WineIcon from '@/components/icons/WineIcon';
 import { Heading, Body, Button, Card } from '@/components/rc';
+import { trackEvent } from '@/config/analytics';
 
 interface OnboardingFlowProps {
   displayName: string | null;
@@ -33,11 +34,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ displayName, onComplete
   const firstName = displayName?.split(' ')[0] || null;
 
   const handleScanFirst = () => {
+    trackEvent('onboarding_completed');
     onComplete();
     onScanFirst();
   };
 
   const handleSkip = () => {
+    trackEvent('onboarding_completed');
     onComplete();
   };
 

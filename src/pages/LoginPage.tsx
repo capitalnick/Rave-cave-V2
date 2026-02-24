@@ -162,6 +162,14 @@ export default function LoginPage() {
               onClick={toggleMode}
             />
           </div>
+
+          {/* Learn more */}
+          <a
+            href="/welcome"
+            className="font-mono text-[11px] uppercase tracking-wider text-[var(--rc-text-secondary)] hover:text-[var(--rc-text-primary)] transition-colors"
+          >
+            Learn more about Rave Cave &rarr;
+          </a>
         </div>
       </Card>
     </div>

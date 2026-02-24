@@ -9,6 +9,7 @@ import { ProdWriteGuard } from '@/components/ProdWriteGuard';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import FilterOverlay from '@/components/FilterOverlay';
 import { useRailExpanded } from '@/hooks/useRailExpanded';
+import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -63,6 +64,8 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const isRailExpanded = useRailExpanded();
   const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
+  const { user } = useAuth();
+  const avatarInitial = (user?.displayName?.[0] || user?.email?.[0] || '?').toUpperCase();
 
   const getTabLabel = (item: typeof navItems[0]) => {
     if (item.id === 'remy' && !isPremium) return 'RÉMY ✦';
@@ -215,7 +218,31 @@ const Layout: React.FC<LayoutProps> = ({
         className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
-        <EnvBadge className="fixed top-2 right-2 z-40 md:hidden" />
+        {/* Mobile top-right: avatar → settings */}
+        <div className="fixed top-2 right-2 z-40 md:hidden flex items-center gap-2">
+          <EnvBadge />
+          <button
+            onClick={() => onTabChange('settings')}
+            className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-1 ring-white/10 active:scale-90 transition-transform"
+            aria-label="Settings"
+          >
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt="Settings"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center font-['Satoshi'] font-bold text-sm"
+                style={{ backgroundColor: 'var(--rc-accent-pink)', color: 'var(--rc-ink-on-accent)' }}
+              >
+                {avatarInitial}
+              </div>
+            )}
+          </button>
+        </div>
         {subscriptionStatus === 'past_due' && (
           <div
             className="px-4 py-2 text-center text-sm font-medium shrink-0"

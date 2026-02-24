@@ -2,10 +2,12 @@ import './styles/index.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { initSentry } from '@/config/sentry';
+import { initAnalytics } from '@/config/analytics';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import App from './App';
 
 initSentry();
+initAnalytics();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Rave Cave — Your Personal AI Sommelier</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="theme-color" content="#0A0A0A">
+    <meta name="description" content="AI-powered wine cellar management. Scan labels, track bottles, get personalised recommendations from your AI sommelier.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Rave Cave — Your Personal AI Sommelier">
+    <meta property="og:description" content="AI-powered wine cellar management. Scan labels, track bottles, get personalised recommendations.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ravecave.app/welcome">
+    <meta property="og:image" content="https://ravecave.app/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Rave Cave — Your Personal AI Sommelier">
+    <meta name="twitter:description" content="AI-powered wine cellar management. Scan labels, track bottles, get personalised recommendations.">
+    <meta name="twitter:image" content="https://ravecave.app/og-image.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0A0A0A;
+            --text-primary: #FAFAF9;
+            --text-secondary: #A3A3A3;
+            --accent-pink: #FF006E;
+            --accent-acid: #C7FF00;
+            --card-border: rgba(255,255,255,0.08);
+            --font-display: 'Satoshi', sans-serif;
+            --font-body: 'Instrument Sans', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ── Sticky Nav ── */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10,10,10,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+        }
+        .nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 18px;
+            letter-spacing: 0.04em;
+        }
+        .nav-signin {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            transition: color 0.15s;
+        }
+        .nav-signin:hover { color: var(--text-primary); }
+
+        /* ── Hero ── */
+        .hero {
+            padding: 96px 0 80px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: clamp(48px, 8vw, 80px);
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+        }
+        .hero h1 span { color: var(--accent-pink); }
+        .hero-sub {
+            margin-top: 20px;
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero-cta {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 16px 40px;
+            background: var(--accent-pink);
+            color: #fff;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 12px;
+            transition: opacity 0.15s;
+        }
+        .hero-cta:hover { opacity: 0.9; }
+        .hero-note {
+            margin-top: 16px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ── Feature Grid ── */
+        .features {
+            padding: 80px 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .feature-card {
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 32px;
+        }
+        .feature-card svg {
+            width: 32px;
+            height: 32px;
+            color: var(--accent-pink);
+            margin-bottom: 20px;
+        }
+        .feature-card h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ── Rémy Section ── */
+        .remy {
+            padding: 80px 0;
+            text-align: center;
+        }
+        .remy h2 {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: clamp(32px, 5vw, 48px);
+        }
+        .remy h2 span { color: var(--accent-pink); }
+        .remy p {
+            margin-top: 16px;
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .remy-cta {
+            display: inline-block;
+            margin-top: 32px;
+            padding: 14px 36px;
+            border: 2px solid var(--accent-pink);
+            color: var(--accent-pink);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 15px;
+            border-radius: 12px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .remy-cta:hover {
+            background: var(--accent-pink);
+            color: #fff;
+        }
+        .remy-note {
+            margin-top: 12px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ── Pricing ── */
+        .pricing {
+            padding: 80px 0;
+        }
+        .pricing h2 {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: clamp(32px, 5vw, 48px);
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        .pricing-card {
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+        }
+        .pricing-card.highlighted {
+            border-color: var(--accent-pink);
+        }
+        .pricing-card .tier-name {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        .pricing-card .tier-price {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 36px;
+            margin-bottom: 4px;
+        }
+        .pricing-card .tier-period {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        .pricing-card ul {
+            list-style: none;
+            flex: 1;
+        }
+        .pricing-card li {
+            position: relative;
+            padding-left: 24px;
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .pricing-card li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 7px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-pink);
+        }
+        .pricing-note {
+            margin-top: 32px;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            border-top: 1px solid var(--card-border);
+            padding: 32px 0;
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .footer a {
+            color: var(--text-secondary);
+            transition: color 0.15s;
+        }
+        .footer a:hover { color: var(--text-primary); }
+        .footer-links { display: flex; justify-content: center; gap: 24px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero { padding: 64px 0 56px; }
+            .features, .remy, .pricing { padding: 56px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <div class="container">
+            <a href="/welcome" class="nav-brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF006E" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter">
+                    <path d="M9 2h6v7c0 3.5-2.5 6-6 6s-6-2.5-6-6V2m0 13h12M7 22h10"/>
+                </svg>
+                RAVE CAVE
+            </a>
+            <a href="/" class="nav-signin">Sign In &rarr;</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <h1>YOUR PERSONAL<br><span>AI SOMMELIER</span></h1>
+            <p class="hero-sub">Scan wine labels. Build your cellar. Get recommendations tailored to every occasion.</p>
+            <a href="/" class="hero-cta">Get Started — It's Free</a>
+            <p class="hero-note">No credit card required &middot; 50 bottles free</p>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                        <circle cx="12" cy="13" r="3"/>
+                    </svg>
+                    <h3>Scan a Label</h3>
+                    <p>Point your camera at any bottle. AI extracts producer, vintage, region, and more.</p>
+                </div>
+                <div class="feature-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                        <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+                        <path d="M3 12a9 3 0 0 0 18 0"/>
+                    </svg>
+                    <h3>Build Your Cellar</h3>
+                    <p>Track every bottle — drinking windows, valuations, tasting notes. See your collection at a glance.</p>
+                </div>
+                <div class="feature-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                        <path d="M5 3v4"/>
+                        <path d="M19 17v4"/>
+                        <path d="M3 5h4"/>
+                        <path d="M17 19h4"/>
+                    </svg>
+                    <h3>Get Recommendations</h3>
+                    <p>Hosting dinner? Tell us the occasion, the food, and the vibe. We'll pick the perfect bottle.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rémy -->
+    <section class="remy">
+        <div class="container">
+            <h2>Meet <span>R&eacute;my</span></h2>
+            <p>Your AI sommelier who knows every bottle in your cellar.</p>
+            <a href="/" class="remy-cta">Unlock R&eacute;my — $6.99/month</a>
+            <p class="remy-note">Part of Rave Cave Reserve</p>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing">
+        <div class="container">
+            <h2>Simple Pricing</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="tier-name">Free</div>
+                    <div class="tier-price">$0</div>
+                    <div class="tier-period">forever</div>
+                    <ul>
+                        <li>Up to 50 bottles</li>
+                        <li>Label scanning</li>
+                        <li>Cellar management</li>
+                        <li>Drinking windows &amp; valuations</li>
+                        <li>Occasion-based recommendations</li>
+                        <li>Wine list analysis</li>
+                        <li>CSV export</li>
+                    </ul>
+                </div>
+                <div class="pricing-card highlighted">
+                    <div class="tier-name">Reserve</div>
+                    <div class="tier-price">$6.99</div>
+                    <div class="tier-period">AUD / month</div>
+                    <ul>
+                        <li>Everything in Free, plus:</li>
+                        <li>Unlimited cellar</li>
+                        <li>R&eacute;my AI sommelier</li>
+                        <li>Personalised food pairings</li>
+                        <li>Expert tasting notes</li>
+                        <li>Cellar advice on demand</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="pricing-note">Cancel anytime &middot; Powered by Stripe</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <span>&copy; 2026 Rave Cave</span>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

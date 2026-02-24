@@ -26,6 +26,7 @@ import {
 import { CONFIG } from '@/constants';
 import type { Wine } from '@/types';
 import { formatGrapeDisplay } from '@/utils/grapeUtils';
+import { trackEvent } from '@/config/analytics';
 
 // ── Constants ──
 
@@ -93,6 +94,7 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('upgrade') === 'success') {
+      trackEvent('upgrade_completed');
       showToast({ tone: 'success', message: 'Welcome to Premium! Your upgrade is active.' });
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -148,6 +150,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleExport = () => {
+    trackEvent('csv_exported');
     exportCellarCSV(inventory);
     showToast({ tone: 'neutral', message: 'Cellar exported' });
   };

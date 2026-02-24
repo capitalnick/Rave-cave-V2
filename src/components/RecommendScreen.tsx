@@ -13,6 +13,7 @@ import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListServ
 import { useWineListCapture } from '@/hooks/useWineListCapture';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
 import CrowdShortfallError from './recommend/CrowdShortfallError';
+import { trackEvent } from '@/config/analytics';
 import type {
   OccasionId,
   OccasionContext,
@@ -186,6 +187,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
   }, []);
 
   const handleFormSubmit = useCallback((context: OccasionContext) => {
+    trackEvent('recommend_requested', { occasion: selectedOccasion });
     setOccasionContext(context);
     setError(null);
     setRecommendations([]);

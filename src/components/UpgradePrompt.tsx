@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import WineIcon from '@/components/icons/WineIcon';
 import { Card, Heading, Body, MonoLabel, Button, InlineMessage } from '@/components/rc';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
+import { trackEvent } from '@/config/analytics';
 
 interface UpgradePromptProps {
   variant: 'fullscreen' | 'modal';
@@ -29,7 +30,12 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ variant, feature, onDismi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    trackEvent('upgrade_prompt_shown', { variant, feature });
+  }, [variant, feature]);
+
   const handleUpgrade = async () => {
+    trackEvent('upgrade_initiated', { feature });
     setLoading(true);
     setError(null);
     try {

@@ -27,6 +27,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { useIsMobile } from '@/components/ui/use-mobile';
 import { hapticHeavy } from '@/utils/haptics';
+import { trackEvent } from '@/config/analytics';
 
 // ── State Machine ──
 
@@ -251,6 +252,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
 
   // Camera capture → reviewing stage (quality gate)
   const handleCameraCapture = useCallback((file: File) => {
+    trackEvent('scan_started');
     const previewUrl = createPreviewUrl(file);
     dispatch({ type: 'CAPTURE', file, previewUrl });
   }, []);
@@ -380,6 +382,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       }
 
       dispatch({ type: 'COMMIT_SUCCESS' });
+      trackEvent('wine_committed');
       setCommitStage('success');
 
       // 4. Show toast with undo (10s window)

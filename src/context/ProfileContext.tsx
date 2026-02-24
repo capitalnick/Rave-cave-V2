@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo, useCallback } 
 import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp, type Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { useAuth } from '@/context/AuthContext';
+import { trackEvent } from '@/config/analytics';
 
 // ── Types ──
 
@@ -93,6 +94,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           onboardingComplete: DEFAULT_PROFILE.onboardingComplete,
           createdAt: serverTimestamp(),
         }, { merge: true });
+        trackEvent('sign_up');
       }
       setProfileLoading(false);
     });

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { trackEvent } from '@/config/analytics';
 import { useNavigate } from '@tanstack/react-router';
 import { inventoryService } from '@/services/inventoryService';
 import { deleteLabelImage } from '@/services/storageService';
@@ -265,6 +266,19 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isPremium) return true;
     return totalBottles + count <= CONFIG.FREE_TIER.MAX_BOTTLES;
   }, [isPremium, totalBottles]);
+
+  // ── Cellar milestone tracking ──
+  const prevTotalRef = useRef(totalBottles);
+  useEffect(() => {
+    const prev = prevTotalRef.current;
+    prevTotalRef.current = totalBottles;
+    const milestones = [3, 10, 50];
+    for (const m of milestones) {
+      if (prev < m && totalBottles >= m) {
+        trackEvent('cellar_milestone', { milestone: m, total: totalBottles });
+      }
+    }
+  }, [totalBottles]);
 
   // ── Wine update handler ──
   const handleUpdate = useCallback(async (wine: Wine, key: string, value: string) => {
