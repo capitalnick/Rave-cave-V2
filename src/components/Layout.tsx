@@ -219,11 +219,11 @@ const Layout: React.FC<LayoutProps> = ({
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
         {/* Mobile top-right: avatar → settings */}
-        <div className="fixed top-2 right-2 z-40 md:hidden flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-40 md:hidden flex items-center gap-2">
           <EnvBadge />
           <button
             onClick={() => onTabChange('settings')}
-            className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-1 ring-white/10 active:scale-90 transition-transform"
+            className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[var(--rc-accent-pink)] active:scale-90 transition-transform"
             aria-label="Settings"
           >
             {user?.photoURL ? (
