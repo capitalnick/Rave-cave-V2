@@ -37,7 +37,8 @@ const wineTypeToHeadingColour = {
 const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) => {
   const rcProps = toRCWineCardProps(wine);
   const indicatorType = rcProps.type as WineType;
-  const displayImageUrl = getDirectImageUrl(wine.resolvedImageUrl || wine.imageUrl);
+  // Grid view: prefer thumbnail for fast loading; fall back to full image
+  const displayImageUrl = getDirectImageUrl(wine.thumbnailUrl || wine.resolvedImageUrl || wine.imageUrl);
   const stampRotation = React.useMemo(() => Math.random() * 6 - 3, []);
   const vintageColour = wineTypeToHeadingColour[rcProps.type];
 

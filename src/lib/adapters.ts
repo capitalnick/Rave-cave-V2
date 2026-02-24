@@ -49,6 +49,6 @@ export function toRCWineCardProps(wine: Wine) {
     vintage: String(wine.vintage),
     type: toRCWineType(wine.type),
     maturity: computeMaturity(wine.drinkFrom, wine.drinkUntil),
-    image: wine.resolvedImageUrl || wine.imageUrl || '',
+    image: wine.thumbnailUrl || wine.resolvedImageUrl || wine.imageUrl || '',
   };
 }

@@ -85,6 +85,21 @@ export async function compressImageForStorage(file: File | Blob): Promise<Blob> 
 }
 
 /**
+ * Compress an image for thumbnail upload: 400px max, JPEG quality 0.7.
+ * Returns a Blob ready for upload (~30-60KB).
+ */
+export async function compressImageForThumbnail(file: File | Blob): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const { blob } = await resizeToCanvas(img, 400, 0.7, 'image/jpeg');
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
  * Create a preview URL from a File or Blob. Caller is responsible for revoking.
  */
 export function createPreviewUrl(file: File | Blob): string {

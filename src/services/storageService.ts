@@ -3,28 +3,45 @@ import { storage } from '@/firebase';
 import { requireUid } from '@/utils/authHelpers';
 
 /**
- * Upload a compressed label image to Firebase Storage.
- * Path: labels/{wineId}.jpg
+ * Upload a compressed label image + thumbnail to Firebase Storage.
+ * Full image: users/{uid}/labels/{wineId}.jpg
+ * Thumbnail:  users/{uid}/labels/{wineId}_thumb.jpg
  */
-export async function uploadLabelImage(blob: Blob, wineId: string): Promise<string> {
+export async function uploadLabelImage(
+  blob: Blob,
+  thumbnailBlob: Blob,
+  wineId: string,
+): Promise<{ imageUrl: string; thumbnailUrl: string }> {
   const uid = requireUid();
-  const storageRef = ref(storage, `users/${uid}/labels/${wineId}.jpg`);
-  await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
-  return getDownloadURL(storageRef);
+  const fullRef = ref(storage, `users/${uid}/labels/${wineId}.jpg`);
+  const thumbRef = ref(storage, `users/${uid}/labels/${wineId}_thumb.jpg`);
+
+  await Promise.all([
+    uploadBytes(fullRef, blob, { contentType: 'image/jpeg' }),
+    uploadBytes(thumbRef, thumbnailBlob, { contentType: 'image/jpeg' }),
+  ]);
+
+  const [imageUrl, thumbnailUrl] = await Promise.all([
+    getDownloadURL(fullRef),
+    getDownloadURL(thumbRef),
+  ]);
+
+  return { imageUrl, thumbnailUrl };
 }
 
 /**
- * Delete a label image from Firebase Storage (used for undo).
+ * Delete a label image and its thumbnail from Firebase Storage (used for undo).
  */
 export async function deleteLabelImage(wineId: string): Promise<void> {
   const uid = requireUid();
-  const storageRef = ref(storage, `users/${uid}/labels/${wineId}.jpg`);
-  try {
-    await deleteObject(storageRef);
-  } catch (e: any) {
-    // Ignore not-found errors (image may not have been uploaded yet)
-    if (e?.code !== 'storage/object-not-found') throw e;
-  }
+  const fullRef = ref(storage, `users/${uid}/labels/${wineId}.jpg`);
+  const thumbRef = ref(storage, `users/${uid}/labels/${wineId}_thumb.jpg`);
+  const safeDelete = async (r: typeof fullRef) => {
+    try { await deleteObject(r); } catch (e: any) {
+      if (e?.code !== 'storage/object-not-found') throw e;
+    }
+  };
+  await Promise.all([safeDelete(fullRef), safeDelete(thumbRef)]);
 }
 
 /**

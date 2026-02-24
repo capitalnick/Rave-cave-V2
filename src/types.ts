@@ -32,6 +32,7 @@ export interface Wine {
   personalNote?: string;
   linkToWine?: string;
   imageUrl?: string;
+  thumbnailUrl?: string;
   resolvedImageUrl?: string;
   price: number;
   format: string;
@@ -399,6 +400,7 @@ export const FIRESTORE_FIELD_MAP: Record<string, string> = {
   personalNote: 'Personal Note',
   linkToWine: 'Link to wine',
   imageUrl: 'Label image',
+  thumbnailUrl: 'Thumbnail URL',
   price: 'Bottle Price',
   format: 'Format',
   processingStatus: 'Processing Status',

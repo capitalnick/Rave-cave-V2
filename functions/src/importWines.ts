@@ -36,6 +36,7 @@ const FIRESTORE_FIELD_MAP: Record<string, string> = {
   personalNote: "Personal Note",
   linkToWine: "Link to wine",
   imageUrl: "Label image",
+  thumbnailUrl: "Thumbnail URL",
   price: "Bottle Price",
   format: "Format",
   processingStatus: "Processing Status",

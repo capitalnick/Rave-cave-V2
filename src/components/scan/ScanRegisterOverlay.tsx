@@ -9,7 +9,7 @@ import DuplicateAlert from './DuplicateAlert';
 import SessionHeader from './SessionHeader';
 import DiscardConfirmation from './DiscardConfirmation';
 import type { Wine, ScanStage, WineDraft, ExtractionResult, DraftImage, DuplicateCandidate, CommitStage, ExtractionErrorCode, WineBriefContext } from '@/types';
-import { compressImageForExtraction, compressImageForStorage, createPreviewUrl } from '@/utils/imageCompression';
+import { compressImageForExtraction, compressImageForStorage, compressImageForThumbnail, createPreviewUrl } from '@/utils/imageCompression';
 import { extractWineFromLabel, ExtractionError } from '@/services/extractionService';
 import { analyseImageQuality } from '@/utils/imageQuality';
 import { findDuplicates } from '@/services/duplicateService';
@@ -360,12 +360,17 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       const docId = await inventoryService.addWine(wineData);
       if (!docId) throw new Error('Failed to save to cellar');
 
-      // 3. Upload image in background (non-blocking)
+      // 3. Upload image + thumbnail in background (non-blocking)
       if (state.rawFile) {
         const rawFile = state.rawFile;
-        compressImageForStorage(rawFile)
-          .then((blob) => uploadLabelImage(blob, docId))
-          .then((url) => inventoryService.updateField(docId, 'imageUrl', url))
+        Promise.all([
+          compressImageForStorage(rawFile),
+          compressImageForThumbnail(rawFile),
+        ])
+          .then(([fullBlob, thumbBlob]) => uploadLabelImage(fullBlob, thumbBlob, docId))
+          .then(({ imageUrl, thumbnailUrl }) =>
+            inventoryService.updateFields(docId, { imageUrl, thumbnailUrl })
+          )
           .catch((err) => console.error('Image upload failed (non-blocking):', err));
       }
 
