@@ -12,6 +12,51 @@ const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 const FREE_TIER_MAX_BOTTLES = 50;
 
+/**
+ * Maps camelCase Wine fields to their Title Case Firestore field names.
+ * Must stay in sync with FIRESTORE_FIELD_MAP in src/types.ts.
+ */
+const FIRESTORE_FIELD_MAP: Record<string, string> = {
+  producer: "Producer",
+  name: "Wine name",
+  vintage: "Vintage",
+  type: "Wine type",
+  cepage: "Cépage",
+  grapeVarieties: "Grape Varieties",
+  appellation: "Appellation",
+  region: "Region",
+  country: "Country",
+  quantity: "Quantity",
+  drinkFrom: "Drink From",
+  drinkUntil: "Drink Until",
+  maturity: "Maturity",
+  tastingNotes: "Tasting Notes",
+  myRating: "My Rating",
+  vivinoRating: "Vivino Rating",
+  personalNote: "Personal Note",
+  linkToWine: "Link to wine",
+  imageUrl: "Label image",
+  price: "Bottle Price",
+  format: "Format",
+  processingStatus: "Processing Status",
+};
+
+/**
+ * Convert a camelCase wine object to Title Case Firestore doc.
+ * @param {Record<string, unknown>} wine The wine with camelCase keys.
+ * @return {Record<string, unknown>} Doc with Title Case keys.
+ */
+function wineToFirestoreDoc(
+  wine: Record<string, unknown>
+): Record<string, unknown> {
+  const doc: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(wine)) {
+    const firestoreKey = FIRESTORE_FIELD_MAP[key] || key;
+    doc[firestoreKey] = value;
+  }
+  return doc;
+}
+
 // Rave Cave Wine fields that can be imported
 const IMPORTABLE_FIELDS = [
   "producer",
@@ -382,7 +427,8 @@ export const commitImport = onRequest(
 
       const winesSnap = await db.collection(`users/${uid}/wines`).get();
       const currentBottles = winesSnap.docs.reduce((sum, doc) => {
-        return sum + (doc.data().quantity || 0);
+        const d = doc.data();
+        return sum + (d["Quantity"] || d.quantity || 0);
       }, 0);
 
       let importLimit: number;
@@ -422,6 +468,13 @@ export const commitImport = onRequest(
             reason: "Missing producer and wine name",
           });
           continue;
+        }
+
+        // Ensure producer is always set
+        if (!wine.producer && wine.name) {
+          wine.producer = wine.name;
+        } else if (wine.producer && !wine.name) {
+          wine.name = wine.producer;
         }
 
         // Defaults for missing fields
@@ -471,7 +524,7 @@ export const commitImport = onRequest(
         for (const wine of chunk) {
           const docRef = db.collection(`users/${uid}/wines`).doc();
           batch.set(docRef, {
-            ...wine,
+            ...wineToFirestoreDoc(wine),
             createdAt: FieldValue.serverTimestamp(),
           });
           importedCount++;
@@ -488,7 +541,7 @@ export const commitImport = onRequest(
         for (const update of chunk) {
           const docRef = db.doc(`users/${uid}/wines/${update.docId}`);
           batch.update(docRef, {
-            quantity: FieldValue.increment(update.addQuantity),
+            "Quantity": FieldValue.increment(update.addQuantity),
           });
         }
 
@@ -617,9 +670,12 @@ function findDuplicate(
   const wVintage = (wine.vintage as number) || 0;
 
   for (const e of existing) {
-    const eProducer = normalise(e.producer);
-    const eName = normalise(e.name);
-    const eVintage = (e.vintage as number) || 0;
+    // Existing docs use Title Case keys from Firestore
+    const eProducer = normalise(e["Producer"] || e.producer);
+    const eName = normalise(e["Wine name"] || e.name);
+    const eVintage = (
+      (e["Vintage"] as number) || (e.vintage as number) || 0
+    );
 
     // Exact match on all three
     if (

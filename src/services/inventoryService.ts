@@ -21,6 +21,9 @@ function docToWine(docId: string, data: Record<string, any>): Wine {
     const firestoreKey = FIRESTORE_FIELD_MAP[key];
     wine[key] = data[firestoreKey];
   });
+  // Fallback: ensure producer is always set (imported wines may only have name)
+  if (!wine.producer && wine.name) wine.producer = wine.name;
+  if (wine.producer && !wine.name) wine.name = wine.producer;
   // Fallback: legacy docs may have 'Cépage' / 'Blend %' instead of 'Grape Varieties'
   if (!wine.grapeVarieties || !Array.isArray(wine.grapeVarieties) || wine.grapeVarieties.length === 0) {
     wine.grapeVarieties = migrateLegacyFields(data['Cépage'], data['Blend %']);
@@ -41,12 +44,12 @@ export const inventoryService = {
   getInventory: async (): Promise<Wine[]> => {
     const winesRef = userWinesCollection();
     const snapshot = await getDocs(winesRef);
-    return snapshot.docs.map(d => docToWine(d.id, d.data())).filter(w => !!w.producer);
+    return snapshot.docs.map(d => docToWine(d.id, d.data())).filter(w => !!(w.producer || w.name));
   },
 
   onInventoryChange: (callback: (wines: Wine[]) => void): Unsubscribe => {
     return onSnapshot(userWinesCollection(), (snap) => {
-      callback(snap.docs.map(d => docToWine(d.id, d.data())).filter(w => !!w.producer));
+      callback(snap.docs.map(d => docToWine(d.id, d.data())).filter(w => !!(w.producer || w.name)));
     });
   },
 
