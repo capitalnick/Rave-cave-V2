@@ -36,6 +36,8 @@ const PROTECTED_FIELDS = [
   "subscriptionId",
   "subscriptionStatus",
   "upgradedAt",
+  "cancelAtPeriodEnd",
+  "cancelAt",
 ];
 
 // ── createCheckoutSession ──
@@ -336,6 +338,8 @@ async function handleCheckoutCompleted(
     subscriptionId: subId,
     subscriptionStatus: "active",
     upgradedAt: FieldValue.serverTimestamp(),
+    cancelAtPeriodEnd: false,
+    cancelAt: null,
   }, {merge: true});
 
   // Reverse mapping: stripeCustomerId -> uid
@@ -363,14 +367,26 @@ async function handleSubscriptionUpdated(
   const tier = premiumStatuses.includes(status) ?
     "premium" : "free";
 
-  const profileRef = db.doc(`users/${uid}/profile/preferences`);
-  await profileRef.set({
+  const cancelAtPeriodEnd =
+    subscription.cancel_at_period_end ?? false;
+  const cancelAtTs = subscription.cancel_at ?? null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const update: Record<string, any> = {
     tier,
     subscriptionStatus: status,
-  }, {merge: true});
+    cancelAtPeriodEnd,
+    cancelAt: cancelAtTs ?
+      new Date(cancelAtTs * 1000).toISOString() :
+      null,
+  };
+
+  const profileRef =
+    db.doc(`users/${uid}/profile/preferences`);
+  await profileRef.set(update, {merge: true});
 
   logger.info("Subscription updated", {
-    uid, status, tier,
+    uid, status, tier, cancelAtPeriodEnd,
   });
 }
 

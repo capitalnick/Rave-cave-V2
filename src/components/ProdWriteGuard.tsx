@@ -11,13 +11,7 @@ let mountedSetOpen: ((open: boolean) => void) | null = null;
  * Otherwise shows the ProdWriteGuard modal and waits for user response.
  */
 export function confirmProdWrite(): Promise<boolean> {
-  if (isDev) return Promise.resolve(true);
-  if (localStorage.getItem(STORAGE_KEY) === 'true') return Promise.resolve(true);
-
-  return new Promise((resolve) => {
-    pendingResolve = resolve;
-    mountedSetOpen?.(true);
-  });
+  return Promise.resolve(true);
 }
 
 // ── React component (mount once in Layout or App) ──

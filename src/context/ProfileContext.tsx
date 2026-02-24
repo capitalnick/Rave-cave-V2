@@ -17,6 +17,8 @@ interface UserProfile {
   subscriptionId: string | null;
   subscriptionStatus: string | null;
   upgradedAt: Timestamp | null;
+  cancelAtPeriodEnd: boolean;
+  cancelAt: string | null;
 }
 
 interface ProfileContextValue {
@@ -37,6 +39,8 @@ const DEFAULT_PROFILE: UserProfile = {
   subscriptionId: null,
   subscriptionStatus: null,
   upgradedAt: null,
+  cancelAtPeriodEnd: false,
+  cancelAt: null,
 };
 
 // ── Context ──
@@ -77,13 +81,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           subscriptionId: data.subscriptionId ?? null,
           subscriptionStatus: data.subscriptionStatus ?? null,
           upgradedAt: data.upgradedAt ?? null,
+          cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
+          cancelAt: data.cancelAt ?? null,
         });
       } else {
         // New user — create default profile doc
+        // Note: tier is omitted here (protected field in Firestore rules)
+        // and defaults to 'free' on read via ?? fallback
         await setDoc(profileRef, {
           currency: DEFAULT_PROFILE.currency,
           onboardingComplete: DEFAULT_PROFILE.onboardingComplete,
-          tier: DEFAULT_PROFILE.tier,
           createdAt: serverTimestamp(),
         }, { merge: true });
       }

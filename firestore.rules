@@ -15,7 +15,8 @@ service cloud.firestore {
                     && !request.resource.data.keys().hasAny([
                          'tier', 'stripeCustomerId',
                          'subscriptionId', 'subscriptionStatus',
-                         'upgradedAt'
+                         'upgradedAt', 'cancelAtPeriodEnd',
+                         'cancelAt'
                        ]);
 
       // Update — block changes to protected fields
@@ -25,7 +26,8 @@ service cloud.firestore {
                         .affectedKeys().hasAny([
                           'tier', 'stripeCustomerId',
                           'subscriptionId', 'subscriptionStatus',
-                          'upgradedAt'
+                          'upgradedAt', 'cancelAtPeriodEnd',
+                          'cancelAt'
                         ]);
     }
 
