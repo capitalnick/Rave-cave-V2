@@ -326,7 +326,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
               <Body className="w-auto mb-2">
                 Upload a CSV file exported from CellarTracker, Vivino, or any spreadsheet.
               </Body>
-              <Body size="small" colour="secondary" className="w-auto mb-6">
+              <Body size="caption" colour="secondary" className="w-auto mb-6">
                 Vivino users: upload <strong>cellar.csv</strong> for your current collection,
                 or <strong>full_wine_list.csv</strong> for everything you've scanned.
               </Body>
@@ -345,7 +345,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
               >
                 <Upload size={32} className="mx-auto mb-4 text-[var(--rc-ink-ghost)]" />
                 <Body className="w-auto mb-1">Drag & drop a .csv file here</Body>
-                <Body size="small" colour="ghost" className="w-auto">or click to browse</Body>
+                <Body size="caption" colour="ghost" className="w-auto">or click to browse</Body>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -379,7 +379,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                 Detected a <strong>{sourceLabel}</strong> export with{' '}
                 <strong>{mappingResult.totalRows}</strong> wines.
               </Body>
-              <Body size="small" colour="secondary" className="w-auto mb-4">
+              <Body size="caption" colour="secondary" className="w-auto mb-4">
                 Review the column mapping below, then continue.
               </Body>
 
@@ -420,7 +420,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
               </div>
 
               {!hasRequiredMapping && (
-                <Body size="small" colour="ghost" className="w-auto text-right mt-2">
+                <Body size="caption" colour="ghost" className="w-auto text-right mt-2">
                   Map at least Producer or Wine Name to continue
                 </Body>
               )}
@@ -458,13 +458,13 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                         )}
                       </div>
                     </div>
-                    <Body size="small" colour="secondary" className="w-auto mt-1">
+                    <Body size="caption" colour="secondary" className="w-auto mt-1">
                       {[wine.cepage, wine.region, wine.country]
                         .filter(Boolean)
                         .join(' \u00B7 ')}
                     </Body>
                     {(wine.price || wine.drinkFrom || wine.drinkUntil) && (
-                      <Body size="small" colour="ghost" className="w-auto mt-0.5">
+                      <Body size="caption" colour="ghost" className="w-auto mt-0.5">
                         {[
                           wine.price ? `$${wine.price}` : null,
                           wine.drinkFrom && wine.drinkUntil
@@ -479,7 +479,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                 ))}
 
                 {previewWines.length === 0 && (
-                  <Body size="small" colour="ghost" className="w-auto text-center py-8">
+                  <Body size="caption" colour="ghost" className="w-auto text-center py-8">
                     No preview available — check your column mapping
                   </Body>
                 )}
@@ -488,11 +488,11 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
               {/* Tier cap info */}
               {!isPremium && blocked > 0 && (
                 <Card elevation="flat" padding="standard" className="mb-4 border border-[var(--rc-accent-pink)]/20">
-                  <Body size="small" className="w-auto">
+                  <Body size="caption" className="w-auto">
                     Free tier: {CONFIG.FREE_TIER.MAX_BOTTLES} bottles max. You have{' '}
                     {totalBottles} bottles now.
                   </Body>
-                  <Body size="small" colour="secondary" className="w-auto mt-1">
+                  <Body size="caption" colour="secondary" className="w-auto mt-1">
                     <strong>{canImport}</strong> of {mappingResult.totalRows} wines will be
                     imported. Upgrade to import all {mappingResult.totalRows}.
                   </Body>
@@ -508,7 +508,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                   disabled={canImport === 0}
                 />
                 {!isPremium && blocked > 0 && (
-                  <Body size="small" colour="ghost" className="w-auto text-center">
+                  <Body size="caption" colour="ghost" className="w-auto text-center">
                     Upgrade to Reserve to import all {mappingResult.totalRows} wines
                   </Body>
                 )}
@@ -521,7 +521,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
             <div className="flex flex-col items-center justify-center py-16 gap-4">
               <Spinner size="lg" />
               <Heading scale="subhead">Importing wines...</Heading>
-              <Body size="small" colour="ghost" className="w-auto">
+              <Body size="caption" colour="ghost" className="w-auto">
                 This may take a minute for large collections.
               </Body>
 
@@ -546,12 +546,12 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                   <strong>{importProgress.imported}</strong> wine{importProgress.imported !== 1 ? 's' : ''} imported
                 </Body>
                 {importProgress.duplicates > 0 && (
-                  <Body size="small" colour="secondary" className="w-auto">
+                  <Body size="caption" colour="secondary" className="w-auto">
                     {importProgress.duplicates} duplicate{importProgress.duplicates !== 1 ? 's' : ''} merged (quantity added)
                   </Body>
                 )}
                 {importProgress.skipped > 0 && (
-                  <Body size="small" colour="secondary" className="w-auto">
+                  <Body size="caption" colour="secondary" className="w-auto">
                     {importProgress.skipped} row{importProgress.skipped !== 1 ? 's' : ''} skipped (missing required data)
                   </Body>
                 )}
@@ -644,7 +644,7 @@ function MappingRow({
 
       {/* Sample values */}
       <div className="w-[140px] shrink-0 truncate hidden sm:block">
-        <Body size="small" colour="ghost" className="w-auto truncate">
+        <Body size="caption" colour="ghost" className="w-auto truncate">
           {mapping.sampleValues.join(', ')}
         </Body>
       </div>
