@@ -57,6 +57,7 @@
   --rc-accent-coral-dark: #E0553A;
   --rc-accent-coral-tint-8: rgba(255, 106, 77, 0.08);
   --rc-accent-coral-tint-12: rgba(255, 106, 77, 0.12);
+  --rc-accent-ink: var(--rc-ink-primary);
   --rc-surface-elevated: #FFFFFF;
   --rc-surface-primary: #FAFAF9;
   --rc-surface-secondary: #F3EFE4;

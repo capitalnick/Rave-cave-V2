@@ -4,7 +4,7 @@ export type TabId = 'cellar' | 'pulse' | 'recommend' | 'remy';
 export type NavId = TabId | 'settings';
 
 export type WineType = 'Red' | 'White' | 'Rosé' | 'Sparkling' | 'Dessert' | 'Fortified';
-export type AccentToken = 'accent-pink' | 'accent-acid' | 'accent-coral';
+export type AccentToken = 'accent-pink' | 'accent-acid' | 'accent-coral' | 'accent-ink';
 export type MaturityStatus = 'Hold' | 'Drink Now' | 'Past Peak';
 
 export interface GrapeVariety {
@@ -101,6 +101,7 @@ export interface Occasion {
   description: string;
   icon: LucideIcon;
   accentToken: AccentToken;
+  order: number;
   featured?: boolean;
   primary?: boolean;
 }

@@ -181,11 +181,11 @@ export const SYSTEM_PROMPT = buildSystemPrompt("Inventory context unavailable.")
 // ── Phase 6: Recommend ──
 
 export const OCCASIONS: Occasion[] = [
-  { id: 'dinner',            title: 'Pair a Meal',            description: 'Perfect wines for your meal',         icon: UtensilsCrossed, accentToken: 'accent-pink' },
-  { id: 'party',             title: 'Wines for a Crowd',      description: 'Crowd-pleasing selections',           icon: PartyPopper,     accentToken: 'accent-acid' },
-  { id: 'gift',              title: 'Choose a Gift',          description: 'Thoughtful wine gifts',               icon: Gift,            accentToken: 'accent-coral' },
-  { id: 'surprise',          title: 'Something Unexpected',   description: 'Let Rémy decide',                     icon: Sparkles,        accentToken: 'accent-acid' },
-  { id: 'analyze_winelist',  title: 'Analyse a Wine List',    description: 'Multi-page scan with deep analysis',  icon: ListChecks,      accentToken: 'accent-pink',  primary: true },
+  { id: 'dinner',            title: 'Pair a Meal',            description: 'Perfect wines for what you\'re cooking',  icon: UtensilsCrossed, accentToken: 'accent-pink',  order: 1 },
+  { id: 'party',             title: 'Wines for a Crowd',      description: 'Crowd-pleasing selections',               icon: PartyPopper,     accentToken: 'accent-acid',  order: 2 },
+  { id: 'gift',              title: 'Choose a Gift',          description: 'Thoughtful wine gifts',                   icon: Gift,            accentToken: 'accent-coral', order: 3 },
+  { id: 'surprise',          title: 'Something Unexpected',   description: 'Let Rémy decide',                         icon: Sparkles,        accentToken: 'accent-ink',   order: 4 },
+  { id: 'analyze_winelist',  title: 'Analyse a Wine List',    description: 'Multi-page scan with deep analysis',      icon: ListChecks,      accentToken: 'accent-pink',  order: 5, primary: true },
 ];
 
 export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; textColor: string }> = {
