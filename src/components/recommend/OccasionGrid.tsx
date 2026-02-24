@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import OccasionCard from './OccasionCard';
 import { OCCASIONS } from '@/constants';
+import { PageHeader } from '@/components/rc';
 import type { OccasionId } from '@/types';
 
 interface OccasionGridProps {
@@ -14,22 +15,12 @@ const OccasionGrid: React.FC<OccasionGridProps> = ({ onSelectOccasion, cellarEmp
   const fullCards = OCCASIONS.filter(o => o.featured || o.primary);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[var(--rc-surface-secondary)]">
+    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
 
-      {/* ── Header ── */}
-      <div className="px-5 pt-4 pb-7 border-b border-[var(--rc-border-subtle)]">
-        <p className="font-[var(--rc-font-mono)] text-[10px] font-normal tracking-[0.14em] uppercase text-[var(--rc-ink-tertiary)] mb-1.5">
-          What's the occasion?
-        </p>
-        <h1 className="font-[var(--rc-font-display)] text-[64px] leading-[0.92] tracking-[-0.01em] text-[var(--rc-ink-primary)]">
-          RECOMMEND
-        </h1>
+      {/* Header */}
+      <div className="p-6 sm:p-10 pb-4">
+        <PageHeader title="RECOMMEND" subtitle="WHAT'S THE OCCASION?" />
       </div>
-
-      {/* ── Section label ── */}
-      <p className="font-[var(--rc-font-mono)] text-[9px] font-bold tracking-[0.18em] uppercase text-[var(--rc-ink-ghost)] px-5 pt-5 pb-3">
-        Choose a path
-      </p>
 
       {/* ── 2-column grid ── */}
       <div
@@ -44,7 +35,6 @@ const OccasionGrid: React.FC<OccasionGridProps> = ({ onSelectOccasion, cellarEmp
               role="listitem"
               className={cn(
                 "border-[var(--rc-border-subtle)]",
-                // Right border on left-column cards only
                 index % 2 === 0 ? "border-r" : ""
               )}
             >

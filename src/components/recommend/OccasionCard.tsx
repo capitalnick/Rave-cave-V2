@@ -34,7 +34,7 @@ const OccasionCard: React.FC<OccasionCardProps> = ({ occasion, onClick, disabled
         // Full-width horizontal layout (featured / primary)
         isFull
           ? "flex-row items-center gap-5 px-5 py-6 min-h-[88px]"
-          : "flex-col px-4 py-5 min-h-[128px]",
+          : "flex-col px-4 py-5 min-h-[128px] h-full",
         // Hover
         "md:hover:bg-[var(--rc-surface-elevated)] transition-colors duration-150",
         // Press
