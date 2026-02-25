@@ -229,8 +229,8 @@ const Layout: React.FC<LayoutProps> = ({
         className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
-        {/* Mobile top-right: avatar → settings */}
-        <div className="fixed top-4 right-4 z-40 md:hidden flex items-center gap-2">
+        {/* Mobile top bar: avatar → settings */}
+        <div className="md:hidden shrink-0 flex items-center justify-end gap-2 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
           <EnvBadge />
           <button
             onClick={() => onTabChange('settings')}
@@ -262,7 +262,9 @@ const Layout: React.FC<LayoutProps> = ({
             Your payment is past due. Please update your card in Settings to keep Premium.
           </div>
         )}
-        {children}
+        <div className="flex-1 min-h-0">
+          {children}
+        </div>
       </main>
       <ProdWriteGuard />
     </div>
