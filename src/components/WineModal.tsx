@@ -5,7 +5,7 @@ import { getDirectImageUrl } from '@/utils/imageUrl';
 import { toRCWineCardProps } from '@/lib/adapters';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { RightPanel } from '@/components/ui/right-panel';
-import { Heading, MonoLabel, Body, Badge, Chip, Divider, Input, WineTypeIndicator, Button, InlineMessage, showToast } from '@/components/rc';
+import { Heading, MonoLabel, Body, Chip, Divider, Input, WineTypeIndicator, Button, InlineMessage, showToast } from '@/components/rc';
 import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
 import { useIsMobile } from '@/components/ui/use-mobile';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
@@ -58,6 +58,12 @@ function validateNumericField(key: string, value: string): string | null {
       break;
   }
   return null;
+}
+
+/** Display Rémy score as integer out of 100 — handles both 0-5 and 0-100 stored scales */
+function formatRemyScore(value: number): string {
+  const score = value <= 5 ? Math.round(value * 20) : Math.round(value);
+  return String(score);
 }
 
 // ── Photo upload hook (shared between desktop hero + mobile heroZone) ──
@@ -375,60 +381,70 @@ const WineDetailContent: React.FC<{
         </div>
       </div>
 
-      {/* Badges: Rating, My Rating, Maturity, Quantity */}
-      <div className="px-6 flex flex-wrap items-center gap-3 mb-6">
-        {/* Vivino Rating Badge */}
-        <div className="sticker-badge">
-          {editingField === 'Rating' ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--rc-ink-primary)] border border-[var(--rc-ink-primary)] rounded-[var(--rc-radius-sm)]">
-              <Star size={16} fill="var(--rc-accent-acid)" className="text-[var(--rc-accent-acid)]" />
-              <input
-                value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                className="w-10 bg-transparent border-b border-[var(--rc-accent-acid)] font-[var(--rc-font-display)] text-xl text-[var(--rc-accent-acid)] outline-none"
-                autoFocus
-                onBlur={() => handleUpdate('vivinoRating')}
-                onKeyDown={e => e.key === 'Enter' && handleUpdate('vivinoRating')}
-              />
-            </div>
-          ) : (
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-              onClick={() => { setEditingField('Rating'); setEditValue(wine.vivinoRating?.toString() || ''); }}
-            >
-              <Badge typeVariant="Rating" label={Number(wine.vivinoRating || 0).toFixed(1)} />
-            </div>
-          )}
-        </div>
-
-        {/* My Rating — tappable stars */}
-        <div className="sticker-badge">
-          <div className="flex items-center gap-1 px-3 py-1.5">
-            {[1, 2, 3, 4, 5].map(star => (
-              <button
-                key={star}
-                onClick={() => onUpdate?.('myRating', star.toString())}
-                className="p-0.5 hover:scale-110 transition-transform"
-              >
-                <Star
-                  size={18}
-                  fill={star <= Number(wine.myRating) ? 'var(--rc-accent-pink)' : 'none'}
-                  className="text-[var(--rc-accent-pink)]"
+      {/* Ratings — side-by-side: Rémy score | Personal stars */}
+      <div className="px-6 mb-4">
+        <div className="flex items-stretch rounded-[var(--rc-radius-sm)] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] overflow-hidden">
+          {/* Rémy Score (left) */}
+          <div
+            className="flex-1 flex flex-col items-center justify-center py-3 gap-1 cursor-pointer"
+            onClick={() => { if (editingField !== 'Rating') { setEditingField('Rating'); setEditValue(wine.vivinoRating?.toString() || ''); } }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-[22px] h-[22px] rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center font-[var(--rc-font-mono)] text-[10px] font-bold text-white leading-none shrink-0">R</span>
+              {editingField === 'Rating' ? (
+                <input
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  className="w-12 bg-transparent border-b border-[var(--rc-accent-pink)] font-[var(--rc-font-display)] text-2xl font-black text-[var(--rc-ink-primary)] outline-none text-center"
+                  autoFocus
+                  onBlur={() => handleUpdate('vivinoRating')}
+                  onKeyDown={e => e.key === 'Enter' && handleUpdate('vivinoRating')}
                 />
-              </button>
-            ))}
-            {wine.myRating && (
-              <button
-                onClick={() => onUpdate?.('myRating', '')}
-                className="p-0.5 ml-1 opacity-40 hover:opacity-100 transition-opacity"
-                title="Clear rating"
-              >
-                <X size={14} className="text-[var(--rc-ink-primary)]" />
-              </button>
-            )}
+              ) : (
+                <span className="font-[var(--rc-font-display)] text-2xl font-black leading-none">
+                  {wine.vivinoRating ? formatRemyScore(wine.vivinoRating) : '—'}
+                </span>
+              )}
+            </div>
+            <MonoLabel size="micro" colour="ghost">Rémy</MonoLabel>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px bg-[var(--rc-border-emphasis)] self-stretch" />
+
+          {/* Personal Rating (right) */}
+          <div className="flex-1 flex flex-col items-center justify-center py-3 gap-1">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  onClick={() => onUpdate?.('myRating', star.toString())}
+                  className="p-0.5 hover:scale-110 transition-transform"
+                >
+                  <Star
+                    size={18}
+                    fill={star <= Number(wine.myRating) ? 'var(--rc-accent-pink)' : 'none'}
+                    className="text-[var(--rc-accent-pink)]"
+                  />
+                </button>
+              ))}
+              {wine.myRating && (
+                <button
+                  onClick={() => onUpdate?.('myRating', '')}
+                  className="p-0.5 ml-1 opacity-40 hover:opacity-100 transition-opacity"
+                  title="Clear rating"
+                >
+                  <X size={14} className="text-[var(--rc-ink-primary)]" />
+                </button>
+              )}
+            </div>
+            <MonoLabel size="micro" colour="ghost">Yours</MonoLabel>
           </div>
         </div>
+      </div>
 
+      {/* Maturity + Quantity row */}
+      <div className="px-6 flex flex-wrap items-center gap-3 mb-6">
         {/* Maturity Chip */}
         <Chip
           variant="Maturity"

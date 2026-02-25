@@ -1,19 +1,22 @@
 import React from 'react';
+import { Star, Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RANK_BADGES, REMYS_PICK_BADGE } from '@/constants';
 import { Heading, MonoLabel, Body } from '@/components/rc';
 import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
 import WineIcon from '@/components/icons/WineIcon';
-import type { Recommendation } from '@/types';
+import type { Recommendation, Wine } from '@/types';
 
 interface RecommendResultCardProps {
   recommendation: Recommendation;
+  matchedWine?: Wine;
   imageUrl?: string;
   isSurprise?: boolean;
   isSingleResult?: boolean;
   index: number;
   onAddToCellar?: (recommendation: Recommendation) => void;
   onViewWine?: (wineId: string) => void;
+  onUpdateQuantity?: (wineId: string, quantity: number) => void;
 }
 
 const BADGE_W = 'w-[120px]';
@@ -21,12 +24,14 @@ const BADGE_H = 'h-[44px]';
 
 const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
   recommendation,
+  matchedWine,
   imageUrl,
   isSurprise = false,
   isSingleResult = false,
   index,
   onAddToCellar,
   onViewWine,
+  onUpdateQuantity,
 }) => {
   const badge = isSurprise || isSingleResult
     ? REMYS_PICK_BADGE
@@ -102,7 +107,47 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
             {recommendation.rationale}
           </Body>
 
-          {/* Metadata row */}
+          {/* Ratings row — Rémy score | Personal stars */}
+          {(recommendation.rating != null || matchedWine?.myRating) && (
+            <div className="flex items-stretch rounded-[6px] border border-[var(--rc-border-subtle)] bg-[var(--rc-surface-secondary)] overflow-hidden">
+              {/* Rémy Score (left) */}
+              {recommendation.rating != null && (
+                <div className="flex-1 flex flex-col items-center justify-center py-1.5 gap-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-[16px] h-[16px] rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center font-[var(--rc-font-mono)] text-[8px] font-bold text-white leading-none shrink-0">R</span>
+                    <span className="font-[var(--rc-font-display)] text-lg font-black leading-none">
+                      {formatRemyScore(recommendation.rating)}
+                    </span>
+                  </div>
+                  <MonoLabel size="micro" colour="ghost">Rémy</MonoLabel>
+                </div>
+              )}
+
+              {/* Divider — only when both sections render */}
+              {recommendation.rating != null && matchedWine?.myRating && (
+                <div className="w-px bg-[var(--rc-border-subtle)] self-stretch" />
+              )}
+
+              {/* Personal Rating (right) */}
+              {matchedWine?.myRating && (
+                <div className="flex-1 flex flex-col items-center justify-center py-1.5 gap-0.5">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Star
+                        key={star}
+                        size={14}
+                        fill={star <= Number(matchedWine.myRating) ? 'var(--rc-accent-pink)' : 'none'}
+                        className="text-[var(--rc-accent-pink)]"
+                      />
+                    ))}
+                  </div>
+                  <MonoLabel size="micro" colour="ghost">Yours</MonoLabel>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Metadata row: maturity + cellar status + bottle count */}
           <div className="flex items-center flex-wrap gap-2">
             <span className={cn(
               "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold font-[var(--rc-font-mono)] uppercase tracking-wider",
@@ -113,15 +158,31 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
               {maturityLabel}
             </span>
 
-            {recommendation.rating != null && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--rc-badge-rating-bg,#f5f0e8)] text-[12px] font-bold font-[var(--rc-font-display)]">
-                ★ {recommendation.rating.toFixed(1)}
-              </span>
-            )}
-
             <MonoLabel size="micro" colour={recommendation.isFromCellar ? 'tertiary' : 'accent-coral'} as="span" className="w-auto">
               {recommendation.isFromCellar ? 'From cellar' : 'Not in your cellar'}
             </MonoLabel>
+
+            {/* Bottle count with +/− for cellar wines */}
+            {matchedWine && onUpdateQuantity && (
+              <div className="flex items-center gap-1.5 ml-auto">
+                <button
+                  onClick={() => onUpdateQuantity(matchedWine.id, Math.max(0, matchedWine.quantity - 1))}
+                  className="w-6 h-6 flex items-center justify-center rounded-[4px] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors"
+                >
+                  <Minus size={12} />
+                </button>
+                <div className="flex flex-col items-center">
+                  <span className="font-[var(--rc-font-display)] text-base font-black leading-none w-5 text-center">{matchedWine.quantity}</span>
+                  <MonoLabel size="micro" colour="ghost" className="w-auto">btl</MonoLabel>
+                </div>
+                <button
+                  onClick={() => onUpdateQuantity(matchedWine.id, matchedWine.quantity + 1)}
+                  className="w-6 h-6 flex items-center justify-center rounded-[4px] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Action link */}
@@ -153,6 +214,12 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
 };
 
 // ── Helpers ──
+
+/** Display Rémy score as integer out of 100 — handles both 0-5 and 0-100 stored scales */
+function formatRemyScore(value: number): string {
+  const score = value <= 5 ? Math.round(value * 20) : Math.round(value);
+  return String(score);
+}
 
 type HeadingColour = 'primary' | 'secondary' | 'on-accent' | 'accent-pink' | 'accent-acid' | 'accent-coral';
 

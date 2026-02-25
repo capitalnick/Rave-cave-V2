@@ -25,6 +25,7 @@ interface RecommendResultsProps {
   onSurpriseReroll: () => void;
   onAddToCellar?: (recommendation: Recommendation) => void;
   onViewWine?: (wineId: string) => void;
+  onUpdateQuantity?: (wineId: string, quantity: number) => void;
   crowdAllocation?: CrowdAllocation | null;
 }
 
@@ -45,6 +46,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   onSurpriseReroll,
   onAddToCellar,
   onViewWine,
+  onUpdateQuantity,
   crowdAllocation,
 }) => {
   const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
@@ -131,12 +133,14 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
             <RecommendResultCard
               key={`${rec.producer}-${rec.vintage}-${rec.rank}`}
               recommendation={rec}
+              matchedWine={matchedWine}
               imageUrl={imageUrl}
               isSurprise={isSurprise}
               isSingleResult={recommendations.length === 1 && !isStreaming}
               index={i}
               onAddToCellar={onAddToCellar}
               onViewWine={onViewWine}
+              onUpdateQuantity={onUpdateQuantity}
             />
           );
         })}

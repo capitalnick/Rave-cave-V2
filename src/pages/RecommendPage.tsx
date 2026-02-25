@@ -7,6 +7,7 @@ const RecommendPage: React.FC = () => {
     inventory,
     handleHandoffToRemy,
     handleAddToCellarFromRecommend,
+    handleUpdate,
     setSelectedWine,
     recommendResetKey,
   } = useInventory();
@@ -18,6 +19,7 @@ const RecommendPage: React.FC = () => {
       onHandoffToRemy={handleHandoffToRemy}
       onAddToCellar={handleAddToCellarFromRecommend}
       onViewWine={setSelectedWine}
+      onUpdateWine={handleUpdate}
     />
   );
 };

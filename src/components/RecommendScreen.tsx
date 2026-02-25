@@ -38,9 +38,10 @@ interface RecommendScreenProps {
   onHandoffToRemy?: (context: RecommendChatContext) => void;
   onAddToCellar?: (recommendation: Recommendation) => void;
   onViewWine?: (wine: Wine) => void;
+  onUpdateWine?: (wine: Wine, key: string, value: string) => Promise<void>;
 }
 
-const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, onHandoffToRemy, onAddToCellar, onViewWine }) => {
+const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, onHandoffToRemy, onAddToCellar, onViewWine, onUpdateWine }) => {
   const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
   const { requirePremium, upgradePromptOpen, upgradeFeature, closeUpgradePrompt } = useTierGate();
   const [view, setView] = useState<RecommendView>('grid');
@@ -418,6 +419,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
             const wine = inventory.find(w => w.id === wineId);
             if (wine) onViewWine?.(wine);
           }}
+          onUpdateQuantity={onUpdateWine ? (wineId, quantity) => {
+            const wine = inventory.find(w => w.id === wineId);
+            if (wine) onUpdateWine(wine, 'quantity', quantity.toString());
+          } : undefined}
           crowdAllocation={crowdAllocation}
         />
       )}
