@@ -112,7 +112,7 @@ export interface Occasion {
 export interface DinnerContext {
   meal: string;
   guests: 2 | 4 | 6 | 8;
-  vibe: 'casual' | 'fancy';
+  budgetPerBottle: 'any' | 'under-20' | '20-50' | '50-plus';
   cellarOnly: boolean;
 }
 

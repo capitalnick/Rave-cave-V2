@@ -47,10 +47,11 @@ function buildOccasionPrompt(occasionId: OccasionId, context: OccasionContext): 
   switch (occasionId) {
     case 'dinner': {
       const c = context as DinnerContext;
+      const dinnerBudgetLabel = c.budgetPerBottle === 'any' ? 'Any' : c.budgetPerBottle === 'under-20' ? 'Under $20' : c.budgetPerBottle === '20-50' ? '$20–50' : '$50+';
       return `The user is planning a dinner.
 Meal: ${c.meal || 'Not specified'}
 Guests: ${c.guests}
-Vibe: ${c.vibe}`;
+Budget per bottle: ${dinnerBudgetLabel}`;
     }
     case 'party': {
       const c = context as PartyContext;

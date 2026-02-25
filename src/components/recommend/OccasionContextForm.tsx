@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Button, Input, Switch, Heading, MonoLabel } from '@/components/rc';
+import { Button, Input, Switch, Heading, MonoLabel, Body } from '@/components/rc';
 import { OCCASIONS, WINE_PER_PERSON_MULTIPLIER } from '@/constants';
 import { cn } from '@/lib/utils';
 import type {
@@ -187,28 +187,43 @@ interface FormProps {
 const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
   const [meal, setMeal] = useState('');
   const [guests, setGuests] = useState<2 | 4 | 6 | 8>(4);
-  const [vibe, setVibe] = useState<'casual' | 'fancy'>('casual');
+  const [budgetPerBottle, setBudgetPerBottle] = useState<'any' | 'under-20' | '20-50' | '50-plus'>('any');
   const [cellarOnly, setCellarOnly] = useState(true);
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const ctx: DinnerContext = { meal, guests, vibe, cellarOnly };
+    const ctx: DinnerContext = { meal, guests, budgetPerBottle, cellarOnly };
     onSubmit(ctx);
   };
 
   return (
-    <div className="space-y-6">
-      <Heading scale="subhead" colour="primary">TELL RÉMY ABOUT YOUR MEAL</Heading>
+    <div className="space-y-8">
+      {/* Headline */}
+      <Heading scale="title" colour="primary">What are you eating?</Heading>
 
-      <FieldGroup label="What are you serving?" hint={!meal ? 'A description helps Rémy nail the pairing' : undefined}>
-        <Input
-          typeVariant="Textarea"
-          placeholder="e.g., Slow-braised lamb shoulder with rosemary roasted potatoes"
-          value={meal}
-          onChange={(e) => setMeal(e.target.value)}
-        />
-      </FieldGroup>
+      {/* Rémy personality block */}
+      <div className="flex gap-3 items-start">
+        <span className="w-[28px] h-[28px] rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center font-[var(--rc-font-mono)] text-[11px] font-bold text-white leading-none shrink-0 mt-0.5">R</span>
+        <div className="space-y-1">
+          <div className="flex items-baseline gap-2">
+            <MonoLabel size="label" colour="primary" className="w-auto">Rémy</MonoLabel>
+            <MonoLabel size="micro" colour="ghost" className="w-auto">Bon appétit</MonoLabel>
+          </div>
+          <Body size="caption" colour="secondary" as="p" className="italic">
+            Décrivez votre plat — the more detail, the better I can match.
+          </Body>
+        </div>
+      </div>
 
+      {/* Meal textarea */}
+      <Input
+        typeVariant="Textarea"
+        placeholder="e.g., Slow-braised lamb shoulder with rosemary roasted potatoes, finishing with a dark chocolate tart"
+        value={meal}
+        onChange={(e) => setMeal(e.target.value)}
+      />
+
+      {/* Guests */}
       <FieldGroup label="Guests">
         <SegmentedControl
           options={[
@@ -222,14 +237,17 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }
         />
       </FieldGroup>
 
-      <FieldGroup label="Vibe">
+      {/* Price per bottle */}
+      <FieldGroup label="Price per bottle">
         <SegmentedControl
           options={[
-            { value: 'casual' as const, label: 'Casual' },
-            { value: 'fancy' as const, label: 'Fancy' },
+            { value: 'any' as const, label: 'Any' },
+            { value: 'under-20' as const, label: 'Under $20' },
+            { value: '20-50' as const, label: '$20–50' },
+            { value: '50-plus' as const, label: '$50+' },
           ]}
-          value={vibe}
-          onChange={setVibe}
+          value={budgetPerBottle}
+          onChange={setBudgetPerBottle}
         />
       </FieldGroup>
 
