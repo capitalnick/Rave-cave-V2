@@ -1,5 +1,4 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
 import RecommendResultCard from './RecommendResultCard';
 import CrowdAllocationResults from './CrowdAllocationResults';
 import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/components/rc';
@@ -98,12 +97,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
         </MonoLabel>
         <div className="flex flex-col items-center gap-3">
           <Button variantType="Primary" label="SCAN A LABEL" onClick={onStartOver} />
-          <button
-            onClick={onRetryWithoutCellar}
-            className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
-          >
-            Try without cellar filter →
-          </button>
+          <Button variantType="Tertiary" label="Try without cellar filter →" onClick={onRetryWithoutCellar} />
         </div>
       </div>
     );
@@ -155,12 +149,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
       {isSurprise && !isStreaming && (
         <div className="text-center">
           {surpriseRerollCount < 3 ? (
-            <button
-              onClick={onSurpriseReroll}
-              className="text-[var(--rc-accent-pink)] underline underline-offset-4 font-[var(--rc-font-mono)] text-xs uppercase tracking-wider"
-            >
-              Not feeling it? →
-            </button>
+            <Button variantType="Tertiary" label="Not feeling it? →" onClick={onSurpriseReroll} />
           ) : (
             <MonoLabel size="micro" colour="ghost" align="centre">
               That's all Rémy's got for now.
@@ -171,16 +160,20 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
 
       {/* Actions — hidden while streaming */}
       {!isStreaming && (
-        <div className="flex flex-col sm:flex-row gap-3 pb-8">
-          <Button variantType="Secondary" label="Start Over" onClick={onStartOver} className="flex-1" />
-          <Button
-            variantType="Primary"
-            label="Refine with Rémy"
-            iconAsset={ArrowRight}
-            iconPosition="Trailing"
+        <div className="flex flex-col gap-2 pb-8 mt-[var(--rc-space-2xl)]">
+          <button
             onClick={handleAskRemy}
-            className="flex-1"
-          />
+            className="w-full flex items-center justify-center gap-2 h-12 rounded-[var(--rc-button-radius)] border border-[var(--rc-ink-primary)] bg-transparent text-[var(--rc-ink-primary)] font-[var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-[0.08em] transition-colors hover:bg-[var(--rc-surface-secondary)]"
+          >
+            <span className="w-[18px] h-[18px] rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center font-[var(--rc-font-mono)] text-[9px] font-bold text-white leading-none">R</span>
+            REFINE WITH RÉMY
+          </button>
+          <button
+            onClick={onStartOver}
+            className="w-full flex items-center justify-center h-10 bg-transparent font-[var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--rc-ink-ghost)] transition-colors hover:text-[var(--rc-ink-tertiary)]"
+          >
+            START OVER
+          </button>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { RANK_BADGES, REMYS_PICK_BADGE } from '@/constants';
-import { MonoLabel, Body } from '@/components/rc';
+import { Heading, MonoLabel, Body } from '@/components/rc';
 import { ImageWithFallback } from '@/components/rc/figma/ImageWithFallback';
 import WineIcon from '@/components/icons/WineIcon';
 import type { Recommendation } from '@/types';
@@ -32,7 +32,6 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
     ? REMYS_PICK_BADGE
     : RANK_BADGES[recommendation.rankLabel];
 
-  const wineTypeColor = getWineTypeColor(recommendation.type);
   const maturityLabel = formatMaturity(recommendation.maturity);
 
   return (
@@ -78,7 +77,7 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <WineIcon size={32} className={`opacity-30`} style={{ color: wineTypeColor }} />
+              <WineIcon size={32} className="opacity-30 text-[var(--rc-ink-ghost)]" />
             )}
           </div>
         </div>
@@ -90,12 +89,12 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
             <MonoLabel size="label" colour="secondary" className="w-auto" truncate>
               {recommendation.producer}
             </MonoLabel>
-            <p className="font-[var(--rc-font-display)] font-black text-[var(--rc-ink-primary)] leading-tight">
+            <Heading scale="subhead" as="p">
               {recommendation.name}
-            </p>
-            <p className="font-[var(--rc-font-display)] font-black leading-tight" style={{ color: wineTypeColor }}>
+            </Heading>
+            <Heading scale="subhead" as="p" colour={getWineTypeHeadingColour(recommendation.type)}>
               {recommendation.vintage} · {recommendation.type}
-            </p>
+            </Heading>
           </div>
 
           {/* Rationale */}
@@ -120,12 +119,9 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
               </span>
             )}
 
-            <span className={cn(
-              "text-[11px] font-[var(--rc-font-mono)] uppercase tracking-wider",
-              recommendation.isFromCellar ? "text-[var(--rc-ink-tertiary)]" : "text-[var(--rc-accent-coral)]"
-            )}>
+            <MonoLabel size="micro" colour={recommendation.isFromCellar ? 'tertiary' : 'accent-coral'} as="span" className="w-auto">
               {recommendation.isFromCellar ? 'From cellar' : 'Not in your cellar'}
-            </span>
+            </MonoLabel>
           </div>
 
           {/* Action link */}
@@ -158,16 +154,18 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
 
 // ── Helpers ──
 
-function getWineTypeColor(type: string): string {
-  const map: Record<string, string> = {
-    'Red': 'var(--rc-accent-pink)',
-    'White': 'var(--rc-accent-acid)',
-    'Rosé': 'var(--rc-accent-coral)',
-    'Sparkling': '#ffd700',
-    'Dessert': '#d4a574',
-    'Fortified': '#6b4226',
+type HeadingColour = 'primary' | 'secondary' | 'on-accent' | 'accent-pink' | 'accent-acid' | 'accent-coral';
+
+function getWineTypeHeadingColour(type: string): HeadingColour {
+  const map: Record<string, HeadingColour> = {
+    'Red': 'accent-pink',
+    'White': 'accent-acid',
+    'Rosé': 'accent-coral',
+    'Sparkling': 'accent-acid',
+    'Dessert': 'accent-coral',
+    'Fortified': 'accent-coral',
   };
-  return map[type] || 'var(--rc-ink-secondary)';
+  return map[type] || 'secondary';
 }
 
 function formatMaturity(maturity: string): string {
