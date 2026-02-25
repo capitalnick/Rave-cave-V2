@@ -169,6 +169,9 @@ function AppShell() {
           wine={ctx.selectedWine}
           onClose={() => ctx.setSelectedWine(null)}
           onUpdate={(key, value) => ctx.handleUpdate(ctx.selectedWine!, key, value)}
+          onDelete={async (wineId) => {
+            await ctx.handleDeleteWine(wineId);
+          }}
         />
       )}
 

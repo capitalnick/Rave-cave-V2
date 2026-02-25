@@ -55,6 +55,7 @@ interface InventoryContextValue {
 
   // Wine CRUD
   handleUpdate: (wine: Wine, key: string, value: string) => Promise<void>;
+  handleDeleteWine: (wineId: string) => Promise<void>;
 
   // Scan overlay
   scanOpen: boolean;
@@ -280,6 +281,17 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [totalBottles]);
 
+  // ── Wine delete handler (standalone, also used by qty→0) ──
+  const handleDeleteWine = useCallback(async (wineId: string) => {
+    const wine = inventory.find(w => w.id === wineId);
+    const wineName = wine ? `${wine.vintage || ''} ${wine.producer || 'Wine'}`.trim() : 'Wine';
+    await inventoryService.deleteWine(wineId);
+    deleteLabelImage(wineId).catch(() => {});
+    setInventory(prev => prev.filter(w => w.id !== wineId));
+    setSelectedWine(prev => prev?.id === wineId ? null : prev);
+    showToast({ tone: 'neutral', message: `${wineName} removed from cellar` });
+  }, [inventory]);
+
   // ── Wine update handler ──
   const handleUpdate = useCallback(async (wine: Wine, key: string, value: string) => {
     // Bottle cap check on quantity increase
@@ -295,12 +307,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Auto-delete when quantity reaches 0
     if (key === 'quantity' && Number(value) <= 0) {
-      const wineName = `${wine.vintage || ''} ${wine.producer || 'Wine'}`.trim();
-      await inventoryService.deleteWine(wine.id);
-      deleteLabelImage(wine.id).catch(() => {});
-      setInventory(prev => prev.filter(w => w.id !== wine.id));
-      setSelectedWine(prev => prev?.id === wine.id ? null : prev);
-      showToast({ tone: 'neutral', message: `${wineName} removed from cellar` });
+      await handleDeleteWine(wine.id);
       return;
     }
 
@@ -312,7 +319,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setInventory(prev => prev.map(w => w.id === wine.id ? { ...w, [key]: coerced } : w));
       setSelectedWine(prev => prev?.id === wine.id ? { ...prev, [key]: coerced } : prev);
     }
-  }, [canAddBottles]);
+  }, [canAddBottles, handleDeleteWine]);
 
   // ── Scan callbacks ──
   const openScan = useCallback((prefill?: Partial<Wine> | null) => {
@@ -411,6 +418,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     totalBottles,
     canAddBottles,
     handleUpdate,
+    handleDeleteWine,
     scanOpen,
     prefillData,
     openScan,
@@ -436,7 +444,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }), [
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
     sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
-    totalBottlesFiltered, heroWineIds, totalBottles, canAddBottles, handleUpdate, scanOpen, prefillData,
+    totalBottlesFiltered, heroWineIds, totalBottles, canAddBottles, handleUpdate, handleDeleteWine, scanOpen, prefillData,
     openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
     handleAddToCellarFromChat, wineBriefContext, handleAskRemyAboutWine,
