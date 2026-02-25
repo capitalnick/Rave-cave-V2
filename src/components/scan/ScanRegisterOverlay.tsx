@@ -177,9 +177,10 @@ interface ScanRegisterOverlayProps {
   onAskRemy?: (draft: WineDraft) => void;
   manualEntryDirect?: boolean;
   onClearManualEntryDirect?: () => void;
+  onImport?: () => void;
 }
 
-const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy, manualEntryDirect, onClearManualEntryDirect }) => {
+const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy, manualEntryDirect, onClearManualEntryDirect, onImport }) => {
   const { isPremium } = useProfile();
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -547,6 +548,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 onCameraCapture={handleCameraCapture}
                 onGalleryCapture={handleGalleryCapture}
                 onManualEntry={handleManualEntry}
+                onImport={onImport}
                 autoCapture={state.autoCapture}
               />
             </motion.div>

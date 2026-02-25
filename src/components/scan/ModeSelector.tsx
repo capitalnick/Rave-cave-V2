@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { Camera, PenLine, ImageIcon } from 'lucide-react';
+import { Camera, PenLine, ImageIcon, FileSpreadsheet } from 'lucide-react';
 import { Heading, MonoLabel, Body } from '@/components/rc';
 import { hapticLight } from '@/utils/haptics';
 
@@ -7,6 +7,7 @@ interface ModeSelectorProps {
   onCameraCapture: (file: File) => void;
   onGalleryCapture: (file: File) => void;
   onManualEntry: () => void;
+  onImport?: () => void;
   autoCapture?: boolean;
 }
 
@@ -30,7 +31,7 @@ function openFilePicker(
   input.click();
 }
 
-const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryCapture, onManualEntry, autoCapture }) => {
+const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryCapture, onManualEntry, onImport, autoCapture }) => {
   const hasAutoFired = useRef(false);
 
   const handleCamera = useCallback(() => {
@@ -106,6 +107,22 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
             <MonoLabel size="micro" colour="ghost">Type wine details by hand</MonoLabel>
           </div>
         </button>
+
+        {/* Import Spreadsheet */}
+        {onImport && (
+          <button
+            onClick={() => { hapticLight(); onImport(); }}
+            className="w-full flex items-center gap-4 p-5 border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] hover:bg-[var(--rc-surface-secondary)] transition-colors rounded-[var(--rc-radius-md)] text-left group"
+          >
+            <div className="w-12 h-12 rounded-full bg-[var(--rc-surface-secondary)] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <FileSpreadsheet size={24} className="text-[var(--rc-ink-primary)]" />
+            </div>
+            <div>
+              <Body size="body" weight="bold">IMPORT SPREADSHEET</Body>
+              <MonoLabel size="micro" colour="ghost">CSV from Vivino, CellarTracker, etc.</MonoLabel>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );

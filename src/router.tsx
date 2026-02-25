@@ -11,6 +11,7 @@ import {
 import Layout from '@/components/Layout';
 import ScanOverlay from '@/components/ScanOverlay';
 import WineModal from '@/components/WineModal';
+import ImportFlow from '@/components/import/ImportFlow';
 import PinnedRemyPanel from '@/components/PinnedRemyPanel';
 import SplashScreen from '@/components/SplashScreen';
 import LoginPage from '@/pages/LoginPage';
@@ -56,6 +57,14 @@ function AppShell() {
   const navigate = useNavigate();
   const scrollWrapperRef = useScrollPreservation();
   useKeyboardShortcuts(navigate);
+
+  // ── Import flow ──
+  const [showImport, setShowImport] = useState(false);
+
+  const handleOpenImport = useCallback(() => {
+    ctx.closeScan();
+    setShowImport(true);
+  }, [ctx]);
 
   // ── Onboarding for new users ──
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -164,7 +173,10 @@ function AppShell() {
         onAskRemy={isPremium ? ctx.handleAskRemyAboutWine : undefined}
         manualEntryDirect={ctx.manualEntryDirect}
         onClearManualEntryDirect={ctx.clearManualEntryDirect}
+        onImport={handleOpenImport}
       />
+
+      {showImport && <ImportFlow onClose={() => setShowImport(false)} />}
 
       {ctx.selectedWine && (
         <WineModal
