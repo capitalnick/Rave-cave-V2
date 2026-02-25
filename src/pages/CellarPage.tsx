@@ -4,7 +4,7 @@ import WineCard from '@/components/WineCard';
 import { useInventory } from '@/context/InventoryContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { IconButton, Heading, MonoLabel, Body, PageHeader } from '@/components/rc';
+import { IconButton, Heading, MonoLabel, Body, PageHeader, Button } from '@/components/rc';
 import WineIcon from '@/components/icons/WineIcon';
 import { SortMenu } from '@/components/SortMenu';
 import type { SortField } from '@/types';
@@ -67,6 +67,7 @@ const CellarPage: React.FC = () => {
     setSortField,
     activeFilterCount,
     setMobileFiltersOpen,
+    openScan,
   } = useInventory();
 
   const { sentinelRef, isPastHero } = useScrollSentinel();
@@ -159,7 +160,9 @@ const CellarPage: React.FC = () => {
                 <div className="col-span-full py-20 sm:py-40 text-center border-4 sm:border-8 border-dashed border-[var(--rc-ink-ghost)] bg-[var(--rc-surface-elevated)]/50 px-4">
                   <p className="font-display text-4xl sm:text-6xl text-[var(--rc-ink-ghost)]">Your cellar awaits its first libation.</p>
                   <p className="mt-3 font-mono text-sm text-[var(--rc-ink-ghost)]">Add a bottle to begin.</p>
-                  <button onClick={clearFilters} className="mt-6 bg-[var(--rc-ink-primary)] text-[var(--rc-ink-on-accent)] px-8 py-3 font-mono text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink)]">Add to Cellar</button>
+                  <div className="mt-6">
+                    <Button variantType="Primary" label="ADD YOUR FIRST WINE" onClick={() => openScan()} />
+                  </div>
                 </div>
               )}
             </div>
