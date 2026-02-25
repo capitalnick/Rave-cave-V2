@@ -82,7 +82,7 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
     };
 
     const currentScale = scaleStyles[scale];
-    const needsStroke = colour === 'accent-acid' && (scale === 'hero' || scale === 'vintage' || scale === 'title' || scale === 'heading');
+    const needsStroke = colour === 'accent-acid' && (scale === 'hero' || scale === 'vintage' || scale === 'title' || scale === 'heading' || scale === 'subhead');
 
     return (
       <Component

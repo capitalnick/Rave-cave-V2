@@ -36,9 +36,9 @@ body {
 /* Diagonal clip for hero sections */
 .clip-diagonal { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
 
-/* Text stroke utility */
+/* Text stroke utility — thin outline so acid-green fill stays visible */
 .text-stroke-black {
-  -webkit-text-stroke: 3px var(--rc-ink-primary);
+  -webkit-text-stroke: 1.5px var(--rc-ink-primary);
   paint-order: stroke fill;
 }
 
