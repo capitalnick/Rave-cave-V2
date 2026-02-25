@@ -22,7 +22,7 @@ const CondensedHeader: React.FC<{
   setSortField: (f: SortField) => void;
 }> = ({ isPastHero, totalBottles, totalLabels, activeFilterCount, onFilterPress, sortField, setSortField }) => (
   <div
-    className="sticky top-0 z-[var(--rc-z-sticky)] flex items-center gap-3 sm:gap-4 px-4 sm:px-10 bg-[var(--rc-surface-elevated)] border-b border-[var(--rc-border-subtle)] transition-opacity duration-150 motion-reduce:transition-none"
+    className={`${isPastHero ? 'sticky' : 'absolute'} top-0 left-0 right-0 z-[var(--rc-z-sticky)] flex items-center gap-3 sm:gap-4 px-4 sm:px-10 bg-[var(--rc-surface-elevated)] border-b border-[var(--rc-border-subtle)] transition-opacity duration-150 motion-reduce:transition-none`}
     style={{
       height: 56,
       opacity: isPastHero ? 1 : 0,
@@ -94,7 +94,7 @@ const CellarPage: React.FC = () => {
   const openFilters = () => setMobileFiltersOpen(true);
 
   return (
-    <div data-scroll-container className="h-full overflow-y-auto">
+    <div data-scroll-container className="relative h-full overflow-y-auto">
       <CondensedHeader
         isPastHero={isPastHero}
         totalBottles={totalBottlesFiltered}
