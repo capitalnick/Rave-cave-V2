@@ -68,14 +68,23 @@ export const drinkingWindowNotifier = onSchedule(
             const wine = eligibleWines[0].data();
             const wineName = wine["Wine name"] || wine["Producer"] || "A wine";
             title = "Ready to drink";
-            body = `${wineName} (${wine["Vintage"] || ""}) has entered its drinking window.`;
+            const v = wine["Vintage"] || "";
+            body = `${wineName} (${v}) has entered ` +
+              "its drinking window.";
           } else {
             const first = eligibleWines[0].data();
             const second = eligibleWines[1].data();
-            const firstName = first["Wine name"] || first["Producer"] || "Wine";
-            const secondName = second["Wine name"] || second["Producer"] || "Wine";
-            title = `${eligibleWines.length} wines ready to drink`;
-            body = `${firstName}, ${secondName}${eligibleWines.length > 2 ? ` and ${eligibleWines.length - 2} more` : ""} have entered their drinking window.`;
+            const firstName =
+              first["Wine name"] || first["Producer"] || "Wine";
+            const secondName =
+              second["Wine name"] || second["Producer"] || "Wine";
+            const count = eligibleWines.length;
+            title = `${count} wines ready to drink`;
+            const extra = count > 2 ?
+              ` and ${count - 2} more` :
+              "";
+            body = `${firstName}, ${secondName}${extra}` +
+              " have entered their drinking window.";
           }
 
           const message = {
@@ -118,7 +127,8 @@ export const drinkingWindowNotifier = onSchedule(
           }
         }
 
-        // Mark wines as notified for this year (even if no tokens — avoids daily re-query)
+        // Mark wines as notified for this year
+        // (even if no tokens — avoids daily re-query)
         const batch = db.batch();
         for (const wineDoc of eligibleWines) {
           batch.update(wineDoc.ref, {notifiedForYear: currentYear});
