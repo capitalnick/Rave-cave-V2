@@ -10,6 +10,7 @@ interface MoreFieldsSectionProps {
   onFieldChange: (key: string, value: string | number) => void;
   expanded?: boolean;
   onToggleExpanded?: () => void;
+  source?: 'scan' | 'manual';
 }
 
 const MORE_FIELDS: { key: keyof Wine; label: string }[] = [
@@ -26,6 +27,7 @@ const MoreFieldsSection: React.FC<MoreFieldsSectionProps> = ({
   onFieldChange,
   expanded: controlledExpanded,
   onToggleExpanded,
+  source,
 }) => {
   const [internalExpanded, setInternalExpanded] = React.useState(false);
   const expanded = controlledExpanded ?? internalExpanded;
@@ -66,7 +68,7 @@ const MoreFieldsSection: React.FC<MoreFieldsSectionProps> = ({
                   <MonoLabel size="micro" weight="bold" colour="accent-pink" as="span" className="w-auto">
                     {label}
                   </MonoLabel>
-                  <ConfidenceIndicator confidence={confidence} />
+                  {source !== 'manual' && <ConfidenceIndicator confidence={confidence} />}
                 </div>
                 {key === 'tastingNotes' || key === 'personalNote' ? (
                   <textarea

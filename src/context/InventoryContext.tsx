@@ -61,6 +61,9 @@ interface InventoryContextValue {
   scanOpen: boolean;
   prefillData: Partial<Wine> | null;
   openScan: (prefill?: Partial<Wine> | null) => void;
+  openManualAdd: () => void;
+  manualEntryDirect: boolean;
+  clearManualEntryDirect: () => void;
   closeScan: () => void;
   handleWineCommitted: (docId: string | string[]) => void;
   handleViewWine: (wine: Wine) => void;
@@ -139,6 +142,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [scanOpen, setScanOpen] = useState(false);
   const [prefillData, setPrefillData] = useState<Partial<Wine> | null>(null);
   const scanFABRef = useRef<HTMLButtonElement | null>(null);
+
+  // ── Manual entry direct (FAB long-press) ──
+  const [manualEntryDirect, setManualEntryDirect] = useState(false);
 
   // ── Mobile filter overlay ──
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -327,6 +333,16 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setScanOpen(true);
   }, []);
 
+  const openManualAdd = useCallback(() => {
+    setPrefillData(null);
+    setManualEntryDirect(true);
+    setScanOpen(true);
+  }, []);
+
+  const clearManualEntryDirect = useCallback(() => {
+    setManualEntryDirect(false);
+  }, []);
+
   const closeScan = useCallback(() => {
     setScanOpen(false);
     setPrefillData(null);
@@ -422,6 +438,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     scanOpen,
     prefillData,
     openScan,
+    openManualAdd,
+    manualEntryDirect,
+    clearManualEntryDirect,
     closeScan,
     handleWineCommitted,
     handleViewWine,
@@ -445,7 +464,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
     sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
     totalBottlesFiltered, heroWineIds, totalBottles, canAddBottles, handleUpdate, handleDeleteWine, scanOpen, prefillData,
-    openScan, closeScan, handleWineCommitted, handleViewWine, selectedWine,
+    openScan, openManualAdd, manualEntryDirect, clearManualEntryDirect, closeScan, handleWineCommitted, handleViewWine, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
     handleAddToCellarFromChat, wineBriefContext, handleAskRemyAboutWine,
     mobileFiltersOpen, triggerRefreshFeedback,

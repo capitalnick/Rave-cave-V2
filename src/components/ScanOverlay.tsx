@@ -10,12 +10,14 @@ interface ScanOverlayProps {
   onViewWine?: (wine: Wine) => void;
   prefillData?: Partial<Wine> | null;
   onAskRemy?: (draft: WineDraft) => void;
+  manualEntryDirect?: boolean;
+  onClearManualEntryDirect?: () => void;
 }
 
 /**
  * Thin wrapper preserving the App.tsx import. Delegates to ScanRegisterOverlay.
  */
-const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy }) => {
+const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy, manualEntryDirect, onClearManualEntryDirect }) => {
   return (
     <ScanRegisterOverlay
       open={open}
@@ -25,6 +27,8 @@ const ScanOverlay: React.FC<ScanOverlayProps> = ({ open, onClose, inventory, onW
       onViewWine={onViewWine}
       prefillData={prefillData}
       onAskRemy={onAskRemy}
+      manualEntryDirect={manualEntryDirect}
+      onClearManualEntryDirect={onClearManualEntryDirect}
     />
   );
 };

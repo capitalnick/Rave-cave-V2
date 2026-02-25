@@ -52,6 +52,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
   keyboardVisible = false,
 }) => {
   const { fields, extraction, image, source } = draft;
+  const isManual = source === 'manual';
   const [priceInput, setPriceInput] = useState(fields.price ? String(fields.price) : '');
   const [inputFocused, setInputFocused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -138,25 +139,28 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
         <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto min-h-0 pb-20 lg:pb-4">
           {/* Header */}
           <div className="px-4 pt-5 pb-3 flex items-center justify-between">
-            <div className="space-y-1">
-              <Heading scale="heading">REVIEW &amp; EDIT</Heading>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                    source === 'scan'
-                      ? 'bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)]'
-                      : 'bg-[var(--rc-surface-secondary)] text-[var(--rc-ink-ghost)]'
-                  }`}
-                >
-                  {source === 'scan' ? 'LABEL SCAN' : 'MANUAL ENTRY'}
-                </span>
-                {extraction?.imageQuality && (
-                  <MonoLabel size="micro" colour="ghost">
-                    Image: {extraction.imageQuality}
-                  </MonoLabel>
-                )}
+            {isManual ? (
+              <div className="space-y-1">
+                <Heading scale="heading">ADD WINE</Heading>
+                <MonoLabel size="micro" colour="ghost">Enter wine details below</MonoLabel>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-1">
+                <Heading scale="heading">REVIEW &amp; EDIT</Heading>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)]"
+                  >
+                    LABEL SCAN
+                  </span>
+                  {extraction?.imageQuality && (
+                    <MonoLabel size="micro" colour="ghost">
+                      Image: {extraction.imageQuality}
+                    </MonoLabel>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
@@ -198,7 +202,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
               <MonoLabel size="micro" weight="bold" colour="accent-pink" as="span" className="w-auto">
                 Type
               </MonoLabel>
-              <ConfidenceIndicator confidence={getConfidence('type')} />
+              {!isManual && <ConfidenceIndicator confidence={getConfidence('type')} />}
             </div>
             <div className="flex flex-wrap gap-2">
               {WINE_TYPES.map((type) => (
@@ -236,7 +240,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
                     >
                       {label}
                     </MonoLabel>
-                    <ConfidenceIndicator confidence={confidence} />
+                    {!isManual && <ConfidenceIndicator confidence={confidence} />}
                   </div>
                   {isGrapes ? (
                     <GrapeVarietiesEditor
@@ -322,6 +326,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
             onFieldChange={handleFieldChange}
             expanded={moreFieldsExpanded}
             onToggleExpanded={onToggleMoreFields}
+            source={source}
           />
         </div>
 
@@ -333,7 +338,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
             <div className="flex flex-col gap-2">
               <Button
                 variantType="Primary"
-                label={isCommitting ? 'SAVING...' : 'CONFIRM TO CELLAR'}
+                label={isCommitting ? 'SAVING...' : isManual ? 'ADD TO CELLAR' : 'CONFIRM TO CELLAR'}
                 onClick={onConfirm}
                 disabled={!priceValid || isCommitting}
                 className="w-full"

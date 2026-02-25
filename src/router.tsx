@@ -142,7 +142,7 @@ function AppShell() {
         mobileFiltersOpen={ctx.mobileFiltersOpen}
         onMobileFiltersOpenChange={ctx.setMobileFiltersOpen}
         onScanPress={() => ctx.openScan()}
-        onScanLongPress={() => ctx.openScan()}
+        onScanLongPress={() => ctx.openManualAdd()}
         scanFABRef={ctx.scanFABRef}
         scrollWrapperRef={scrollWrapperRef}
         pinnedRightOffset={pinnedRemyVisible ? 400 : 0}
@@ -162,6 +162,8 @@ function AppShell() {
         onViewWine={ctx.handleViewWine}
         prefillData={ctx.prefillData}
         onAskRemy={isPremium ? ctx.handleAskRemyAboutWine : undefined}
+        manualEntryDirect={ctx.manualEntryDirect}
+        onClearManualEntryDirect={ctx.clearManualEntryDirect}
       />
 
       {ctx.selectedWine && (

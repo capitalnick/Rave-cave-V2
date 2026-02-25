@@ -175,9 +175,11 @@ interface ScanRegisterOverlayProps {
   onViewWine?: (wine: Wine) => void;
   prefillData?: Partial<Wine> | null;
   onAskRemy?: (draft: WineDraft) => void;
+  manualEntryDirect?: boolean;
+  onClearManualEntryDirect?: () => void;
 }
 
-const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy }) => {
+const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy, manualEntryDirect, onClearManualEntryDirect }) => {
   const { isPremium } = useProfile();
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -202,20 +204,25 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   // Open/close sync
   useEffect(() => {
     if (open && !prevOpenRef.current) {
-      if (prefillData) {
+      if (manualEntryDirect) {
+        dispatch({ type: 'MANUAL_ENTRY' });
+        setMoreFieldsExpanded(true);
+        onClearManualEntryDirect?.();
+      } else if (prefillData) {
         dispatch({ type: 'PREFILL_OPEN', fields: prefillData });
+        setMoreFieldsExpanded(true);
       } else {
         dispatch({ type: 'OPEN' });
+        setMoreFieldsExpanded(false);
       }
       setDuplicateCandidate(null);
-      setMoreFieldsExpanded(false);
     } else if (!open && prevOpenRef.current) {
       if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
       dispatch({ type: 'CLOSE' });
       setDuplicateCandidate(null);
     }
     prevOpenRef.current = open;
-  }, [open, prefillData]);
+  }, [open, prefillData, manualEntryDirect, onClearManualEntryDirect]);
 
   // Browser back button handling (WineModal pattern)
   useEffect(() => {
@@ -283,6 +290,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
 
   const handleManualEntry = useCallback(() => {
     dispatch({ type: 'MANUAL_ENTRY' });
+    setMoreFieldsExpanded(true);
   }, []);
 
   const handleRetake = useCallback(() => {
