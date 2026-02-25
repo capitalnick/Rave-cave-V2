@@ -37,6 +37,12 @@ service cloud.firestore {
                          && request.auth.uid == userId;
     }
 
+    // FCM tokens subcollection: full access for owner
+    match /users/{userId}/fcmTokens/{tokenId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
     // Usage subcollection: read-only for owner
     // (writes come from Cloud Functions via Admin SDK)
     match /users/{userId}/usage/{monthId} {

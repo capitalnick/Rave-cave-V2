@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, Download, Upload, Trash2, Crown, CreditCard } from 'lucide-react';
+import { LogOut, Download, Upload, Trash2, Crown, CreditCard, Bell } from 'lucide-react';
 import { collection, getDocs, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import { ref, listAll, deleteObject } from 'firebase/storage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -28,6 +28,7 @@ import type { Wine } from '@/types';
 import { formatGrapeDisplay } from '@/utils/grapeUtils';
 import { trackEvent } from '@/config/analytics';
 import ImportFlow from '@/components/import/ImportFlow';
+import { requestNotificationPermission, getNotificationStatus } from '@/config/notifications';
 
 // ── Constants ──
 
@@ -91,6 +92,32 @@ const SettingsPage: React.FC = () => {
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [manageLoading, setManageLoading] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [notifStatus, setNotifStatus] = useState<'granted' | 'denied' | 'default' | 'unsupported' | 'loading'>('loading');
+
+  // Check notification permission on mount
+  useEffect(() => {
+    getNotificationStatus().then(setNotifStatus);
+  }, []);
+
+  const handleNotifToggle = async (checked: boolean) => {
+    if (!checked || !user) return;
+    setNotifStatus('loading');
+    try {
+      const granted = await requestNotificationPermission(user.uid);
+      if (granted) {
+        setNotifStatus('granted');
+        showToast({ tone: 'success', message: 'Drinking window alerts enabled' });
+      } else {
+        const status = await getNotificationStatus();
+        setNotifStatus(status);
+        showToast({ tone: 'error', message: 'Notification permission denied' });
+      }
+    } catch {
+      const status = await getNotificationStatus();
+      setNotifStatus(status);
+      showToast({ tone: 'error', message: 'Failed to enable notifications' });
+    }
+  };
 
   // Show success toast when returning from Stripe Checkout
   useEffect(() => {
@@ -374,8 +401,20 @@ const SettingsPage: React.FC = () => {
           trailingAction="value"
           trailingValue={profile.currency}
           onClick={() => setCurrencyOpen(prev => !prev)}
-          divider={false}
+          divider={notifStatus !== 'unsupported'}
         />
+        {notifStatus !== 'unsupported' && (
+          <Row
+            title="Drinking Window Alerts"
+            subtitle={notifStatus === 'denied' ? 'Blocked in browser settings' : 'Get notified when wines are ready'}
+            leadingIcon={<Bell size={20} />}
+            trailingAction="switch"
+            switchChecked={notifStatus === 'granted'}
+            onSwitchChange={handleNotifToggle}
+            disabled={notifStatus === 'denied' || notifStatus === 'loading'}
+            divider={false}
+          />
+        )}
         <AnimatePresence initial={false}>
           {currencyOpen && (
             <motion.div

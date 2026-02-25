@@ -37,6 +37,7 @@ export interface Wine {
   price: number;
   format: string;
   processingStatus?: 'pending' | 'complete' | 'error';
+  notifiedForYear?: number;
 }
 
 export type SortField =

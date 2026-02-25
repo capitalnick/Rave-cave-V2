@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MessageSquare, Database, LayoutDashboard, Settings, Sparkles } from 'lucide-react';
 import WineIcon from '@/components/icons/WineIcon';
 import { ScanBottleIcon } from '@/components/rc/ScanBottleIcon';
 import { NavId, TabId } from '@/types';
 import type { FacetKey, FacetOption, FiltersState } from '@/lib/faceted-filters';
-import { TabItem, Divider, Heading, MonoLabel, ScanFAB, EnvBadge } from '@/components/rc';
+import { TabItem, Divider, Heading, MonoLabel, ScanFAB, EnvBadge, showToast } from '@/components/rc';
+import { onForegroundMessage } from '@/config/notifications';
 import { ProdWriteGuard } from '@/components/ProdWriteGuard';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import FilterOverlay from '@/components/FilterOverlay';
@@ -66,6 +67,16 @@ const Layout: React.FC<LayoutProps> = ({
   const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
   const { user } = useAuth();
   const avatarInitial = (user?.displayName?.[0] || user?.email?.[0] || '?').toUpperCase();
+
+  // Foreground FCM messages → show as toast instead of system notification
+  useEffect(() => {
+    const unsubscribe = onForegroundMessage((payload) => {
+      const title = payload.notification?.title || 'Rave Cave';
+      const body = payload.notification?.body || '';
+      showToast({ tone: 'neutral', message: `${title}: ${body}` });
+    });
+    return unsubscribe;
+  }, []);
 
   const getTabLabel = (item: typeof navItems[0]) => {
     if (item.id === 'remy' && !isPremium) return 'RÉMY ✦';

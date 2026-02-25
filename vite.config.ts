@@ -69,6 +69,7 @@ export default defineConfig(({ mode }) => {
         'process.env.SENTRY_DSN': JSON.stringify(e('SENTRY_DSN')),
         'process.env.VITE_POSTHOG_KEY': JSON.stringify(e('VITE_POSTHOG_KEY')),
         'process.env.VITE_POSTHOG_HOST': JSON.stringify(e('VITE_POSTHOG_HOST')),
+        'process.env.VITE_FIREBASE_VAPID_KEY': JSON.stringify(e('VITE_FIREBASE_VAPID_KEY')),
       },
       resolve: {
         alias: {
