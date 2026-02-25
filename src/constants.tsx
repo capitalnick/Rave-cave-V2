@@ -199,7 +199,7 @@ export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; tex
   'best-match':   { text: 'BEST MATCH',       bgColor: 'var(--rc-accent-acid)',  textColor: 'var(--rc-ink-primary)' },
   'also-great':   { text: 'ALSO GREAT',       bgColor: 'var(--rc-accent-pink)',  textColor: 'var(--rc-ink-on-accent)' },
   'adventurous':  { text: 'ADVENTUROUS PICK', bgColor: 'var(--rc-accent-coral)', textColor: 'var(--rc-ink-on-accent)' },
-  'value':        { text: 'VALUE PICK',        bgColor: 'transparent',            textColor: 'var(--rc-accent-acid)' },
+  'value':        { text: 'VALUE PICK',        bgColor: 'transparent',            textColor: 'var(--rc-accent-pink)' },
   'pairing':      { text: 'PAIRING PICK',      bgColor: 'var(--rc-accent-pink)',  textColor: 'var(--rc-ink-on-accent)' },
 };
 

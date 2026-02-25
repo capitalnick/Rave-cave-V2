@@ -347,7 +347,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
                 <button
                   onClick={onAskRemy}
                   disabled={isCommitting}
-                  className="w-full py-3 px-4 rounded-[var(--rc-radius-sm)] border border-[var(--rc-accent-acid)] bg-transparent font-[var(--rc-font-mono)] text-xs font-bold tracking-wider text-[var(--rc-accent-acid)] uppercase hover:bg-[var(--rc-accent-acid)]/10 transition-colors disabled:opacity-50"
+                  className="w-full py-3 px-4 rounded-[var(--rc-radius-sm)] border border-[var(--rc-accent-pink)] bg-transparent font-[var(--rc-font-mono)] text-xs font-bold tracking-wider text-[var(--rc-accent-pink)] uppercase hover:bg-[var(--rc-accent-pink)]/10 transition-colors disabled:opacity-50"
                 >
                   ✦ Ask Remy About This Wine
                 </button>

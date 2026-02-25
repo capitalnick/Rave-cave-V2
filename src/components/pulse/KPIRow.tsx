@@ -31,7 +31,7 @@ const KPIRow: React.FC<KPIRowProps> = ({ totalBottles, totalValue, bottlesNeedin
           REGISTERED
         </MonoLabel>
         {readyToDrinkCount > 0 && (
-          <MonoLabel size="micro" colour="accent-acid" className="mt-1">
+          <MonoLabel size="micro" colour="accent-pink" className="mt-1">
             {readyToDrinkCount} READY NOW
           </MonoLabel>
         )}

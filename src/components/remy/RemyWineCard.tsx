@@ -54,7 +54,7 @@ const RemyWineCard: React.FC<RemyWineCardProps> = ({ wine, index, onAddToCellar,
       {cellarMatch && onViewWine ? (
         <button
           onClick={() => onViewWine(cellarMatch)}
-          className="mt-3 font-[var(--rc-font-mono)] text-[11px] uppercase tracking-wider text-[var(--rc-accent-acid)] underline underline-offset-2 hover:text-[var(--rc-accent-pink)] transition-colors"
+          className="mt-3 font-[var(--rc-font-mono)] text-[11px] uppercase tracking-wider text-[var(--rc-accent-pink)] underline underline-offset-2 hover:text-[var(--rc-accent-coral)] transition-colors"
         >
           Open bottle detail &rarr;
         </button>

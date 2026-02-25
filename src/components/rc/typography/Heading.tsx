@@ -82,6 +82,7 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
     };
 
     const currentScale = scaleStyles[scale];
+    const needsStroke = colour === 'accent-acid' && (scale === 'hero' || scale === 'vintage' || scale === 'title' || scale === 'heading');
 
     return (
       <Component
@@ -94,6 +95,7 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
           currentScale.ls,
           colourStyles[colour],
           alignStyles[align],
+          needsStroke && "text-stroke-black",
           truncate && !maxLines && "whitespace-nowrap overflow-hidden text-overflow-ellipsis",
           maxLines && "line-clamp-[var(--max-lines)]",
           className

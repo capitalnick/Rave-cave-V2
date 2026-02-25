@@ -38,7 +38,7 @@ body {
 
 /* Text stroke utility */
 .text-stroke-black {
-  -webkit-text-stroke: 1px var(--rc-ink-primary);
+  -webkit-text-stroke: 3px var(--rc-ink-primary);
   paint-order: stroke fill;
 }
 

@@ -80,7 +80,7 @@ const CaptureReview: React.FC<CaptureReviewProps> = ({ file, previewUrl, onAccep
 
         {result?.verdict === 'pass' && (
           <div className="flex items-center justify-center gap-2">
-            <Body size="body" weight="bold" className="text-[var(--rc-accent-acid)]">
+            <Body size="body" weight="bold" className="text-[var(--rc-accent-pink)]">
               Looks good
             </Body>
           </div>

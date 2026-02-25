@@ -61,7 +61,7 @@ const WineListPickCard: React.FC<WineListPickCardProps> = ({ pick, entry }) => {
 
       {/* Cellar match note */}
       {pick.cellarMatchNote && (
-        <MonoLabel size="micro" colour="accent-acid" className="w-auto">
+        <MonoLabel size="micro" colour="accent-pink" className="w-auto">
           {pick.cellarMatchNote}
         </MonoLabel>
       )}
