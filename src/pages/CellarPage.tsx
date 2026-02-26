@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Filter } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import WineCard from '@/components/WineCard';
 import { useInventory } from '@/context/InventoryContext';
+import { useAuth } from '@/context/AuthContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { IconButton, Heading, MonoLabel, Body, PageHeader, Button } from '@/components/rc';
+import { IconButton, Heading, MonoLabel, Body, PageHeader, Button, EnvBadge } from '@/components/rc';
 import WineIcon from '@/components/icons/WineIcon';
 import { SortMenu } from '@/components/SortMenu';
 import type { SortField } from '@/types';
@@ -70,6 +72,10 @@ const CellarPage: React.FC = () => {
     openScan,
   } = useInventory();
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const avatarInitial = (user?.displayName?.[0] || user?.email?.[0] || '?').toUpperCase();
+
   const { sentinelRef, isPastHero } = useScrollSentinel();
 
   // Progressive rendering — show PAGE_SIZE at a time
@@ -110,6 +116,30 @@ const CellarPage: React.FC = () => {
       <div className="p-4 sm:p-10 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="flex-1 w-full">
+            <div className="flex items-center gap-3 mb-2 md:hidden">
+              <button
+                onClick={() => navigate({ to: '/settings' })}
+                className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[var(--rc-accent-pink)] active:scale-90 transition-transform"
+                aria-label="Account settings"
+              >
+                {user?.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="Account"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center font-['Satoshi'] font-bold text-sm"
+                    style={{ backgroundColor: 'var(--rc-accent-pink)', color: 'var(--rc-ink-on-accent)' }}
+                  >
+                    {avatarInitial}
+                  </div>
+                )}
+              </button>
+              <EnvBadge />
+            </div>
             <PageHeader title="THE COLLECTION" subtitle="Your cellar inventory" />
           </div>
 

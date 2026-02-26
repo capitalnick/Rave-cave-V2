@@ -10,7 +10,6 @@ import { ProdWriteGuard } from '@/components/ProdWriteGuard';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import FilterOverlay from '@/components/FilterOverlay';
 import { useRailExpanded } from '@/hooks/useRailExpanded';
-import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -65,9 +64,6 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const isRailExpanded = useRailExpanded();
   const railContext = isRailExpanded ? 'rail-expanded' : 'rail-collapsed';
-  const { user } = useAuth();
-  const avatarInitial = (user?.displayName?.[0] || user?.email?.[0] || '?').toUpperCase();
-
   // Foreground FCM messages → show as toast instead of system notification
   useEffect(() => {
     const unsubscribe = onForegroundMessage((payload) => {
@@ -229,31 +225,6 @@ const Layout: React.FC<LayoutProps> = ({
         className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
-        {/* Mobile top bar: avatar → settings */}
-        <div className="md:hidden shrink-0 flex items-center justify-end gap-2 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
-          <EnvBadge />
-          <button
-            onClick={() => onTabChange('settings')}
-            className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[var(--rc-accent-pink)] active:scale-90 transition-transform"
-            aria-label="Settings"
-          >
-            {user?.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="Settings"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center font-['Satoshi'] font-bold text-sm"
-                style={{ backgroundColor: 'var(--rc-accent-pink)', color: 'var(--rc-ink-on-accent)' }}
-              >
-                {avatarInitial}
-              </div>
-            )}
-          </button>
-        </div>
         {subscriptionStatus === 'past_due' && (
           <div
             className="px-4 py-2 text-center text-sm font-medium shrink-0"
