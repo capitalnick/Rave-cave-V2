@@ -330,6 +330,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
           occasionId={selectedOccasion}
           onSubmit={handleFormSubmit}
           onBack={handleBack}
+          inventory={inventory}
         />
       )}
 

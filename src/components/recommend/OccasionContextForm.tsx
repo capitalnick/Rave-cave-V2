@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Button, Input, Switch, Heading, MonoLabel, Body } from '@/components/rc';
+import { Button, Input, Switch, Heading, MonoLabel, Body, PriceRangeSlider } from '@/components/rc';
 import { OCCASIONS, WINE_PER_PERSON_MULTIPLIER } from '@/constants';
 import { cn } from '@/lib/utils';
+import { ABSOLUTE_MAX_PRICE } from '@/utils/priceSlider';
 import type {
   OccasionId,
   OccasionContext,
@@ -12,15 +13,17 @@ import type {
   WinePerPerson,
   GiftContext,
   WineListAnalysisContext,
+  Wine,
 } from '@/types';
 
 interface OccasionContextFormProps {
   occasionId: OccasionId;
   onSubmit: (context: OccasionContext) => void;
   onBack: () => void;
+  inventory: Wine[];
 }
 
-const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, onSubmit, onBack }) => {
+const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, onSubmit, onBack, inventory }) => {
   const occasion = OCCASIONS.find(o => o.id === occasionId)!;
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,7 +47,7 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
       {/* Form Content */}
       <div className="flex-1 px-6 pb-24">
         {occasionId === 'dinner' && (
-          <DinnerForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
+          <DinnerForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} inventory={inventory} />
         )}
         {occasionId === 'party' && (
           <PartyForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
@@ -182,22 +185,48 @@ interface FormProps {
   onSubmit: (context: OccasionContext) => void;
   submitting: boolean;
   setSubmitting: (v: boolean) => void;
+  inventory?: Wine[];
 }
 
-const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
+const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting, inventory = [] }) => {
   const [meal, setMeal] = useState('');
   const [guests, setGuests] = useState<2 | 4 | 6 | 8>(4);
-  const [budgetPerBottle, setBudgetPerBottle] = useState<'any' | 'under-20' | '20-50' | '50-plus'>('any');
   const [cellarOnly, setCellarOnly] = useState(true);
+
+  const absoluteMax = ABSOLUTE_MAX_PRICE;
+
+  const mostExpensive = useMemo(
+    () => Math.max(0, ...inventory.map(w => w.price ?? 0)),
+    [inventory],
+  );
+
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: absoluteMax });
+
+  // Clamp max when cellarOnly changes
+  useEffect(() => {
+    if (cellarOnly && mostExpensive > 0) {
+      setPriceRange(prev => ({
+        min: prev.min,
+        max: Math.min(prev.max, Math.max(absoluteMax, mostExpensive)),
+      }));
+    }
+  }, [cellarOnly, mostExpensive, absoluteMax]);
+
+  const isFullRange = priceRange.min === 0 && priceRange.max >= absoluteMax;
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const ctx: DinnerContext = { meal, guests, budgetPerBottle, cellarOnly };
+    const ctx: DinnerContext = {
+      meal,
+      guests,
+      priceRange: isFullRange ? null : priceRange,
+      cellarOnly,
+    };
     onSubmit(ctx);
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Headline */}
       <Heading scale="title" colour="primary">What are you eating?</Heading>
 
@@ -207,10 +236,10 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
             <MonoLabel size="label" colour="primary" className="w-auto">Rémy</MonoLabel>
-            <MonoLabel size="micro" colour="ghost" className="w-auto">Bon appétit</MonoLabel>
+            <MonoLabel size="micro" colour="ghost" className="w-auto">Dites-moi tout</MonoLabel>
           </div>
           <Body size="caption" colour="secondary" as="p" className="italic">
-            Décrivez votre plat — the more detail, the better I can match.
+            Paint me the scene — courses, flavours, mood. The more I know, the sharper my picks.
           </Body>
         </div>
       </div>
@@ -222,6 +251,13 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }
         value={meal}
         onChange={(e) => setMeal(e.target.value)}
       />
+
+      {/* ── Optional context divider ── */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-[var(--rc-border-subtle)]" />
+        <MonoLabel size="micro" colour="ghost" className="w-auto shrink-0">OPTIONAL CONTEXT</MonoLabel>
+        <div className="flex-1 h-px bg-[var(--rc-border-subtle)]" />
+      </div>
 
       {/* Guests */}
       <FieldGroup label="Guests">
@@ -237,19 +273,12 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }
         />
       </FieldGroup>
 
-      {/* Price per bottle */}
-      <FieldGroup label="Price per bottle">
-        <SegmentedControl
-          options={[
-            { value: 'any' as const, label: 'Any' },
-            { value: 'under-20' as const, label: 'Under $20' },
-            { value: '20-50' as const, label: '$20–50' },
-            { value: '50-plus' as const, label: '$50+' },
-          ]}
-          value={budgetPerBottle}
-          onChange={setBudgetPerBottle}
-        />
-      </FieldGroup>
+      {/* Price per bottle — dual-handle slider */}
+      <PriceRangeSlider
+        value={priceRange}
+        onChange={setPriceRange}
+        absoluteMax={absoluteMax}
+      />
 
       <CellarToggle value={cellarOnly} onChange={setCellarOnly} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />

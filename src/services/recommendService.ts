@@ -47,11 +47,13 @@ function buildOccasionPrompt(occasionId: OccasionId, context: OccasionContext): 
   switch (occasionId) {
     case 'dinner': {
       const c = context as DinnerContext;
-      const dinnerBudgetLabel = c.budgetPerBottle === 'any' ? 'Any' : c.budgetPerBottle === 'under-20' ? 'Under $20' : c.budgetPerBottle === '20-50' ? '$20–50' : '$50+';
+      const priceClause = c.priceRange
+        ? `Price per bottle: $${c.priceRange.min}–$${c.priceRange.max}`
+        : 'Price: no constraint';
       return `The user is planning a dinner.
 Meal: ${c.meal || 'Not specified'}
 Guests: ${c.guests}
-Budget per bottle: ${dinnerBudgetLabel}`;
+${priceClause}`;
     }
     case 'party': {
       const c = context as PartyContext;

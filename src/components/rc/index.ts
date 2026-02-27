@@ -23,3 +23,4 @@ export { RCWineCard } from './RCWineCard';
 export * from './loading';
 export { EnvBadge } from './EnvBadge';
 export { PageHeader } from './PageHeader';
+export { PriceRangeSlider } from './PriceRangeSlider';
