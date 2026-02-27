@@ -40,9 +40,11 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
           <span className="font-[var(--rc-font-mono)] text-xs uppercase tracking-wider">Back</span>
         </button>
       </div>
-      <div className="px-6 pb-4">
-        <Heading scale="heading">{occasion.title}</Heading>
-      </div>
+      {occasionId !== 'dinner' && (
+        <div className="px-6 pb-4">
+          <Heading scale="heading">{occasion.title}</Heading>
+        </div>
+      )}
 
       {/* Form Content */}
       <div className="flex-1 px-6 pb-24">

@@ -162,7 +162,7 @@ export const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
           box-shadow: var(--rc-shadow-card, 0 1px 3px rgba(0,0,0,0.12));
           pointer-events: auto;
           cursor: pointer;
-          margin-top: 0;
+          margin-top: -11px;
         }
         .price-range-thumb::-moz-range-thumb {
           width: 22px;

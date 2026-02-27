@@ -276,13 +276,15 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
       {/* Header */}
       <div className="px-6 py-4 border-b border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-elevated,#2d2d2d)] flex items-center justify-between shrink-0">
         <div className="flex-1">
-          <Heading scale="heading" colour="accent-pink" as="h2" className="text-3xl!">
-            Rémy Sommelier
+          <Heading scale="heading" colour="accent-pink" as="h2">
+            RÉMY SOMMELIER
           </Heading>
           <div className="flex items-center gap-2 mt-1">
-            <MonoLabel size="micro" colour="ghost" as="span" className="w-auto">
-              {isRecording ? "I'm listening" : 'Text Ready'}
-            </MonoLabel>
+            {isRecording && (
+              <MonoLabel size="micro" colour="ghost" as="span" className="w-auto">
+                I'm listening
+              </MonoLabel>
+            )}
             {stagedWine && (
               <span className="flex items-center gap-2">
                 <span className="bg-[var(--rc-accent-acid)] text-[var(--rc-ink-primary)] px-2 py-0.5 rounded-[var(--rc-radius-sm)] font-[var(--rc-font-mono)] text-[9px] font-bold animate-pulse">
