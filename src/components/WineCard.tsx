@@ -110,9 +110,11 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
       {/* Data Zone */}
       <div className="flex flex-col flex-1 mt-[var(--rc-card-gap-image-to-data)] min-w-0">
         {/* Wine Name */}
-        <MonoLabel size="micro" weight="bold" colour="ghost" truncate className="mb-[var(--rc-card-gap-text-lines)]">
-          {wine.name || ''}
-        </MonoLabel>
+        {wine.name && (
+          <MonoLabel size="micro" weight="bold" colour="ghost" truncate className="mb-[var(--rc-card-gap-text-lines)]">
+            {wine.name}
+          </MonoLabel>
+        )}
 
         {/* Producer */}
         <MonoLabel size="label" colour="tertiary" uppercase={false} truncate className="mb-[var(--rc-card-gap-text-lines)]">

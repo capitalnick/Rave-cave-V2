@@ -331,7 +331,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
         </div>
 
         {/* Footer — always visible, outside scroll container */}
-        <div className="shrink-0 bg-[var(--rc-surface-primary)] border-t border-[var(--rc-border-emphasis)] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="shrink-0 bg-[var(--rc-surface-primary)] border-t border-[var(--rc-border-emphasis)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {commitStage !== 'idle' && commitStage !== undefined ? (
             <CommitTransition stage={commitStage} onComplete={onCommitAnimationComplete ?? (() => {})} />
           ) : (
