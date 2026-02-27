@@ -82,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({
   const showFilters = activeTab === 'cellar' && filters && facetOptions && onToggleFacet && onClearFilters;
 
   return (
-    <div className="flex h-screen bg-[var(--rc-surface-tertiary)] text-[var(--rc-ink-primary)] overflow-hidden">
+    <div className="flex h-dvh bg-[var(--rc-surface-tertiary)] text-[var(--rc-ink-primary)] overflow-hidden">
       {/* Desktop Rail */}
       <aside className={cn(
         "hidden md:flex border-r-[var(--rc-divider-emphasis-weight)] border-r-[var(--rc-ink-primary)] flex-col items-center bg-[var(--rc-surface-primary)] overflow-hidden transition-[width] duration-200",
@@ -169,35 +169,6 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--rc-surface-primary)] border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] z-50 grid grid-cols-5 items-end pb-[env(safe-area-inset-bottom)]" role="tablist">
-        {navItems.slice(0, 2).map((item) => (
-          <TabItem
-            key={item.id}
-            icon={<item.icon className="w-full h-full" />}
-            iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
-            label={getTabLabel(item)}
-            state={activeTab === item.id ? 'active' : 'inactive'}
-            context="tabbar"
-            onClick={() => onTabChange(item.id)}
-          />
-        ))}
-        <div className="flex items-center justify-center pb-1">
-          <ScanFAB ref={scanFABRef} onClick={onScanPress} onLongPress={onScanLongPress} className="relative -top-3" />
-        </div>
-        {navItems.slice(2).map((item) => (
-          <TabItem
-            key={item.id}
-            icon={<item.icon className="w-full h-full" />}
-            iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
-            label={getTabLabel(item)}
-            state={activeTab === item.id ? 'active' : 'inactive'}
-            context="tabbar"
-            onClick={() => onTabChange(item.id)}
-          />
-        ))}
-      </nav>
-
       {/* Mobile Filter Overlay — BottomSheet */}
       {showFilters && (
         <BottomSheet
@@ -222,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({
 
       <main
         ref={scrollWrapperRef}
-        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] pb-16 md:pb-0 transition-[padding-right] duration-200"
+        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] transition-[padding-right] duration-200"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
         {subscriptionStatus === 'past_due' && (
@@ -236,6 +207,35 @@ const Layout: React.FC<LayoutProps> = ({
         <div className="flex-1 min-h-0">
           {children}
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="md:hidden bg-[var(--rc-surface-primary)] border-t-[var(--rc-divider-emphasis-weight)] border-t-[var(--rc-ink-primary)] z-50 grid grid-cols-5 items-end pb-[env(safe-area-inset-bottom)] shrink-0" role="tablist">
+          {navItems.slice(0, 2).map((item) => (
+            <TabItem
+              key={item.id}
+              icon={<item.icon className="w-full h-full" />}
+              iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
+              label={getTabLabel(item)}
+              state={activeTab === item.id ? 'active' : 'inactive'}
+              context="tabbar"
+              onClick={() => onTabChange(item.id)}
+            />
+          ))}
+          <div className="flex items-center justify-center pb-1">
+            <ScanFAB ref={scanFABRef} onClick={onScanPress} onLongPress={onScanLongPress} className="relative -top-3" />
+          </div>
+          {navItems.slice(2).map((item) => (
+            <TabItem
+              key={item.id}
+              icon={<item.icon className="w-full h-full" />}
+              iconFilled={<item.icon className="w-full h-full" strokeWidth={2.5} />}
+              label={getTabLabel(item)}
+              state={activeTab === item.id ? 'active' : 'inactive'}
+              context="tabbar"
+              onClick={() => onTabChange(item.id)}
+            />
+          ))}
+        </nav>
       </main>
       <ProdWriteGuard />
     </div>

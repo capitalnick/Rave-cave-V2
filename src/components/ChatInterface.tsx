@@ -365,7 +365,7 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
       )}
 
       {/* Input Area */}
-      <div className="px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
+      <div className="px-6 pt-4 pb-6 md:pb-4 bg-[var(--rc-surface-elevated,#2d2d2d)] border-t border-[var(--rc-border-emphasis)] shrink-0">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-end gap-3">
             {isRecording ? (

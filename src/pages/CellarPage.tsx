@@ -6,8 +6,7 @@ import { useInventory } from '@/context/InventoryContext';
 import { useAuth } from '@/context/AuthContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { IconButton, Heading, MonoLabel, Body, PageHeader, Button, EnvBadge } from '@/components/rc';
-import WineIcon from '@/components/icons/WineIcon';
+import { IconButton, Heading, MonoLabel, Body, PageHeader, Button } from '@/components/rc';
 import { SortMenu } from '@/components/SortMenu';
 import type { SortField } from '@/types';
 
@@ -116,10 +115,13 @@ const CellarPage: React.FC = () => {
       <div className="p-4 sm:p-10 space-y-4 sm:space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
           <div className="flex-1 w-full">
-            <div className="flex items-center gap-3 mb-2 md:hidden">
+            <div className="flex items-start">
+              <div className="flex-1">
+                <PageHeader title="THE COLLECTION" subtitle="Your cellar inventory" />
+              </div>
               <button
                 onClick={() => navigate({ to: '/settings' })}
-                className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[var(--rc-accent-pink)] active:scale-90 transition-transform"
+                className="w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-[var(--rc-accent-pink)] active:scale-90 transition-transform ml-auto md:hidden mt-1"
                 aria-label="Account settings"
               >
                 {user?.photoURL ? (
@@ -138,9 +140,7 @@ const CellarPage: React.FC = () => {
                   </div>
                 )}
               </button>
-              <EnvBadge />
             </div>
-            <PageHeader title="THE COLLECTION" subtitle="Your cellar inventory" />
           </div>
 
           <div className="flex gap-4 sm:gap-6 items-end flex-shrink-0">
