@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GripVertical, X, Plus } from 'lucide-react';
 import { CepageCombobox } from './CepageCombobox';
 import { grapePercentTotal } from '../utils/grapeUtils';
@@ -18,6 +19,8 @@ export function GrapeVarietiesEditor({
 }: GrapeVarietiesEditorProps) {
   // Ensure at least one empty row when mounted with empty array
   const rows = value.length > 0 ? value : [{ name: '', pct: null }];
+  // Counter bumps on addRow, used in key to force-remount last row (triggers autoFocus)
+  const [addCounter, setAddCounter] = useState(0);
 
   const updateRow = (index: number, patch: Partial<GrapeVariety>) => {
     const next = rows.map((r, i) => (i === index ? { ...r, ...patch } : r));
@@ -27,6 +30,7 @@ export function GrapeVarietiesEditor({
 
   const addRow = () => {
     if (rows.length >= MAX_VARIETIES) return;
+    setAddCounter(c => c + 1);
     onChange([...rows, { name: '', pct: null }]);
   };
 
@@ -42,7 +46,7 @@ export function GrapeVarietiesEditor({
     <div className={className}>
       <div className="flex flex-col gap-2">
         {rows.map((row, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i === rows.length - 1 ? `row-${i}-${addCounter}` : i} className="flex items-center gap-2">
             <GripVertical
               size={14}
               className="text-[var(--rc-ink-ghost)] shrink-0 cursor-grab"
@@ -53,7 +57,7 @@ export function GrapeVarietiesEditor({
                 value={row.name}
                 onChange={(name) => updateRow(i, { name })}
                 placeholder="Variety…"
-                autoFocus={i === 0 && rows.length === 1}
+                autoFocus={i === rows.length - 1 && row.name === ''}
               />
             </div>
 

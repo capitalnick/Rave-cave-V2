@@ -99,6 +99,9 @@ ${context.meal ? '- Select 1-2 pairing picks (best matches for the meal)' : ''}
 }
 
 function formatBudget(ctx: WineListAnalysisContext): string {
+  if (ctx.priceRange) {
+    return `${ctx.currency} ${ctx.priceRange.min}\u2013${ctx.priceRange.max}`;
+  }
   if (ctx.budgetMin === null && ctx.budgetMax === null) return 'No limit';
   if (ctx.budgetMin === null) return `Under ${ctx.currency} ${ctx.budgetMax}`;
   if (ctx.budgetMax === null) return `${ctx.currency} ${ctx.budgetMin}+`;

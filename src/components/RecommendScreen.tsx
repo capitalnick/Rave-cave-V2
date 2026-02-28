@@ -7,7 +7,7 @@ import RecommendResults from './recommend/RecommendResults';
 import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
-import { Heading, Spinner } from '@/components/rc';
+import { Heading } from '@/components/rc';
 import { getRecommendations, getRecommendationsStream, getSurpriseMe, getPartyRecommendation } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
@@ -386,16 +386,28 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
       )}
 
       {view === 'loading' && (
-        <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
-          <Spinner size="lg" tone="pink" />
-          <Heading
-            scale="subhead"
-            colour="secondary"
-            align="centre"
-            className={`transition-opacity duration-300 ${thinkingFading ? 'opacity-0' : 'opacity-100'}`}
-          >
-            {thinkingText}
-          </Heading>
+        <div className="flex flex-col items-center justify-center h-full gap-8 px-6">
+          {/* Rémy avatar */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center shadow-lg">
+              <span className="font-[var(--rc-font-mono)] text-2xl font-bold text-white leading-none">R</span>
+            </div>
+            <Heading
+              scale="subhead"
+              colour="secondary"
+              align="centre"
+              className={`transition-opacity duration-300 ${thinkingFading ? 'opacity-0' : 'opacity-100'}`}
+            >
+              {thinkingText}
+            </Heading>
+          </div>
+
+          {/* Skeleton preview */}
+          <div className="w-full max-w-sm flex flex-col gap-3 opacity-40">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="h-16 rounded-lg bg-[var(--rc-surface-secondary)] animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
+            ))}
+          </div>
         </div>
       )}
 

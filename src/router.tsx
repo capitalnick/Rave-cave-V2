@@ -170,7 +170,7 @@ function AppShell() {
         onWineCommitted={ctx.handleWineCommitted}
         onViewWine={ctx.handleViewWine}
         prefillData={ctx.prefillData}
-        onAskRemy={isPremium ? ctx.handleAskRemyAboutWine : undefined}
+        onAskRemy={ctx.handleAskRemyAboutWine}
         manualEntryDirect={ctx.manualEntryDirect}
         onClearManualEntryDirect={ctx.clearManualEntryDirect}
         onImport={handleOpenImport}

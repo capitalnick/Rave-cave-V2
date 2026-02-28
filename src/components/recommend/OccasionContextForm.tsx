@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Button, Input, Switch, Heading, MonoLabel, Body, PriceRangeSlider } from '@/components/rc';
+import { Button, Input, Heading, MonoLabel, Body, PriceRangeSlider } from '@/components/rc';
 import { OCCASIONS, WINE_PER_PERSON_MULTIPLIER } from '@/constants';
 import { cn } from '@/lib/utils';
 import { ABSOLUTE_MAX_PRICE } from '@/utils/priceSlider';
@@ -130,18 +130,26 @@ const Stepper: React.FC<StepperProps> = ({ value, min, max, onChange }) => {
   );
 };
 
-// ── Cellar Toggle ──
+// ── Source Picker ──
 
-interface CellarToggleProps {
-  value: boolean;
-  onChange: (v: boolean) => void;
+type SourceMode = 'cellar' | 'any';
+
+interface SourcePickerProps {
+  value: SourceMode;
+  onChange: (v: SourceMode) => void;
 }
 
-const CellarToggle: React.FC<CellarToggleProps> = ({ value, onChange }) => (
-  <div className="flex items-center justify-between py-3">
-    <MonoLabel size="label" colour="primary" className="w-auto">From my cellar only</MonoLabel>
-    <Switch variant={value ? 'On' : 'Off'} onChange={onChange} />
-  </div>
+const SourcePicker: React.FC<SourcePickerProps> = ({ value, onChange }) => (
+  <FieldGroup label="Source">
+    <SegmentedControl
+      options={[
+        { value: 'cellar' as const, label: 'My Cellar' },
+        { value: 'any' as const, label: 'Any Source' },
+      ]}
+      value={value}
+      onChange={onChange}
+    />
+  </FieldGroup>
 );
 
 // ── Submit Button ──
@@ -193,7 +201,8 @@ interface FormProps {
 const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting, inventory = [] }) => {
   const [meal, setMeal] = useState('');
   const [guests, setGuests] = useState<2 | 4 | 6 | 8>(4);
-  const [cellarOnly, setCellarOnly] = useState(true);
+  const [sourceMode, setSourceMode] = useState<SourceMode>('cellar');
+  const cellarOnly = sourceMode === 'cellar';
 
   const absoluteMax = ABSOLUTE_MAX_PRICE;
 
@@ -282,7 +291,7 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting, 
         absoluteMax={absoluteMax}
       />
 
-      <CellarToggle value={cellarOnly} onChange={setCellarOnly} />
+      <SourcePicker value={sourceMode} onChange={setSourceMode} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />
     </div>
   );
@@ -314,7 +323,8 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
   const [winePerPerson, setWinePerPerson] = useState<WinePerPerson>('moderate');
   const [vibe, setVibe] = useState<PartyVibe>('casual-dinner');
   const [budgetPerBottle, setBudgetPerBottle] = useState<'any' | 'under-20' | '20-50' | '50-plus'>('any');
-  const [cellarOnly, setCellarOnly] = useState(true);
+  const [sourceMode, setSourceMode] = useState<SourceMode>('cellar');
+  const cellarOnly = sourceMode === 'cellar';
 
   const totalBottles = Math.ceil(guests * WINE_PER_PERSON_MULTIPLIER[winePerPerson]);
 
@@ -421,7 +431,7 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
         />
       </FieldGroup>
 
-      <CellarToggle value={cellarOnly} onChange={setCellarOnly} />
+      <SourcePicker value={sourceMode} onChange={setSourceMode} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />
     </div>
   );
@@ -434,7 +444,8 @@ const GiftForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) 
   const [theirTaste, setTheirTaste] = useState('');
   const [occasion, setOccasion] = useState<'birthday' | 'thank-you' | 'holiday' | 'just-because'>('just-because');
   const [budget, setBudget] = useState<'any' | 'under-30' | '30-75' | '75-plus'>('any');
-  const [cellarOnly, setCellarOnly] = useState(false); // Default OFF for gifts
+  const [sourceMode, setSourceMode] = useState<SourceMode>('any'); // Default "Any Source" for gifts
+  const cellarOnly = sourceMode === 'cellar';
 
   const handleSubmit = () => {
     setSubmitting(true);
@@ -492,7 +503,7 @@ const GiftForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) 
         />
       </FieldGroup>
 
-      <CellarToggle value={cellarOnly} onChange={setCellarOnly} />
+      <SourcePicker value={sourceMode} onChange={setSourceMode} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />
     </div>
   );
@@ -500,30 +511,45 @@ const GiftForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) 
 
 // ── Wine List Form ──
 
-type BudgetPreset = 'any' | 'under-30' | '30-60' | '60-100' | '100-plus';
-
-const BUDGET_RANGES: Record<BudgetPreset, { min: number | null; max: number | null }> = {
-  'any':       { min: null, max: null },
-  'under-30':  { min: null, max: 30 },
-  '30-60':     { min: 30,   max: 60 },
-  '60-100':    { min: 60,   max: 100 },
-  '100-plus':  { min: 100,  max: null },
-};
+const STYLE_CHIPS = [
+  'Full-bodied',
+  'Light & Crisp',
+  'Old World',
+  'New World',
+  'Natural',
+  'Low Tannin',
+  'Oaky',
+  'Fruit-forward',
+] as const;
 
 const WineListForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
-  const [budgetPreset, setBudgetPreset] = useState<BudgetPreset>('any');
+  const absoluteMax = ABSOLUTE_MAX_PRICE;
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: absoluteMax });
   const [meal, setMeal] = useState('');
   const [preferences, setPreferences] = useState('');
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+
+  const isFullRange = priceRange.min === 0 && priceRange.max >= absoluteMax;
+
+  const toggleStyle = (style: string) => {
+    setSelectedStyles(prev =>
+      prev.includes(style) ? prev.filter(s => s !== style) : [...prev, style]
+    );
+  };
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const range = BUDGET_RANGES[budgetPreset];
+    const allPrefs = [
+      ...selectedStyles,
+      preferences.trim(),
+    ].filter(Boolean).join(', ');
     const ctx: WineListAnalysisContext = {
-      budgetMin: range.min,
-      budgetMax: range.max,
+      budgetMin: isFullRange ? null : priceRange.min,
+      budgetMax: isFullRange ? null : priceRange.max,
+      priceRange: isFullRange ? null : priceRange,
       currency: 'AUD',
       meal,
-      preferences,
+      preferences: allPrefs,
     };
     onSubmit(ctx);
   };
@@ -532,19 +558,11 @@ const WineListForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting
     <div className="space-y-6">
       <Heading scale="subhead" colour="primary">TELL RÉMY WHAT YOU'RE AFTER</Heading>
 
-      <FieldGroup label="Budget per bottle">
-        <SegmentedControl
-          options={[
-            { value: 'any' as const,      label: 'Any' },
-            { value: 'under-30' as const, label: 'Under $30' },
-            { value: '30-60' as const,    label: '$30\u201360' },
-            { value: '60-100' as const,   label: '$60\u2013100' },
-            { value: '100-plus' as const, label: '$100+' },
-          ]}
-          value={budgetPreset}
-          onChange={setBudgetPreset}
-        />
-      </FieldGroup>
+      <PriceRangeSlider
+        value={priceRange}
+        onChange={setPriceRange}
+        absoluteMax={absoluteMax}
+      />
 
       <FieldGroup label="What are you eating?" hint={!meal ? 'Helps Rémy pick pairings from the list' : undefined}>
         <Input
@@ -555,9 +573,26 @@ const WineListForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting
         />
       </FieldGroup>
 
-      <FieldGroup label="Style preferences (optional)">
+      <FieldGroup label="Style preferences">
+        <div className="flex flex-wrap gap-2">
+          {STYLE_CHIPS.map(style => (
+            <button
+              key={style}
+              type="button"
+              onClick={() => toggleStyle(style)}
+              className={cn(
+                "px-3 py-1.5 rounded-full font-[var(--rc-font-mono)] text-[10px] uppercase tracking-wider font-bold border transition-all duration-150",
+                selectedStyles.includes(style)
+                  ? "bg-[var(--rc-selection-bg)] border-[var(--rc-selection-border)] text-[var(--rc-selection-text)]"
+                  : "bg-white border-[var(--rc-border-subtle)] text-[var(--rc-ink-primary)] hover:bg-[var(--rc-surface-secondary)]"
+              )}
+            >
+              {style}
+            </button>
+          ))}
+        </div>
         <Input
-          placeholder="e.g., French only, nothing too tannic..."
+          placeholder="Other preferences…"
           value={preferences}
           onChange={(e) => setPreferences(e.target.value)}
         />

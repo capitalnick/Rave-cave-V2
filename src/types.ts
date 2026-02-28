@@ -143,6 +143,7 @@ export interface GiftContext {
 export interface WineListAnalysisContext {
   budgetMin: number | null;
   budgetMax: number | null;
+  priceRange: { min: number; max: number } | null;
   currency: 'AUD' | 'EUR' | 'USD' | 'GBP';
   meal: string;
   preferences: string;

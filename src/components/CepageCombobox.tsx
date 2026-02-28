@@ -26,7 +26,20 @@ const CepageCombobox: React.FC<CepageComboboxProps> = ({
   const filtered = useMemo(() => {
     if (!value.trim()) return [];
     const q = value.toLowerCase();
-    return GRAPE_VARIETIES.filter((g) => g.toLowerCase().includes(q));
+    const matches = GRAPE_VARIETIES.filter((g) => g.toLowerCase().includes(q));
+    // Sort: exact match first, then prefix, then substring
+    matches.sort((a, b) => {
+      const al = a.toLowerCase();
+      const bl = b.toLowerCase();
+      if (al === q && bl !== q) return -1;
+      if (bl === q && al !== q) return 1;
+      const aPrefix = al.startsWith(q);
+      const bPrefix = bl.startsWith(q);
+      if (aPrefix && !bPrefix) return -1;
+      if (bPrefix && !aPrefix) return 1;
+      return 0;
+    });
+    return matches;
   }, [value]);
 
   // Show dropdown when there are matches and input has text
