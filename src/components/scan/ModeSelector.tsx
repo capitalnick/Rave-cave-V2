@@ -8,15 +8,18 @@ interface ModeSelectorProps {
   onGalleryCapture: (file: File) => void;
   onManualEntry: () => void;
   onImport?: () => void;
-  autoCapture?: boolean;
 }
 
 /**
  * Opens a native file picker by creating a temporary <input type="file">.
  * This avoids having hidden file inputs in the DOM that can be auto-triggered
  * by focus traps (e.g. Radix Dialog) on Chrome Android / Desktop.
+ *
+ * IMPORTANT: Must be called within a direct user gesture (click/tap handler)
+ * for reliable behaviour on mobile browsers. Do NOT call from
+ * requestAnimationFrame, setTimeout, or useEffect.
  */
-function openFilePicker(
+export function openFilePicker(
   opts: { capture?: boolean },
   onFile: (file: File) => void,
 ) {
@@ -31,9 +34,7 @@ function openFilePicker(
   input.click();
 }
 
-const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryCapture, onManualEntry, onImport, autoCapture }) => {
-  const hasAutoFired = useRef(false);
-
+const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryCapture, onManualEntry, onImport }) => {
   const handleCamera = useCallback(() => {
     hapticLight();
     openFilePicker({ capture: true }, onCameraCapture);
@@ -43,16 +44,6 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
     hapticLight();
     openFilePicker({ capture: false }, onGalleryCapture);
   }, [onGalleryCapture]);
-
-  // Auto-open camera for multi-scan session flow ("SCAN ANOTHER")
-  // Only fire once per mount to avoid loops
-  if (autoCapture && !hasAutoFired.current) {
-    hasAutoFired.current = true;
-    // Schedule after first paint so the mode-select screen is visible
-    requestAnimationFrame(() => {
-      openFilePicker({ capture: true }, onCameraCapture);
-    });
-  }
 
   return (
     <div className="flex flex-col items-center px-6 pt-10 pb-16 space-y-8">

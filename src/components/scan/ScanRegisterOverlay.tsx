@@ -1,7 +1,7 @@
 import React, { useReducer, useEffect, useRef, useCallback, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AnimatePresence, motion } from 'framer-motion';
-import ModeSelector from './ModeSelector';
+import ModeSelector, { openFilePicker } from './ModeSelector';
 import CaptureReview from './CaptureReview';
 import ExtractionProgress from './ExtractionProgress';
 import RegisterDraft from './RegisterDraft';
@@ -38,7 +38,6 @@ interface ScanState {
   errorCode: ExtractionErrorCode | null;
   previewUrl: string | null;
   rawFile: File | null;
-  autoCapture: boolean;
 }
 
 type ScanAction =
@@ -67,7 +66,6 @@ const initialState: ScanState = {
   errorCode: null,
   previewUrl: null,
   rawFile: null,
-  autoCapture: false,
 };
 
 function makeDraft(
@@ -100,7 +98,6 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         errorCode: null,
         previewUrl: action.previewUrl,
         rawFile: action.file,
-        autoCapture: false,
       };
     case 'GALLERY_CAPTURE':
       return {
@@ -110,7 +107,6 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         errorCode: null,
         previewUrl: action.previewUrl,
         rawFile: action.file,
-        autoCapture: false,
       };
     case 'REVIEW_ACCEPT':
       return { ...state, stage: 'extracting', error: null, errorCode: null };
@@ -138,9 +134,9 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
         draft: makeDraft('manual', { quantity: 1, price: 0, format: '750ml' }, null, null),
       };
     case 'RETAKE':
-      return { ...state, stage: 'mode-select', error: null, errorCode: null, draft: null, previewUrl: null, rawFile: null, autoCapture: false };
+      return { ...state, stage: 'mode-select', error: null, errorCode: null, draft: null, previewUrl: null, rawFile: null };
     case 'SCAN_NEXT':
-      return { ...state, stage: 'mode-select', error: null, errorCode: null, draft: null, previewUrl: null, rawFile: null, autoCapture: true };
+      return { ...state, stage: 'mode-select', error: null, errorCode: null, draft: null, previewUrl: null, rawFile: null };
     case 'RETRY':
       return { ...state, stage: 'extracting', error: null, errorCode: null };
     case 'UPDATE_DRAFT':
@@ -425,12 +421,15 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   }, []);
 
   // "SCAN ANOTHER" on success screen — starts/continues multi-scan session
+  // Opens camera directly from click handler (user gesture) so mobile browsers
+  // allow the file input. Then resets state to mode-select as a fallback view.
   const handleScanAnother = useCallback(() => {
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
     if (!session.isActive) session.startSession();
+    openFilePicker({ capture: true }, handleCameraCapture);
     dispatch({ type: 'SCAN_NEXT' });
     setCommitStage('idle');
-  }, [state.previewUrl, session]);
+  }, [state.previewUrl, session, handleCameraCapture]);
 
   // "DONE" on success screen
   const handleDone = useCallback(() => {
@@ -505,9 +504,10 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   const handleDiscardConfirm = useCallback(() => {
     setShowDiscard(false);
     if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
-    // Discard current draft, reopen camera
+    // Discard current draft, reopen camera directly from user gesture
+    openFilePicker({ capture: true }, handleCameraCapture);
     dispatch({ type: 'SCAN_NEXT' });
-  }, [state.previewUrl]);
+  }, [state.previewUrl, handleCameraCapture]);
 
   const handleDiscardKeep = useCallback(() => {
     setShowDiscard(false);
@@ -545,7 +545,6 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 onGalleryCapture={handleGalleryCapture}
                 onManualEntry={handleManualEntry}
                 onImport={onImport}
-                autoCapture={state.autoCapture}
               />
             </motion.div>
           )}
