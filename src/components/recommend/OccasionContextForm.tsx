@@ -321,14 +321,17 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
   const [guests, setGuests] = useState(8);
   const [winePerPerson, setWinePerPerson] = useState<WinePerPerson>('moderate');
   const [vibe, setVibe] = useState<PartyVibe>('casual-dinner');
-  const [budgetPerBottle, setBudgetPerBottle] = useState<'any' | 'under-20' | '20-50' | '50-plus'>('any');
   const [sourceMode, setSourceMode] = useState<SourceMode>('cellar');
+
+  const absoluteMax = ABSOLUTE_MAX_PRICE;
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: absoluteMax });
+  const isFullRange = priceRange.min === 0 && priceRange.max >= absoluteMax;
 
   const totalBottles = Math.ceil(guests * WINE_PER_PERSON_MULTIPLIER[winePerPerson]);
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const ctx: PartyContext = { guests, winePerPerson, totalBottles, vibe, budgetPerBottle, sourceMode };
+    const ctx: PartyContext = { guests, winePerPerson, totalBottles, vibe, priceRange: isFullRange ? null : priceRange, sourceMode };
     onSubmit(ctx);
   };
 
@@ -415,19 +418,12 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
         </div>
       </FieldGroup>
 
-      {/* Budget */}
-      <FieldGroup label="Budget per bottle">
-        <SegmentedControl
-          options={[
-            { value: 'any' as const, label: 'Any' },
-            { value: 'under-20' as const, label: 'Under $20' },
-            { value: '20-50' as const, label: '$20–50' },
-            { value: '50-plus' as const, label: '$50+' },
-          ]}
-          value={budgetPerBottle}
-          onChange={setBudgetPerBottle}
-        />
-      </FieldGroup>
+      {/* Budget per bottle — dual-handle slider */}
+      <PriceRangeSlider
+        value={priceRange}
+        onChange={setPriceRange}
+        absoluteMax={absoluteMax}
+      />
 
       <SourcePicker value={sourceMode} onChange={setSourceMode} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />

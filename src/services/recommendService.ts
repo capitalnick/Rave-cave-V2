@@ -90,9 +90,9 @@ const vibeStyleGuide: Record<PartyVibe, string> = {
 };
 
 function buildPartyPromptBlock(c: PartyContext): string {
-  const budgetLabel = c.budgetPerBottle === 'any'
-    ? 'No budget constraint'
-    : c.budgetPerBottle.replace('-', ' to $').replace('under-', 'Under $').replace('plus', '+');
+  const priceClause = c.priceRange
+    ? `$${c.priceRange.min}\u2013$${c.priceRange.max}`
+    : 'No budget constraint';
 
   return `The user is planning a party ("Wines for a Crowd").
 
@@ -101,7 +101,7 @@ CROWD DETAILS:
 - Wine per person: ${c.winePerPerson} (${WINE_PER_PERSON_MULTIPLIER[c.winePerPerson]} bottles pp)
 - Total bottles needed: ${c.totalBottles}
 - Vibe: ${c.vibe}
-- Budget per bottle: ${budgetLabel}
+- Budget per bottle: ${priceClause}
 - Source mode: ${c.sourceMode}
 
 VIBE STYLE GUIDE for "${c.vibe}": ${vibeStyleGuide[c.vibe]}

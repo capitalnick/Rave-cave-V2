@@ -130,7 +130,7 @@ export interface PartyContext {
   winePerPerson: WinePerPerson;
   totalBottles: number;
   vibe: PartyVibe;
-  budgetPerBottle: 'any' | 'under-20' | '20-50' | '50-plus';
+  priceRange: { min: number; max: number } | null;
   sourceMode: SourceMode;
 }
 
