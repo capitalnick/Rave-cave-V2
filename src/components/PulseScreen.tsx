@@ -13,7 +13,6 @@ import MaturityDonut from './pulse/MaturityDonut';
 import TypeBalance from './pulse/TypeBalance';
 import DrinkingWindowTimeline from './pulse/DrinkingWindowTimeline';
 import DrinkingWindowBar from './pulse/DrinkingWindowBar';
-import TopProducers from './pulse/TopProducers';
 import { Loader2 } from 'lucide-react';
 import { useProfile } from '@/context/ProfileContext';
 import { getCurrencySymbol } from '@/lib/formatPrice';
@@ -314,8 +313,6 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
           onChipClick={(value) => onFilterNavigate?.('maturityStatus', value)}
         />
 
-        {/* Top Producers */}
-        <TopProducers producers={stats.topProducers} />
       </div>
     </div>
   );
