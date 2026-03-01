@@ -13,6 +13,32 @@ import { useProfile } from '@/context/ProfileContext';
 
 const MAX_TOOL_ROUNDS = 5;
 
+// ── Intent Detection ──
+
+const CELLAR_INTENT_PATTERNS = [
+  /\bdo i have\b/i,
+  /\bin my (cellar|cave|collection|rave cave)\b/i,
+  /\bmy (reds|whites|bottles|wines|collection)\b/i,
+  /\bwhat('s| is) in\b/i,
+  /\badd (this|it|a bottle)\b/i,
+  /\bdrink tonight\b/i,
+  /\brecommend (from|out of) my\b/i,
+  /\bhow many (do i|bottles)\b/i,
+  /\bmy inventory\b/i,
+  /\bcheck (my|the) (cellar|cave)\b/i,
+  /\bsomething (similar|like that) (in|from) my\b/i,
+];
+
+const AFFIRMATIVE_PATTERNS = [/^(yes|yeah|sure|yep|ok|okay|go ahead|do it|please)[\s!.]*$/i];
+
+function detectCellarIntent(message: string): boolean {
+  return CELLAR_INTENT_PATTERNS.some(pattern => pattern.test(message));
+}
+
+function isAffirmative(message: string): boolean {
+  return AFFIRMATIVE_PATTERNS.some(p => p.test(message.trim()));
+}
+
 async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string; tools?: any[] }) {
   const res = await authFetch(FUNCTION_URLS.gemini, {
     method: 'POST',
@@ -66,6 +92,11 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
   const [stagedWine, setStagedWine] = useState<StagedWine | null>(null);
   const [ingestionState, setIngestionState] = useState<IngestionState>('IDLE');
   
+  // Chat mode — general (no cellar) or cellar (full inventory)
+  const [chatMode, setChatMode] = useState<'general' | 'cellar'>('general');
+  const hasOfferedCellarBridge = useRef(false);
+  const awaitingCellarConfirmation = useRef(false);
+
   const historyRef = useRef<any[]>([]);
   const recognitionRef = useRef<any>(null);
   const ttsQueueRef = useRef<string[]>([]);
@@ -295,6 +326,23 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     setIsProcessing(true);
     stopSpeaking();
 
+    // ── Mode detection ──
+    // Images always trigger cellar mode (label scan → stageWine flow needs inventory)
+    let effectiveMode: 'general' | 'cellar' = chatMode;
+    if (imageBase64) {
+      effectiveMode = 'cellar';
+      setChatMode('cellar');
+    } else if (chatMode === 'general') {
+      if (awaitingCellarConfirmation.current && isAffirmative(text)) {
+        effectiveMode = 'cellar';
+        setChatMode('cellar');
+        awaitingCellarConfirmation.current = false;
+      } else if (detectCellarIntent(text)) {
+        effectiveMode = 'cellar';
+        setChatMode('cellar');
+      }
+    }
+
     let localPrice: number | null = null;
     let localQty: number | null = null;
     const priceMatch = text.match(/\$(\d+(\.\d{2})?)/);
@@ -321,8 +369,6 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       historyRef.current.push({ role: 'user', parts });
 
       // Enforce history turn limit to prevent unbounded context growth.
-      // A "turn" = one user message + one model response (including tool calls/results).
-      // We count user-role messages as turn boundaries.
       const maxTurns = CONFIG.MAX_HISTORY_TURNS;
       const userIndices: number[] = [];
       historyRef.current.forEach((entry, i) => {
@@ -333,7 +379,13 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
         historyRef.current = historyRef.current.slice(cutIndex);
       }
 
-      const prompt = buildSystemPrompt(cellarSnapshot, JSON.stringify(stagedWine));
+      // Build prompt with mode-aware inventory injection
+      const includeBridge = effectiveMode === 'general' && !hasOfferedCellarBridge.current;
+      const prompt = buildSystemPrompt(
+        effectiveMode === 'cellar' ? cellarSnapshot : null,
+        JSON.stringify(stagedWine),
+        includeBridge
+      );
 
       const toolDeclarations = [{ functionDeclarations: [
         { name: 'queryInventory', description: "Search the user's wine cellar. Use this whenever you need to find specific wines, answer questions about inventory, make food pairing recommendations, or check what's available. Always use this tool rather than relying on the cellar summary for specific wine queries.", parameters: {
@@ -415,6 +467,12 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
       historyRef.current.push({ role: 'model', parts: [{ text: finalContent }] });
       setTranscript(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: finalContent, timestamp: new Date() }]);
 
+      // Track bridge offer — after first general response, mark as offered
+      if (effectiveMode === 'general' && !hasOfferedCellarBridge.current) {
+        hasOfferedCellarBridge.current = true;
+        awaitingCellarConfirmation.current = true;
+      }
+
       /**
        * SPEECH REQUIREMENT:
        * Speak ONLY when mic mode was used.
@@ -428,7 +486,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [cellarSnapshot, handleToolCalls, speak, stopSpeaking]);
+  }, [cellarSnapshot, chatMode, handleToolCalls, speak, stopSpeaking]);
 
   const finalizeAndSubmitVoice = useCallback(() => {
     if (hasSubmittedRef.current) return;
