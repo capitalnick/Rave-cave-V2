@@ -90,6 +90,171 @@ interface FieldMapping {
   sampleValues: string[];
 }
 
+// ── Deterministic column mapping for known CSV formats ──
+// Case-insensitive lookup: handles CellarTracker, Vivino, and common variants
+// without needing an AI call for well-known columns.
+
+const KNOWN_COLUMN_MAP: Record<string, ImportableField | null> = {
+  // Identity / IDs — skip
+  "iwine": null,
+  "barcode": null,
+  "producerwineid": null,
+
+  // Producer
+  "producer": "producer",
+  "winery": "producer",
+  "estate": "producer",
+  "domaine": "producer",
+  "house": "producer",
+
+  // Wine name
+  "wine": "name",
+  "wine name": "name",
+  "winename": "name",
+  "label": "name",
+  "cuvee": "name",
+  "cuvée": "name",
+
+  // Vintage
+  "vintage": "vintage",
+  "year": "vintage",
+
+  // Wine type / colour
+  "color": "type",
+  "colour": "type",
+  "wine type": "type",
+  "winetype": "type",
+  "wine color": "type",
+  "wine colour": "type",
+
+  // "Type" can mean wine type (Red/White) in generic CSVs,
+  // or Still/Sparkling in CellarTracker. When Color column also
+  // exists, Type is demoted in the conflict resolution step below.
+  "type": "type",
+  // CellarTracker "Category" = Wine/Beer — skip
+  "category": null,
+
+  // Grape
+  "mastervarietal": "cepage",
+  "varietal": "cepage",
+  "grape": "cepage",
+  "grape variety": "cepage",
+  "grapes": "cepage",
+  "variety": "cepage",
+  "cépage": "cepage",
+  "cepage": "cepage",
+
+  // Geography
+  "country": "country",
+  "region": "region",
+  "appellation": "appellation",
+  // CellarTracker locale / subregion — skip (redundant)
+  "locale": null,
+  "subregion": null,
+  "sub-region": null,
+  "sub region": null,
+
+  // Storage — skip
+  "location": null,
+  "bin": null,
+
+  // Quantity
+  "quantity": "quantity",
+  "qty": "quantity",
+  "bottles": "quantity",
+  "count": "quantity",
+
+  // Price
+  "price": "price",
+  "cost": "price",
+  "bottle price": "price",
+  // Valuation / currency — skip
+  "valuation": null,
+  "currency": null,
+
+  // Drinking window
+  "beginconsume": "drinkFrom",
+  "begin consume": "drinkFrom",
+  "drink from": "drinkFrom",
+  "drinkfrom": "drinkFrom",
+  "endconsume": "drinkUntil",
+  "end consume": "drinkUntil",
+  "drink to": "drinkUntil",
+  "drink until": "drinkUntil",
+  "drinkuntil": "drinkUntil",
+
+  // Ratings
+  "myscore": "myRating",
+  "my score": "myRating",
+  "my rating": "myRating",
+  "your rating": "myRating",
+  "ctscore": null, // CellarTracker community score — skip
+  "ct score": null,
+  "average rating": "vivinoRating",
+  "rating": "vivinoRating",
+  "vivino rating": "vivinoRating",
+
+  // Notes
+  "tasting notes": "tastingNotes",
+  "tastingnotes": "tastingNotes",
+  "notes": "tastingNotes",
+  "your review": "tastingNotes",
+  "private note": "personalNote",
+  "my notes": "personalNote",
+  "personal note": "personalNote",
+
+  // Format
+  "size": "format",
+  "bottle size": "format",
+  "format": "format",
+
+  // Links & images
+  "link to wine": "linkToWine",
+  "imageurl": "imageUrl",
+  "image url": "imageUrl",
+  "image": "imageUrl",
+  "label image": "imageUrl",
+
+  // Vivino-specific skips
+  "scan date": null,
+  "wishlisted date": null,
+  "wine id": null,
+  "wine style": null,
+  "food pairing": null,
+};
+
+/**
+ * Attempt deterministic mapping for a CSV header.
+ * Returns the field mapping or undefined if not found.
+ */
+function deterministicMap(
+  header: string
+): { field: ImportableField | null; found: true } | { found: false } {
+  const key = header.toLowerCase().trim();
+  if (key in KNOWN_COLUMN_MAP) {
+    return {field: KNOWN_COLUMN_MAP[key], found: true};
+  }
+  return {found: false};
+}
+
+/**
+ * Detect source from headers.
+ */
+function detectSourceFromHeaders(headers: string[]): string {
+  const lower = headers.map((h) => h.toLowerCase());
+  if (lower.includes("iwine") || lower.includes("ctscore")) {
+    return "cellartracker";
+  }
+  if (
+    lower.includes("wine id") ||
+    lower.includes("wine style") ||
+    lower.includes("wishlisted date")
+  ) {
+    return "vivino";
+  }
+  return "generic";
+}
+
 // ── mapImportFields ──
 
 export const mapImportFields = onRequest(
@@ -169,112 +334,192 @@ export const mapImportFields = onRequest(
         return;
       }
 
-      // Build sample table for Gemini
       const sampleRows = rows.slice(0, 3);
-      const sampleTable = [
-        headers.join(" | "),
-        headers.map(() => "---").join(" | "),
-        ...sampleRows.map(
-          (row) => headers.map((h) => row[h] || "").join(" | ")
-        ),
-      ].join("\n");
+      const detectedSource = detectSourceFromHeaders(headers);
 
-      const fieldList = IMPORTABLE_FIELDS
-        .map((f) => `- ${f}`)
-        .join("\n");
-      const prompt = [
-        "You are mapping columns from a wine CSV " +
-        "to a wine database schema.",
-        "",
-        "Target fields:",
-        fieldList,
-        "",
-        "CSV data (headers + first 3 rows):",
-        "",
-        sampleTable,
-        "",
-        "For each CSV column, determine which " +
-        "target field it maps to (or null to skip).",
-        "Rate confidence: high, medium, or low.",
-        "",
-        "Common mappings:",
-        "- Wine/Wine Name/Label -> name",
-        "- Winery/Producer/Estate -> producer",
-        "- Varietal/Grape/Variety -> cepage",
-        "- Color/Wine Type/Category -> type " +
-        "(Red/White/Rosé/Sparkling/Dessert/Fortified)",
-        "- Size/Bottle Size/Format -> format",
-        "- Qty/Quantity/Bottles/Count -> quantity",
-        "- BeginConsume/Drink From -> drinkFrom",
-        "- EndConsume/Drink To/Drink Until -> drinkUntil",
-        "- Drinking Window (range like 2024-2030) " +
-        "-> TWO entries: drinkFrom AND drinkUntil",
-        "- Locale/Country -> country",
-        "- Location -> skip (storage, not origin)",
-        "- CT/CT Score/Wine ratings count -> skip",
-        "- Average rating -> vivinoRating (Vivino)",
-        "- Price/Cost/Valuation -> price",
-        "- My Score/My Rating/Your rating -> myRating",
-        "- Notes/Tasting Notes/Your review -> tastingNotes",
-        "- Private Note/My Notes -> personalNote",
-        "- Appellation/Sub-Region -> appellation",
-        "- Link to wine -> linkToWine",
-        "- Label image -> imageUrl",
-        "- Scan date/Wishlisted date -> skip",
-        "",
-        "IMPORTANT: If a column has date ranges " +
-        "like 2024-2030, map as TWO entries: " +
-        "drinkFrom AND drinkUntil.",
-        "",
-        "Respond ONLY with valid JSON, no backticks:",
-        "{",
-        "  \"mappings\": [",
-        "    { \"csvColumn\": \"Wine\", " +
-        "\"raveCaveField\": \"name\", " +
-        "\"confidence\": \"high\" },",
-        "    { \"csvColumn\": \"Loc\", " +
-        "\"raveCaveField\": null, " +
-        "\"confidence\": \"high\" }",
-        "  ],",
-        "  \"detectedSource\": " +
-        "\"cellartracker\"|\"vivino\"|\"generic\",",
-        "  \"notes\": \"Brief notes\"",
-        "}",
-      ].join("\n");
+      // ── Phase 1: Deterministic mapping for known columns ──
+      // Map all headers without deduplication first — conflicts are
+      // resolved in a separate pass before dedup.
+      const deterministicMappings: FieldMapping[] = [];
+      const unmappedHeaders: string[] = [];
 
-      const {GoogleGenAI} = await import("@google/genai");
-      const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY.value()});
+      for (const h of headers) {
+        const result = deterministicMap(h);
+        if (result.found) {
+          deterministicMappings.push({
+            csvColumn: h,
+            raveCaveField: result.field,
+            confidence: "high",
+            sampleValues: sampleRows
+              .map((r) => r[h] || "")
+              .filter(Boolean)
+              .slice(0, 3),
+          });
+        } else {
+          unmappedHeaders.push(h);
+        }
+      }
 
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          temperature: 0.1,
-          maxOutputTokens: 2000,
-        },
-      });
+      // ── Conflict resolution for CellarTracker-specific columns ──
+      const lowerHeaders = headers.map((h) => h.toLowerCase());
 
-      const responseText = result.text?.trim() || "";
+      // When both "Type" and "Color"/"Colour" exist: "Color" is the wine
+      // type (Red/White), "Type" is still/sparkling classification — skip.
+      const hasColorCol = lowerHeaders.some(
+        (h) => h === "color" || h === "colour"
+      );
+      const hasTypeCol = lowerHeaders.some((h) => h === "type");
+      if (hasColorCol && hasTypeCol) {
+        for (const m of deterministicMappings) {
+          if (m.csvColumn.toLowerCase() === "type") {
+            m.raveCaveField = null;
+          }
+        }
+      }
 
-      let aiMapping: {
-        mappings: {
-          csvColumn: string;
-          raveCaveField: string | null;
-          confidence: string;
-        }[];
-        detectedSource: string;
-        notes: string;
-      };
+      // When both "MasterVarietal" and "Varietal" exist: prefer
+      // MasterVarietal for cepage, skip Varietal.
+      const hasMasterVarietal = lowerHeaders.includes("mastervarietal");
+      const hasVarietal = lowerHeaders.includes("varietal");
+      if (hasMasterVarietal && hasVarietal) {
+        for (const m of deterministicMappings) {
+          if (m.csvColumn.toLowerCase() === "varietal") {
+            m.raveCaveField = null;
+          }
+        }
+      }
 
-      try {
-        const cleaned = responseText.replace(/```json|```/g, "").trim();
-        aiMapping = JSON.parse(cleaned);
-      } catch (_e) {
-        logger.error("Failed to parse Gemini mapping response", {
-          responseText,
-        });
-        // Fallback: return headers with no mapping
-        const fallbackMappings: FieldMapping[] = headers.map((h) => ({
+      // ── Deduplicate deterministic mappings ──
+      // First occurrence of each target field wins.
+      const usedDeterministic = new Set<string>();
+      for (const m of deterministicMappings) {
+        if (m.raveCaveField) {
+          if (usedDeterministic.has(m.raveCaveField)) {
+            m.raveCaveField = null;
+            m.confidence = "low";
+          } else {
+            usedDeterministic.add(m.raveCaveField);
+          }
+        }
+      }
+
+      // ── Phase 2: AI mapping for unrecognized columns only ──
+      let aiMappedColumns: FieldMapping[] = [];
+
+      if (unmappedHeaders.length > 0) {
+        const sampleTable = [
+          unmappedHeaders.join(" | "),
+          unmappedHeaders.map(() => "---").join(" | "),
+          ...sampleRows.map(
+            (row) => unmappedHeaders
+              .map((h) => row[h] || "")
+              .join(" | ")
+          ),
+        ].join("\n");
+
+        // Exclude fields already deterministically mapped
+        const remainingFields = IMPORTABLE_FIELDS
+          .filter((f) => !usedDeterministic.has(f));
+        const fieldList = remainingFields
+          .map((f) => `- ${f}`)
+          .join("\n");
+
+        const prompt = [
+          "You are mapping columns from a wine CSV " +
+          "to a wine database schema.",
+          "",
+          "Target fields (only these are still available):",
+          fieldList,
+          "",
+          "CSV columns to map (headers + first 3 rows):",
+          "",
+          sampleTable,
+          "",
+          "For each CSV column, determine which " +
+          "target field it maps to (or null to skip).",
+          "Rate confidence: high, medium, or low.",
+          "",
+          "Respond ONLY with valid JSON, no backticks:",
+          "{",
+          "  \"mappings\": [",
+          "    { \"csvColumn\": \"Col\", " +
+          "\"raveCaveField\": \"name\", " +
+          "\"confidence\": \"high\" },",
+          "    { \"csvColumn\": \"Other\", " +
+          "\"raveCaveField\": null, " +
+          "\"confidence\": \"high\" }",
+          "  ],",
+          "  \"notes\": \"Brief notes about unmapped columns\"",
+          "}",
+        ].join("\n");
+
+        try {
+          const {GoogleGenAI} = await import("@google/genai");
+          const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY.value()});
+
+          const aiResult = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: prompt,
+            config: {
+              temperature: 0.1,
+              maxOutputTokens: 2000,
+            },
+          });
+
+          const responseText = aiResult.text?.trim() || "";
+          const cleaned = responseText
+            .replace(/```json|```/g, "")
+            .trim();
+          const parsed2 = JSON.parse(cleaned);
+
+          aiMappedColumns = (parsed2.mappings || []).map(
+            (m: {
+              csvColumn: string;
+              raveCaveField: string | null;
+              confidence: string;
+            }) => ({
+              csvColumn: m.csvColumn,
+              raveCaveField:
+                (m.raveCaveField as ImportableField) || null,
+              confidence:
+                (m.confidence as "high" | "medium" | "low") || "low",
+              sampleValues: sampleRows
+                .map((r) => r[m.csvColumn] || "")
+                .filter(Boolean)
+                .slice(0, 3),
+            })
+          );
+        } catch (aiErr) {
+          logger.warn("AI mapping failed for remaining columns", {
+            error: aiErr instanceof Error ?
+              aiErr.message :
+              String(aiErr),
+            unmappedHeaders,
+          });
+          // Fallback: mark unmapped columns as skip
+          aiMappedColumns = unmappedHeaders.map((h) => ({
+            csvColumn: h,
+            raveCaveField: null,
+            confidence: "low" as const,
+            sampleValues: sampleRows
+              .map((r) => r[h] || "")
+              .filter(Boolean)
+              .slice(0, 3),
+          }));
+        }
+      }
+
+      // ── Merge: deterministic first, AI-mapped appended ──
+      // Preserve original CSV column order
+      const aiMap = new Map(
+        aiMappedColumns.map((m) => [m.csvColumn, m])
+      );
+      const enrichedMappings: FieldMapping[] = headers.map((h) => {
+        const det = deterministicMappings.find(
+          (m) => m.csvColumn === h
+        );
+        if (det) return det;
+        return aiMap.get(h) || {
           csvColumn: h,
           raveCaveField: null,
           confidence: "low" as const,
@@ -282,28 +527,8 @@ export const mapImportFields = onRequest(
             .map((r) => r[h] || "")
             .filter(Boolean)
             .slice(0, 3),
-        }));
-
-        res.json({
-          mappings: fallbackMappings,
-          detectedSource: "unknown",
-          notes: "AI mapping failed. Please map columns manually.",
-          totalRows: rows.length,
-          parseWarnings: parsed.errors.slice(0, 5).map((e) => e.message),
-        });
-        return;
-      }
-
-      // Enrich with sample values
-      const enrichedMappings: FieldMapping[] = aiMapping.mappings.map((m) => ({
-        csvColumn: m.csvColumn,
-        raveCaveField: (m.raveCaveField as ImportableField) || null,
-        confidence: (m.confidence as "high" | "medium" | "low") || "low",
-        sampleValues: sampleRows
-          .map((r) => r[m.csvColumn] || "")
-          .filter(Boolean)
-          .slice(0, 3),
-      }));
+        };
+      });
 
       // Deduplicate target fields (allow drinkFrom+drinkUntil from same col)
       const usedFields = new Set<string>();
@@ -334,18 +559,27 @@ export const mapImportFields = onRequest(
         }
       }
 
+      const deterministicCount = deterministicMappings
+        .filter((m) => m.raveCaveField !== null).length;
+      const notes = unmappedHeaders.length === 0
+        ? `All ${headers.length} columns matched automatically.`
+        : `Mapped ${deterministicCount} columns automatically, ` +
+          `${unmappedHeaders.length} required AI analysis.`;
+
       res.json({
         mappings: enrichedMappings,
-        detectedSource: aiMapping.detectedSource || "generic",
-        notes: aiMapping.notes || "",
+        detectedSource: detectedSource,
+        notes,
         totalRows: rows.length,
         parseWarnings: parsed.errors.slice(0, 5).map((e) => e.message),
       });
 
       logger.info("Import mapping completed", {
         uid,
-        source: aiMapping.detectedSource,
+        source: detectedSource,
         columns: headers.length,
+        deterministicHits: deterministicCount,
+        aiMapped: unmappedHeaders.length,
         rows: rows.length,
       });
     } catch (e) {
