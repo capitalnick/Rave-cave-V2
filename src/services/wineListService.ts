@@ -9,6 +9,21 @@ import type {
   RankLabel,
 } from '../types';
 
+// ── Progress Callbacks ──
+
+export type WineListProgressEvent =
+  | { stage: 'extracting'; pagesTotal: number }
+  | {
+      stage: 'extraction-complete';
+      entryCount: number;
+      entries: WineListEntry[];
+      restaurantName: string | null;
+      sections: { name: string; pageIndices: number[]; entryIds: string[] }[];
+    }
+  | { stage: 'generating-picks' };
+
+export type WineListProgressCallback = (progress: WineListProgressEvent) => void;
+
 // ── Prompt Builders ──
 
 function buildExtractionPrompt(): string {
@@ -306,14 +321,28 @@ export async function analyseWineList(
   base64Images: string[],
   context: WineListAnalysisContext,
   inventory: Wine[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onProgress?: WineListProgressCallback
 ): Promise<WineListAnalysis> {
   const sessionId = crypto.randomUUID();
+
+  // Fire immediately so the UI can show page count
+  onProgress?.({ stage: 'extracting', pagesTotal: base64Images.length });
 
   // Stage 1: Extraction
   const { restaurantName, entries, sections } = await extractWineListEntries(base64Images, signal);
 
+  // Fire when extraction is done — pass the data so UI can transition early
+  onProgress?.({
+    stage: 'extraction-complete',
+    entryCount: entries.length,
+    entries,
+    restaurantName,
+    sections,
+  });
+
   // Stage 2: Picks
+  onProgress?.({ stage: 'generating-picks' });
   const picks = await generateWineListPicks(entries, restaurantName, context, inventory, signal);
 
   return {

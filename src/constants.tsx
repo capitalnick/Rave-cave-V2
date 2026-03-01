@@ -242,13 +242,26 @@ export const RECOMMEND_FOLLOWUP_CHIPS = [
 
 export const WINELIST_MAX_PAGES = 10;
 
-export const WINELIST_STATUS_MESSAGES = [
+export const WINELIST_EXTRACTION_MESSAGES = [
   'Reading the wine list\u2026',
-  'Identifying producers & vintages\u2026',
-  'Checking your cellar for matches\u2026',
-  'Selecting R\u00e9my\u2019s picks\u2026',
-  'Finalising analysis\u2026',
+  'Spotting producers and regions\u2026',
+  'Identifying vintages and cuv\u00e9es\u2026',
+  'Logging every bottle on the list\u2026',
+  'Cross-referencing labels\u2026',
+  'Working through the pages\u2026',
+  'Nearly through the list\u2026',
+  'Getting the full picture\u2026',
+  'Almost there\u2026',
 ];
+
+export function getWineListTimeEstimate(pageCount: number): string {
+  if (pageCount <= 1) return 'This usually takes about a minute.';
+  if (pageCount <= 3) return `With ${pageCount} pages, allow 2\u20133 minutes.`;
+  return `With ${pageCount} pages, this can take 4\u20135 minutes \u2014 worth the wait.`;
+}
+
+export const WINELIST_LONG_WAIT_MESSAGE =
+  'Longer lists take more time \u2014 R\u00e9my reads every entry.';
 
 export const WINELIST_FOLLOWUP_CHIPS = [
   'Why this pick?',
@@ -257,6 +270,27 @@ export const WINELIST_FOLLOWUP_CHIPS = [
   'What pairs with my meal?',
   'Any wines from my cellar?',
 ];
+
+// ── Party Loading ──
+
+export const PARTY_LOADING_MESSAGES = [
+  'Sizing up your cellar\u2026',
+  'Calculating bottles per person\u2026',
+  'Matching styles to your vibe\u2026',
+  'Checking quantities\u2026',
+  'Balancing reds, whites, and bubbles\u2026',
+  'Allocating the crowd-pleasers\u2026',
+  'Almost ready to pour\u2026',
+];
+
+export function getPartyTimeEstimate(guestCount: number): string {
+  if (guestCount <= 10) return 'This usually takes 15\u201320 seconds.';
+  if (guestCount <= 30) return 'With a crowd this size, allow up to 30 seconds.';
+  return 'Big party \u2014 R\u00e9my is doing the maths. About 30 seconds.';
+}
+
+export const PARTY_LONG_WAIT_MESSAGE =
+  'Still calculating \u2014 larger cellars take a little longer.';
 
 // ── Rémy Thinking States ──
 

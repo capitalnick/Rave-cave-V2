@@ -1,7 +1,7 @@
 import React from 'react';
 import RecommendResultCard from './RecommendResultCard';
 import CrowdAllocationResults from './CrowdAllocationResults';
-import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/components/rc';
+import { Button, Heading, MonoLabel, InlineMessage, SkeletonResultCard } from '@/components/rc';
 import { OCCASIONS } from '@/constants';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
 import { getDirectImageUrl } from '@/utils/imageUrl';
@@ -144,9 +144,13 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
             />
           );
         })}
-        {isStreaming && Array.from({ length: 3 - recommendations.length }, (_, i) => (
-          <SkeletonCard key={`skeleton-${i}`} />
-        ))}
+        {isStreaming && isSurprise && recommendations.length === 0 && (
+          <SkeletonResultCard showBadge={false} />
+        )}
+        {isStreaming && !isSurprise && Array.from(
+          { length: Math.max(0, 3 - recommendations.length) },
+          (_, i) => <SkeletonResultCard key={`skeleton-${i}`} />
+        )}
       </div>
 
       {/* Surprise Me re-roll */}

@@ -7,7 +7,8 @@ import RecommendResults from './recommend/RecommendResults';
 import WineListCapture from './recommend/WineListCapture';
 import WineListLoading from './recommend/WineListLoading';
 import WineListResults from './recommend/WineListResults';
-import { Heading } from '@/components/rc';
+import PartyLoading from './recommend/PartyLoading';
+import { Heading, Spinner } from '@/components/rc';
 import { getRecommendations, getRecommendationsStream, getSurpriseMe, getPartyRecommendation } from '@/services/recommendService';
 import { analyseWineList, reanalyseWineListPicks } from '@/services/wineListService';
 import { useWineListCapture } from '@/hooks/useWineListCapture';
@@ -63,6 +64,8 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
   // Crowd allocation state
   const [crowdAllocation, setCrowdAllocation] = useState<CrowdAllocation | null>(null);
   const [crowdShortfall, setCrowdShortfall] = useState<CrowdShortfall | null>(null);
+  // Wine list picks loading (Stage 2 in background)
+  const [picksLoading, setPicksLoading] = useState(false);
 
   const cellarEmpty = inventory.length === 0;
   const isSurprise = selectedOccasion === 'surprise';
@@ -92,10 +95,15 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
     const doFetch = async () => {
       try {
         if (selectedOccasion === 'surprise') {
+          // Transition immediately — show skeleton on results screen
+          setIsStreaming(true);
+          setRecommendations([]);
+          setView('results');
+
           const result = await getSurpriseMe(inventory, surpriseExcludeIds);
           setRecommendations([result]);
+          setIsStreaming(false);
           setError(null);
-          setView('results');
         } else if (selectedOccasion === 'party') {
           // Party uses non-streaming crowd allocation
           const allocation = await getPartyRecommendation(occasionContext as PartyContext, inventory);
@@ -158,12 +166,32 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
         const result = await analyseWineList(
           wineListImages,
           occasionContext as WineListAnalysisContext,
-          inventory
+          inventory,
+          undefined,
+          (progress) => {
+            if (progress.stage === 'extraction-complete') {
+              // Transition early — show the wine list while picks generate
+              setWineListAnalysis({
+                sessionId: crypto.randomUUID(),
+                restaurantName: progress.restaurantName,
+                entries: progress.entries,
+                sections: progress.sections,
+                picks: [],
+                pageCount: wineListImages.length,
+                analysedAt: Date.now(),
+              });
+              setPicksLoading(true);
+              setView('winelist-results');
+            }
+          }
         );
+
+        // Stage 2 complete — update with picks
         setWineListAnalysis(result);
+        setPicksLoading(false);
         setError(null);
-        setView('winelist-results');
       } catch (err: any) {
+        setPicksLoading(false);
         setError(err.message || 'Failed to analyse the wine list.');
         setView('winelist-results');
       } finally {
@@ -274,6 +302,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
     setWineListAnalysis(null);
     setWineListImages([]);
     setIsReanalysing(false);
+    setPicksLoading(false);
     wineListCapture.clear();
     // Crowd cleanup
     setCrowdAllocation(null);
@@ -361,6 +390,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
           onHandoffToRemy={handleHandoffToRemy}
           onMealContextUpdate={handleMealContextUpdate}
           isReanalysing={isReanalysing}
+          picksLoading={picksLoading}
         />
       )}
 
@@ -387,29 +417,23 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
       )}
 
       {view === 'loading' && (
-        <div className="flex flex-col items-center justify-center h-full gap-8 px-6">
-          {/* Rémy avatar */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-[var(--rc-accent-pink)] flex items-center justify-center shadow-lg">
-              <span className="font-[var(--rc-font-mono)] text-2xl font-bold text-white leading-none">R</span>
+        <>
+          {selectedOccasion === 'party' && occasionContext ? (
+            <PartyLoading context={occasionContext as PartyContext} />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-6 px-6">
+              <Spinner size="lg" tone="pink" />
+              <Heading
+                scale="subhead"
+                colour="secondary"
+                align="centre"
+                className={`transition-opacity duration-300 ${thinkingFading ? 'opacity-0' : 'opacity-100'}`}
+              >
+                {thinkingText}
+              </Heading>
             </div>
-            <Heading
-              scale="subhead"
-              colour="secondary"
-              align="centre"
-              className={`transition-opacity duration-300 ${thinkingFading ? 'opacity-0' : 'opacity-100'}`}
-            >
-              {thinkingText}
-            </Heading>
-          </div>
-
-          {/* Skeleton preview */}
-          <div className="w-full max-w-sm flex flex-col gap-3 opacity-40">
-            {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="h-16 rounded-lg bg-[var(--rc-surface-secondary)] animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
-            ))}
-          </div>
-        </div>
+          )}
+        </>
       )}
 
       {view === 'results' && selectedOccasion && (

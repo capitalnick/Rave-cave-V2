@@ -3,3 +3,4 @@ export { InlineLoader } from './InlineLoader';
 export { SkeletonBlock } from './SkeletonBlock';
 export { SkeletonTextLine } from './SkeletonTextLine';
 export { SkeletonCard } from './SkeletonCard';
+export { SkeletonResultCard } from './SkeletonResultCard';
