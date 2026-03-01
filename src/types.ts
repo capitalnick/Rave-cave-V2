@@ -109,11 +109,13 @@ export interface Occasion {
 }
 
 // ── Context Types (per-occasion form inputs) ──
+export type SourceMode = 'cellar' | 'other' | 'both';
+
 export interface DinnerContext {
   meal: string;
   guests: 2 | 4 | 6 | 8;
   priceRange: { min: number; max: number } | null;
-  cellarOnly: boolean;
+  sourceMode: SourceMode;
 }
 
 export type PartyVibe =
@@ -129,7 +131,7 @@ export interface PartyContext {
   totalBottles: number;
   vibe: PartyVibe;
   budgetPerBottle: 'any' | 'under-20' | '20-50' | '50-plus';
-  cellarOnly: boolean;
+  sourceMode: SourceMode;
 }
 
 export interface GiftContext {
@@ -137,7 +139,7 @@ export interface GiftContext {
   theirTaste: string;
   occasion: 'birthday' | 'thank-you' | 'holiday' | 'just-because';
   budget: 'any' | 'under-30' | '30-75' | '75-plus';
-  cellarOnly: boolean;
+  sourceMode: SourceMode;
 }
 
 export interface WineListAnalysisContext {

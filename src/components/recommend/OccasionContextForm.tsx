@@ -14,6 +14,7 @@ import type {
   GiftContext,
   WineListAnalysisContext,
   Wine,
+  SourceMode,
 } from '@/types';
 
 interface OccasionContextFormProps {
@@ -132,8 +133,6 @@ const Stepper: React.FC<StepperProps> = ({ value, min, max, onChange }) => {
 
 // ── Source Picker ──
 
-type SourceMode = 'cellar' | 'any';
-
 interface SourcePickerProps {
   value: SourceMode;
   onChange: (v: SourceMode) => void;
@@ -143,8 +142,9 @@ const SourcePicker: React.FC<SourcePickerProps> = ({ value, onChange }) => (
   <FieldGroup label="Source">
     <SegmentedControl
       options={[
-        { value: 'cellar' as const, label: 'My Cellar' },
-        { value: 'any' as const, label: 'Any Source' },
+        { value: 'cellar' as SourceMode, label: 'My Cellar' },
+        { value: 'other' as SourceMode, label: 'Other Wines' },
+        { value: 'both' as SourceMode, label: 'Both' },
       ]}
       value={value}
       onChange={onChange}
@@ -202,7 +202,6 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting, 
   const [meal, setMeal] = useState('');
   const [guests, setGuests] = useState<2 | 4 | 6 | 8>(4);
   const [sourceMode, setSourceMode] = useState<SourceMode>('cellar');
-  const cellarOnly = sourceMode === 'cellar';
 
   const absoluteMax = ABSOLUTE_MAX_PRICE;
 
@@ -213,15 +212,15 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting, 
 
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: absoluteMax });
 
-  // Clamp max when cellarOnly changes
+  // Clamp max when sourceMode is cellar-only
   useEffect(() => {
-    if (cellarOnly && mostExpensive > 0) {
+    if (sourceMode === 'cellar' && mostExpensive > 0) {
       setPriceRange(prev => ({
         min: prev.min,
         max: Math.min(prev.max, Math.max(absoluteMax, mostExpensive)),
       }));
     }
-  }, [cellarOnly, mostExpensive, absoluteMax]);
+  }, [sourceMode, mostExpensive, absoluteMax]);
 
   const isFullRange = priceRange.min === 0 && priceRange.max >= absoluteMax;
 
@@ -231,7 +230,7 @@ const DinnerForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting, 
       meal,
       guests,
       priceRange: isFullRange ? null : priceRange,
-      cellarOnly,
+      sourceMode,
     };
     onSubmit(ctx);
   };
@@ -324,13 +323,12 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
   const [vibe, setVibe] = useState<PartyVibe>('casual-dinner');
   const [budgetPerBottle, setBudgetPerBottle] = useState<'any' | 'under-20' | '20-50' | '50-plus'>('any');
   const [sourceMode, setSourceMode] = useState<SourceMode>('cellar');
-  const cellarOnly = sourceMode === 'cellar';
 
   const totalBottles = Math.ceil(guests * WINE_PER_PERSON_MULTIPLIER[winePerPerson]);
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const ctx: PartyContext = { guests, winePerPerson, totalBottles, vibe, budgetPerBottle, cellarOnly };
+    const ctx: PartyContext = { guests, winePerPerson, totalBottles, vibe, budgetPerBottle, sourceMode };
     onSubmit(ctx);
   };
 
@@ -444,12 +442,11 @@ const GiftForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) 
   const [theirTaste, setTheirTaste] = useState('');
   const [occasion, setOccasion] = useState<'birthday' | 'thank-you' | 'holiday' | 'just-because'>('just-because');
   const [budget, setBudget] = useState<'any' | 'under-30' | '30-75' | '75-plus'>('any');
-  const [sourceMode, setSourceMode] = useState<SourceMode>('any'); // Default "Any Source" for gifts
-  const cellarOnly = sourceMode === 'cellar';
+  const [sourceMode, setSourceMode] = useState<SourceMode>('both'); // Default "Both" for gifts
 
   const handleSubmit = () => {
     setSubmitting(true);
-    const ctx: GiftContext = { recipient, theirTaste, occasion, budget, cellarOnly };
+    const ctx: GiftContext = { recipient, theirTaste, occasion, budget, sourceMode };
     onSubmit(ctx);
   };
 

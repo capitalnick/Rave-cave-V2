@@ -5,13 +5,13 @@ import { Button, Heading, MonoLabel, InlineMessage, SkeletonCard } from '@/compo
 import { OCCASIONS } from '@/constants';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
 import { getDirectImageUrl } from '@/utils/imageUrl';
-import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext, Wine, CrowdAllocation } from '@/types';
+import type { OccasionId, Recommendation, RecommendChatContext, OccasionContext, Wine, CrowdAllocation, SourceMode } from '@/types';
 
 interface RecommendResultsProps {
   occasionId: OccasionId;
   recommendations: Recommendation[];
   inventory: Wine[];
-  cellarOnly: boolean;
+  sourceMode: SourceMode;
   error: string | null;
   isStreaming?: boolean;
   onStartOver: () => void;
@@ -33,7 +33,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   occasionId,
   recommendations,
   inventory,
-  cellarOnly,
+  sourceMode,
   error,
   isStreaming = false,
   onStartOver,
@@ -69,7 +69,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
     return (
       <CrowdAllocationResults
         allocation={crowdAllocation}
-        cellarOnly={cellarOnly}
+        sourceMode={sourceMode}
         onStartOver={onStartOver}
         onHandoffToRemy={handleAskRemy}
       />
@@ -119,7 +119,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
             ? thinkingText
             : isSurprise
               ? "Rémy's surprise pick"
-              : `Rémy's top ${recommendations.length} pick${recommendations.length !== 1 ? 's' : ''} ${cellarOnly ? 'from your cellar' : 'from the wine world'}`
+              : `Rémy's top ${recommendations.length} pick${recommendations.length !== 1 ? 's' : ''} ${sourceMode === 'cellar' ? 'from your cellar' : sourceMode === 'other' ? 'from the wine world' : 'from cellar & beyond'}`
           }
         </MonoLabel>
       </div>

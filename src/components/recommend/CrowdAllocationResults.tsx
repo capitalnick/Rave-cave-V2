@@ -1,11 +1,11 @@
 import React from 'react';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { Button, Heading, MonoLabel } from '@/components/rc';
-import type { CrowdAllocation, CrowdAllocationItem, WineType } from '@/types';
+import type { CrowdAllocation, CrowdAllocationItem, WineType, SourceMode } from '@/types';
 
 interface CrowdAllocationResultsProps {
   allocation: CrowdAllocation;
-  cellarOnly: boolean;
+  sourceMode: SourceMode;
   onStartOver: () => void;
   onHandoffToRemy: () => void;
 }
@@ -30,7 +30,7 @@ function buildSearchUrl(item: CrowdAllocationItem): string {
 
 const CrowdAllocationResults: React.FC<CrowdAllocationResultsProps> = ({
   allocation,
-  cellarOnly,
+  sourceMode,
   onStartOver,
   onHandoffToRemy,
 }) => {
@@ -57,7 +57,7 @@ const CrowdAllocationResults: React.FC<CrowdAllocationResultsProps> = ({
       </div>
 
       {/* Non-cellar notice */}
-      {!cellarOnly && hasNonCellar && (
+      {sourceMode !== 'cellar' && hasNonCellar && (
         <div className="rounded-lg bg-[var(--rc-surface-tertiary)] px-4 py-2.5">
           <MonoLabel size="micro" colour="secondary">
             Includes wines to source &middot; tap a card to search
@@ -75,7 +75,7 @@ const CrowdAllocationResults: React.FC<CrowdAllocationResultsProps> = ({
       {/* Wine cards */}
       <div className="grid grid-cols-1 gap-3">
         {allocation.items.map((item, i) => (
-          <AllocationCard key={`${item.producer}-${item.vintage}-${i}`} item={item} cellarOnly={cellarOnly} />
+          <AllocationCard key={`${item.producer}-${item.vintage}-${i}`} item={item} sourceMode={sourceMode} />
         ))}
       </div>
 
@@ -107,10 +107,10 @@ const CrowdAllocationResults: React.FC<CrowdAllocationResultsProps> = ({
 
 interface AllocationCardProps {
   item: CrowdAllocationItem;
-  cellarOnly: boolean;
+  sourceMode: SourceMode;
 }
 
-const AllocationCard: React.FC<AllocationCardProps> = ({ item, cellarOnly }) => {
+const AllocationCard: React.FC<AllocationCardProps> = ({ item, sourceMode }) => {
   const accent = getAccentColor(item.wineType);
   const isExternal = !item.inCellar;
 
@@ -134,7 +134,7 @@ const AllocationCard: React.FC<AllocationCardProps> = ({ item, cellarOnly }) => 
           >
             {item.role}
           </span>
-          {isExternal && !cellarOnly && (
+          {isExternal && sourceMode !== 'cellar' && (
             <span className="inline-block px-2 py-0.5 rounded border border-[var(--rc-border-subtle)] text-[10px] font-bold uppercase tracking-wider text-[var(--rc-ink-ghost)] font-[var(--rc-font-mono)]">
               TO SOURCE
             </span>
@@ -176,7 +176,7 @@ const AllocationCard: React.FC<AllocationCardProps> = ({ item, cellarOnly }) => 
         )}
 
         {/* External search CTA */}
-        {isExternal && !cellarOnly && (
+        {isExternal && sourceMode !== 'cellar' && (
           <a
             href={buildSearchUrl(item)}
             target="_blank"

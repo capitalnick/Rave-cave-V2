@@ -25,6 +25,7 @@ import type {
   Wine,
   CrowdAllocation,
   CrowdShortfall,
+  SourceMode,
 } from '@/types';
 
 export type RecommendView =
@@ -200,10 +201,10 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
       return;
     }
 
-    // Pre-flight cellar check for party
+    // Pre-flight cellar check for party (only when source is cellar-only)
     if (selectedOccasion === 'party') {
       const partyCtx = context as PartyContext;
-      if (partyCtx.cellarOnly) {
+      if (partyCtx.sourceMode === 'cellar') {
         const totalCellarBottles = inventory.reduce((sum, w) => sum + w.quantity, 0);
         if (totalCellarBottles < partyCtx.totalBottles) {
           setCrowdShortfall({
@@ -250,7 +251,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
 
   const handleSearchOutsideCellar = useCallback(() => {
     if (!crowdShortfall) return;
-    const updatedContext: PartyContext = { ...crowdShortfall.originalContext, cellarOnly: false };
+    const updatedContext: PartyContext = { ...crowdShortfall.originalContext, sourceMode: 'both' };
     setOccasionContext(updatedContext);
     setCrowdShortfall(null);
     setCrowdAllocation(null);
@@ -287,8 +288,8 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
   }, []);
 
   const handleRetryWithoutCellar = useCallback(() => {
-    if (occasionContext && 'cellarOnly' in occasionContext) {
-      setOccasionContext({ ...occasionContext, cellarOnly: false } as any);
+    if (occasionContext && 'sourceMode' in occasionContext) {
+      setOccasionContext({ ...occasionContext, sourceMode: 'both' } as any);
     }
     setError(null);
     setRecommendations([]);
@@ -314,7 +315,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
     });
   }, [onHandoffToRemy, requirePremium]);
 
-  const cellarOnly = occasionContext ? (occasionContext as any).cellarOnly !== false : true;
+  const sourceMode: SourceMode = occasionContext ? ((occasionContext as any).sourceMode || 'cellar') : 'cellar';
 
   return (
     <div className="h-full overflow-hidden">
@@ -416,7 +417,7 @@ const RecommendScreen: React.FC<RecommendScreenProps> = ({ inventory, resetKey, 
           occasionId={selectedOccasion}
           recommendations={recommendations}
           inventory={inventory}
-          cellarOnly={cellarOnly}
+          sourceMode={sourceMode}
           error={error}
           isStreaming={isStreaming}
           onStartOver={handleBack}

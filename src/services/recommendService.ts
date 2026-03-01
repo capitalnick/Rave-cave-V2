@@ -11,6 +11,7 @@ import type {
   CrowdAllocation,
   CrowdAllocationItem,
   PartyVibe,
+  SourceMode,
 } from '../types';
 
 import { WINE_PER_PERSON_MULTIPLIER } from '../constants';
@@ -101,7 +102,7 @@ CROWD DETAILS:
 - Total bottles needed: ${c.totalBottles}
 - Vibe: ${c.vibe}
 - Budget per bottle: ${budgetLabel}
-- Cellar only: ${c.cellarOnly}
+- Source mode: ${c.sourceMode}
 
 VIBE STYLE GUIDE for "${c.vibe}": ${vibeStyleGuide[c.vibe]}
 
@@ -112,9 +113,11 @@ ALLOCATION INSTRUCTIONS:
 - Include a short rationale per wine explaining why it fits the vibe and role.
 - Vary by type, region, and price to create an interesting spread.
 
-${c.cellarOnly
+${c.sourceMode === 'cellar'
   ? `CELLAR-ONLY MODE: Every wine MUST come from the cellar. Each item must have a valid wineId and inCellar: true. If you cannot fill ${c.totalBottles} bottles from the cellar, return as many as you can.`
-  : `OPEN MODE: Prefer cellar wines where possible. For cellar wines, set wineId to the cellar ID and inCellar: true. For wines not in the cellar, set wineId to null and inCellar: false.`
+  : c.sourceMode === 'other'
+  ? `OUTSIDE-CELLAR MODE: Every wine MUST be from outside the cellar. Do NOT include any wine from the cellar inventory. Set wineId to null and inCellar: false for all items.`
+  : `MIXED MODE: Include wines from both the cellar AND from outside. You MUST include at least one cellar wine (inCellar: true with valid wineId) and at least one non-cellar wine (inCellar: false, wineId: null).`
 }
 
 Return ONLY a valid JSON object (no markdown fences, no extra text) with this exact shape:
@@ -143,7 +146,7 @@ function buildRecommendPrompt(
   occasionId: OccasionId,
   context: OccasionContext,
   cellarSnapshot: string,
-  cellarOnly: boolean,
+  sourceMode: SourceMode,
   excludeIds?: string[]
 ): string {
   const occasionDetails = buildOccasionPrompt(occasionId, context);
@@ -154,14 +157,19 @@ function buildRecommendPrompt(
     ? `\nDo NOT recommend any of these previously suggested wines (by producer+vintage): ${excludeIds.join(', ')}`
     : '';
 
-  const cellarInstruction = cellarOnly
+  const cellarInstruction = sourceMode === 'cellar'
     ? `You MUST only recommend wines from the user's cellar inventory below. If fewer than ${count} good matches exist, return fewer.
 
 CELLAR INVENTORY:
 ${cellarSnapshot}`
-    : `You may recommend any wine from your general knowledge. The user's cellar is provided for reference — if a recommendation happens to match a cellar wine, note it.
+    : sourceMode === 'other'
+    ? `You MUST only recommend wines that are NOT in the user's cellar. Do not recommend any wine that appears in the cellar inventory below.
 
-CELLAR INVENTORY (for reference):
+CELLAR INVENTORY (avoid these wines):
+${cellarSnapshot}`
+    : `You should recommend a mix of wines from the user's cellar AND wines from your general knowledge. You MUST include at least one wine from the cellar and at least one wine not in the cellar.
+
+CELLAR INVENTORY:
 ${cellarSnapshot}`;
 
   return `You are Rémy, an expert French sommelier for "Rave Cave".
@@ -254,9 +262,9 @@ export async function getRecommendations(
   context: OccasionContext,
   inventory: Wine[]
 ): Promise<Recommendation[]> {
-  const cellarOnly = context ? (context as any).cellarOnly !== false : true;
+  const sourceMode: SourceMode = context ? ((context as any).sourceMode || 'cellar') : 'cellar';
   const cellarSnapshot = buildCellarSnapshotForPrompt(inventory);
-  const systemInstruction = buildRecommendPrompt(occasionId, context, cellarSnapshot, cellarOnly);
+  const systemInstruction = buildRecommendPrompt(occasionId, context, cellarSnapshot, sourceMode);
 
   const response = await callGeminiProxy({
     model: CONFIG.MODELS.TEXT,
@@ -279,7 +287,7 @@ export async function getSurpriseMe(
     'surprise',
     null,
     cellarSnapshot,
-    inventory.length > 0,
+    inventory.length > 0 ? 'cellar' : 'both',
     excludeIds
   );
 
@@ -299,7 +307,7 @@ export async function getSurpriseMe(
 
 // ── Crowd Allocation API ──
 
-function parseCrowdAllocation(rawText: string, inventory: Wine[], cellarOnly: boolean): CrowdAllocation {
+function parseCrowdAllocation(rawText: string, inventory: Wine[], sourceMode: SourceMode): CrowdAllocation {
   let cleaned = rawText.trim();
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
@@ -336,12 +344,18 @@ function parseCrowdAllocation(rawText: string, inventory: Wine[], cellarOnly: bo
     };
   });
 
-  // In cellarOnly mode, filter out any non-cellar items
-  if (cellarOnly) {
+  // In cellar-only mode, filter out any non-cellar items
+  if (sourceMode === 'cellar') {
     const before = items.length;
     items = items.filter(i => i.inCellar);
     if (items.length < before) {
-      console.warn(`[CrowdAllocation] Filtered ${before - items.length} non-cellar items in cellarOnly mode`);
+      console.warn(`[CrowdAllocation] Filtered ${before - items.length} non-cellar items in cellar-only mode`);
+    }
+  } else if (sourceMode === 'other') {
+    const before = items.length;
+    items = items.filter(i => !i.inCellar);
+    if (items.length < before) {
+      console.warn(`[CrowdAllocation] Filtered ${before - items.length} cellar items in other-only mode`);
     }
   }
 
@@ -360,9 +374,11 @@ export async function getPartyRecommendation(
   const cellarSnapshot = buildCellarSnapshotForPrompt(inventory);
   const occasionDetails = buildPartyPromptBlock(context);
 
-  const cellarInstruction = context.cellarOnly
+  const cellarInstruction = context.sourceMode === 'cellar'
     ? `You MUST only recommend wines from the user's cellar inventory below.\n\nCELLAR INVENTORY:\n${cellarSnapshot}`
-    : `You may recommend any wine. The user's cellar is provided for reference.\n\nCELLAR INVENTORY (for reference):\n${cellarSnapshot}`;
+    : context.sourceMode === 'other'
+    ? `You MUST only recommend wines NOT in the user's cellar. Do not include any wine from the inventory below.\n\nCELLAR INVENTORY (avoid these):\n${cellarSnapshot}`
+    : `Include a mix of cellar wines and non-cellar wines. You MUST include at least one from each.\n\nCELLAR INVENTORY:\n${cellarSnapshot}`;
 
   const systemInstruction = `You are Rémy, an expert French sommelier for "Rave Cave".\n\n${occasionDetails}\n\n${cellarInstruction}`;
 
@@ -375,7 +391,7 @@ export async function getPartyRecommendation(
   const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
 
-  return parseCrowdAllocation(text, inventory, context.cellarOnly);
+  return parseCrowdAllocation(text, inventory, context.sourceMode);
 }
 
 // ── Streaming API ──
@@ -464,9 +480,9 @@ export async function getRecommendationsStream(
   onRecommendation: (rec: Recommendation) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const cellarOnly = context ? (context as any).cellarOnly !== false : true;
+  const sourceMode: SourceMode = context ? ((context as any).sourceMode || 'cellar') : 'cellar';
   const cellarSnapshot = buildCellarSnapshotForPrompt(inventory);
-  const systemInstruction = buildRecommendPrompt(occasionId, context, cellarSnapshot, cellarOnly);
+  const systemInstruction = buildRecommendPrompt(occasionId, context, cellarSnapshot, sourceMode);
 
   await callGeminiProxyStream(
     {
