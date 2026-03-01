@@ -225,7 +225,8 @@ const KNOWN_COLUMN_MAP: Record<string, ImportableField | null> = {
 
 /**
  * Attempt deterministic mapping for a CSV header.
- * Returns the field mapping or undefined if not found.
+ * @param {string} header The CSV column header to look up.
+ * @return {object} The mapping result with found flag.
  */
 function deterministicMap(
   header: string
@@ -238,7 +239,9 @@ function deterministicMap(
 }
 
 /**
- * Detect source from headers.
+ * Detect the CSV source (CellarTracker, Vivino, or generic) from headers.
+ * @param {string[]} headers The CSV column headers.
+ * @return {string} The detected source identifier.
  */
 function detectSourceFromHeaders(headers: string[]): string {
   const lower = headers.map((h) => h.toLowerCase());
@@ -561,10 +564,10 @@ export const mapImportFields = onRequest(
 
       const deterministicCount = deterministicMappings
         .filter((m) => m.raveCaveField !== null).length;
-      const notes = unmappedHeaders.length === 0
-        ? `All ${headers.length} columns matched automatically.`
-        : `Mapped ${deterministicCount} columns automatically, ` +
-          `${unmappedHeaders.length} required AI analysis.`;
+      const notes = unmappedHeaders.length === 0 ?
+        `All ${headers.length} columns matched automatically.` :
+        `Mapped ${deterministicCount} columns automatically, ` +
+        `${unmappedHeaders.length} required AI analysis.`;
 
       res.json({
         mappings: enrichedMappings,
