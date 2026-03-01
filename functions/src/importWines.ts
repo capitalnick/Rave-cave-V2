@@ -224,18 +224,142 @@ const KNOWN_COLUMN_MAP: Record<string, ImportableField | null> = {
 };
 
 /**
+ * Normalise a header for lookup: lowercase, strip separators.
+ * "Bottle_Price" -> "bottle price", "DrinkFrom" -> "drinkfrom"
+ * @param {string} header The raw CSV header.
+ * @return {string} The normalised key.
+ */
+function normaliseHeader(header: string): string {
+  return header
+    .trim()
+    .replace(/[_-]+/g, " ") // underscores/dashes → spaces
+    .replace(/([a-z])([A-Z])/g, "$1 $2") // camelCase → spaces
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * Attempt deterministic mapping for a CSV header.
+ * Tries exact lowercase match first, then normalised form.
  * @param {string} header The CSV column header to look up.
  * @return {object} The mapping result with found flag.
  */
 function deterministicMap(
   header: string
 ): { field: ImportableField | null; found: true } | { found: false } {
+  // Exact lowercase match
   const key = header.toLowerCase().trim();
   if (key in KNOWN_COLUMN_MAP) {
     return {field: KNOWN_COLUMN_MAP[key], found: true};
   }
+  // Normalised match (handles underscores, camelCase, dashes)
+  const normalised = normaliseHeader(header);
+  if (normalised !== key && normalised in KNOWN_COLUMN_MAP) {
+    return {field: KNOWN_COLUMN_MAP[normalised], found: true};
+  }
   return {found: false};
+}
+
+// ── Value-based inference ──
+// When the column name doesn't match, inspect sample values to infer the field.
+
+const WINE_TYPES = new Set([
+  "red", "white", "rosé", "rose", "sparkling", "dessert", "fortified",
+]);
+const COUNTRIES = new Set([
+  "australia", "france", "italy", "spain", "germany", "chile",
+  "argentina", "new zealand", "south africa", "portugal", "usa",
+  "united states", "austria", "greece", "hungary", "lebanon",
+  "georgia", "uruguay", "canada", "israel", "england",
+]);
+const FORMAT_PATTERN = /^\d{3,4}\s*ml$|^\d+(\.\d+)?\s*l$/i;
+const YEAR_PATTERN = /^(19|20)\d{2}$/;
+const PRICE_PATTERN = /^\$?\d+(\.\d{1,2})?$/;
+const URL_PATTERN = /^https?:\/\//i;
+const RATING_RANGE = {min: 0, max: 100};
+
+/**
+ * Infer a Rave Cave field from sample values when the column name
+ * doesn't match the known dictionary.
+ * @param {string[]} samples 1-3 non-empty sample values.
+ * @param {Set<string>} usedFields Fields already claimed.
+ * @return {ImportableField | null} The inferred field or null.
+ */
+function inferFieldFromValues(
+  samples: string[],
+  usedFields: Set<string>
+): ImportableField | null {
+  if (samples.length === 0) return null;
+  const cleaned = samples.map((s) => s.trim()).filter(Boolean);
+  if (cleaned.length === 0) return null;
+
+  // Helper: return field only if not already used
+  const claim = (f: ImportableField): ImportableField | null =>
+    usedFields.has(f) ? null : f;
+
+  // Wine type — all samples are known types
+  if (cleaned.every((v) => WINE_TYPES.has(v.toLowerCase()))) {
+    return claim("type");
+  }
+
+  // URL — likely imageUrl or linkToWine
+  if (cleaned.every((v) => URL_PATTERN.test(v))) {
+    if (cleaned.some((v) => /image|img|thumb|label|photo/i.test(v))) {
+      return claim("imageUrl") || claim("linkToWine");
+    }
+    return claim("linkToWine") || claim("imageUrl");
+  }
+
+  // Format — "750ml", "1.5L"
+  if (cleaned.every((v) => FORMAT_PATTERN.test(v.replace(/\s/g, "")))) {
+    return claim("format");
+  }
+
+  // Country — all samples are known countries
+  if (cleaned.every((v) => COUNTRIES.has(v.toLowerCase()))) {
+    return claim("country");
+  }
+
+  // Years — 4-digit numbers in 1900–2099 range
+  if (cleaned.every((v) => YEAR_PATTERN.test(v))) {
+    const years = cleaned.map((v) => parseInt(v, 10));
+    const avg = years.reduce((a, b) => a + b, 0) / years.length;
+    // Drinking windows are typically future; vintages are past/present
+    const currentYear = new Date().getFullYear();
+    if (avg > currentYear + 2) {
+      return claim("drinkUntil") || claim("drinkFrom");
+    }
+    return claim("vintage") || claim("drinkFrom");
+  }
+
+  // Price — "$35" or "85.00"
+  if (cleaned.every((v) => PRICE_PATTERN.test(v))) {
+    const nums = cleaned.map((v) =>
+      parseFloat(v.replace(/[^0-9.]/g, ""))
+    );
+    // Prices typically > 5 and < 10000
+    if (nums.every((n) => n >= 5 && n <= 10000)) {
+      return claim("price");
+    }
+  }
+
+  // Small integers 1-99 — likely quantity or rating
+  if (cleaned.every((v) => /^\d{1,2}$/.test(v))) {
+    const nums = cleaned.map((v) => parseInt(v, 10));
+    if (nums.every((n) => n >= 1 && n <= 20)) {
+      return claim("quantity");
+    }
+    if (
+      nums.every(
+        (n) => n >= RATING_RANGE.min && n <= RATING_RANGE.max
+      )
+    ) {
+      return claim("myRating") || claim("vivinoRating");
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -406,21 +530,48 @@ export const mapImportFields = onRequest(
         }
       }
 
-      // ── Phase 2: AI mapping for unrecognized columns only ──
+      // ── Phase 2: Value-based inference for remaining columns ──
+      // Inspect sample values to infer field type even when the column
+      // name is unrecognised.
+      const inferredMappings: FieldMapping[] = [];
+      const stillUnmapped: string[] = [];
+
+      for (const h of unmappedHeaders) {
+        const samples = sampleRows
+          .map((r) => r[h] || "")
+          .filter(Boolean)
+          .slice(0, 3);
+        const inferred = inferFieldFromValues(
+          samples, usedDeterministic
+        );
+        if (inferred) {
+          usedDeterministic.add(inferred);
+          inferredMappings.push({
+            csvColumn: h,
+            raveCaveField: inferred,
+            confidence: "medium",
+            sampleValues: samples,
+          });
+        } else {
+          stillUnmapped.push(h);
+        }
+      }
+
+      // ── Phase 3: AI mapping for still-unrecognized columns ──
       let aiMappedColumns: FieldMapping[] = [];
 
-      if (unmappedHeaders.length > 0) {
+      if (stillUnmapped.length > 0) {
         const sampleTable = [
-          unmappedHeaders.join(" | "),
-          unmappedHeaders.map(() => "---").join(" | "),
+          stillUnmapped.join(" | "),
+          stillUnmapped.map(() => "---").join(" | "),
           ...sampleRows.map(
-            (row) => unmappedHeaders
+            (row) => stillUnmapped
               .map((h) => row[h] || "")
               .join(" | ")
           ),
         ].join("\n");
 
-        // Exclude fields already deterministically mapped
+        // Only offer fields not already claimed by tiers 1+2
         const remainingFields = IMPORTABLE_FIELDS
           .filter((f) => !usedDeterministic.has(f));
         const fieldList = remainingFields
@@ -465,7 +616,7 @@ export const mapImportFields = onRequest(
             contents: prompt,
             config: {
               temperature: 0.1,
-              maxOutputTokens: 2000,
+              maxOutputTokens: 4000,
             },
           });
 
@@ -497,10 +648,10 @@ export const mapImportFields = onRequest(
             error: aiErr instanceof Error ?
               aiErr.message :
               String(aiErr),
-            unmappedHeaders,
+            stillUnmapped,
           });
-          // Fallback: mark unmapped columns as skip
-          aiMappedColumns = unmappedHeaders.map((h) => ({
+          // Fallback: mark remaining columns as skip
+          aiMappedColumns = stillUnmapped.map((h) => ({
             csvColumn: h,
             raveCaveField: null,
             confidence: "low" as const,
@@ -512,8 +663,11 @@ export const mapImportFields = onRequest(
         }
       }
 
-      // ── Merge: deterministic first, AI-mapped appended ──
+      // ── Merge all tiers: deterministic → inferred → AI ──
       // Preserve original CSV column order
+      const inferredMap = new Map(
+        inferredMappings.map((m) => [m.csvColumn, m])
+      );
       const aiMap = new Map(
         aiMappedColumns.map((m) => [m.csvColumn, m])
       );
@@ -522,6 +676,8 @@ export const mapImportFields = onRequest(
           (m) => m.csvColumn === h
         );
         if (det) return det;
+        const inf = inferredMap.get(h);
+        if (inf) return inf;
         return aiMap.get(h) || {
           csvColumn: h,
           raveCaveField: null,
@@ -564,10 +720,21 @@ export const mapImportFields = onRequest(
 
       const deterministicCount = deterministicMappings
         .filter((m) => m.raveCaveField !== null).length;
-      const notes = unmappedHeaders.length === 0 ?
+      const inferredCount = inferredMappings.length;
+      const aiCount = aiMappedColumns
+        .filter((m) => m.raveCaveField !== null).length;
+      const totalMapped = deterministicCount + inferredCount + aiCount;
+      const notes = stillUnmapped.length === 0 && unmappedHeaders.length === 0 ?
         `All ${headers.length} columns matched automatically.` :
-        `Mapped ${deterministicCount} columns automatically, ` +
-        `${unmappedHeaders.length} required AI analysis.`;
+        [
+          `${deterministicCount} matched by name`,
+          inferredCount > 0 ?
+            `${inferredCount} inferred from values` : null,
+          aiCount > 0 ? `${aiCount} mapped by AI` : null,
+          stillUnmapped.length - aiCount > 0 ?
+            `${stillUnmapped.length - aiCount} need manual review` :
+            null,
+        ].filter(Boolean).join(", ") + ".";
 
       res.json({
         mappings: enrichedMappings,
@@ -582,7 +749,9 @@ export const mapImportFields = onRequest(
         source: detectedSource,
         columns: headers.length,
         deterministicHits: deterministicCount,
-        aiMapped: unmappedHeaders.length,
+        inferredFromValues: inferredCount,
+        aiMapped: aiCount,
+        totalMapped,
         rows: rows.length,
       });
     } catch (e) {
