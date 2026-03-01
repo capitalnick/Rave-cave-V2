@@ -404,16 +404,40 @@ const SettingsPage: React.FC = () => {
           divider={notifStatus !== 'unsupported'}
         />
         {notifStatus !== 'unsupported' && (
-          <Row
-            title="Drinking Window Alerts"
-            subtitle={notifStatus === 'denied' ? 'Blocked in browser settings' : 'Get notified when wines are ready'}
-            leadingIcon={<Bell size={20} />}
-            trailingAction="switch"
-            switchChecked={notifStatus === 'granted'}
-            onSwitchChange={handleNotifToggle}
-            disabled={notifStatus === 'denied' || notifStatus === 'loading'}
-            divider={false}
-          />
+          <>
+            <Row
+              title="Drinking Window Alerts"
+              subtitle={
+                notifStatus === 'denied'
+                  ? 'Blocked — tap below to fix'
+                  : notifStatus === 'granted'
+                    ? 'Enabled \u2014 you\u2019ll be notified when wines are ready'
+                    : 'Get notified when wines are ready'
+              }
+              leadingIcon={<Bell size={20} />}
+              trailingAction="switch"
+              switchChecked={notifStatus === 'granted'}
+              onSwitchChange={handleNotifToggle}
+              disabled={notifStatus === 'denied' || notifStatus === 'loading'}
+              divider={notifStatus === 'denied'}
+            />
+            {notifStatus === 'denied' && (
+              <div className="px-[var(--rc-row-padding-h)] py-3">
+                <InlineMessage
+                  tone="warning"
+                  message="Notifications are blocked by your browser. To enable them, open your browser's site settings for Rave Cave and set Notifications to Allow, then reload."
+                />
+                <button
+                  onClick={() => {
+                    showToast({ tone: 'neutral', message: 'Open your browser settings → Site Settings → Notifications → Allow' });
+                  }}
+                  className="mt-2 font-[var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-wider text-[var(--rc-accent-pink)] hover:underline"
+                >
+                  How to fix →
+                </button>
+              </div>
+            )}
+          </>
         )}
         <AnimatePresence initial={false}>
           {currencyOpen && (
