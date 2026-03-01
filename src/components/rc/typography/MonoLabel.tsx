@@ -46,15 +46,16 @@ export const MonoLabel = React.forwardRef<HTMLElement, MonoLabelProps>(
       bold: 'font-bold', // 700
     };
 
-    const colourStyles = {
-      primary: 'text-[color:var(--rc-ink-primary)]',
-      secondary: 'text-[color:var(--rc-ink-secondary)]',
-      tertiary: 'text-[color:var(--rc-ink-tertiary)]',
-      ghost: 'text-[color:var(--rc-ink-ghost)]',
-      'on-accent': 'text-[color:var(--rc-ink-on-accent)]',
-      'accent-pink': 'text-[color:var(--rc-accent-pink)]',
-      'accent-acid': 'text-[color:var(--rc-accent-acid)]',
-      'accent-coral': 'text-[color:var(--rc-accent-coral)]',
+    // Colour applied via inline style to avoid twMerge stripping text-[color:...]
+    const colourVars: Record<string, string> = {
+      primary: 'var(--rc-ink-primary)',
+      secondary: 'var(--rc-ink-secondary)',
+      tertiary: 'var(--rc-ink-tertiary)',
+      ghost: 'var(--rc-ink-ghost)',
+      'on-accent': 'var(--rc-ink-on-accent)',
+      'accent-pink': 'var(--rc-accent-pink)',
+      'accent-acid': 'var(--rc-accent-acid)',
+      'accent-coral': 'var(--rc-accent-coral)',
     };
 
     const alignStyles = {
@@ -74,12 +75,12 @@ export const MonoLabel = React.forwardRef<HTMLElement, MonoLabelProps>(
           currentSize.lh,
           currentSize.ls,
           weightStyles[weight],
-          colourStyles[colour],
           alignStyles[align],
           uppercase ? "uppercase" : "normal-case",
           truncate && "whitespace-nowrap overflow-hidden text-overflow-ellipsis",
           className
         )}
+        style={{ color: colourVars[colour], ...(props.style || {}) }}
         {...props}
       >
         {children}

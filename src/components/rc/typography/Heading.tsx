@@ -66,13 +66,15 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
       },
     };
 
-    const colourStyles = {
-      primary: 'text-[color:var(--rc-ink-primary)]',
-      secondary: 'text-[color:var(--rc-ink-secondary)]',
-      'on-accent': 'text-[color:var(--rc-ink-on-accent)]',
-      'accent-pink': 'text-[color:var(--rc-accent-pink)]',
-      'accent-acid': 'text-[color:var(--rc-accent-acid)]',
-      'accent-coral': 'text-[color:var(--rc-accent-coral)]',
+    // Colour applied via inline style to avoid twMerge stripping text-[color:...]
+    // when text-left / text-center / text-[length:...] are also present.
+    const colourVars: Record<string, string> = {
+      primary: 'var(--rc-ink-primary)',
+      secondary: 'var(--rc-ink-secondary)',
+      'on-accent': 'var(--rc-ink-on-accent)',
+      'accent-pink': 'var(--rc-accent-pink)',
+      'accent-acid': 'var(--rc-accent-acid)',
+      'accent-coral': 'var(--rc-accent-coral)',
     };
 
     const alignStyles = {
@@ -93,14 +95,14 @@ export const Heading = React.forwardRef<HTMLElement, HeadingProps>(
           currentScale.weight,
           currentScale.lh,
           currentScale.ls,
-          colourStyles[colour],
           alignStyles[align],
           needsStroke && "text-stroke-black",
           truncate && !maxLines && "whitespace-nowrap overflow-hidden text-overflow-ellipsis",
           maxLines && "line-clamp-[var(--max-lines)]",
           className
         )}
-        style={{ 
+        style={{
+          color: colourVars[colour],
           ...style,
           ...(maxLines ? { '--max-lines': maxLines } as React.CSSProperties : {})
         }}

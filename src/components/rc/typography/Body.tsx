@@ -47,14 +47,15 @@ export const Body = React.forwardRef<HTMLElement, BodyProps>(
       medium: 'font-medium', // 500
     };
 
-    const colourStyles = {
-      primary: 'text-[color:var(--rc-ink-primary)]',
-      secondary: 'text-[color:var(--rc-ink-secondary)]',
-      tertiary: 'text-[color:var(--rc-ink-tertiary)]',
-      ghost: 'text-[color:var(--rc-ink-ghost)]',
-      'on-accent': 'text-[color:var(--rc-ink-on-accent)]',
-      'accent-pink': 'text-[color:var(--rc-accent-pink)]',
-      'accent-coral': 'text-[color:var(--rc-accent-coral)]',
+    // Colour applied via inline style to avoid twMerge stripping text-[color:...]
+    const colourVars: Record<string, string> = {
+      primary: 'var(--rc-ink-primary)',
+      secondary: 'var(--rc-ink-secondary)',
+      tertiary: 'var(--rc-ink-tertiary)',
+      ghost: 'var(--rc-ink-ghost)',
+      'on-accent': 'var(--rc-ink-on-accent)',
+      'accent-pink': 'var(--rc-accent-pink)',
+      'accent-coral': 'var(--rc-accent-coral)',
     };
 
     const alignStyles = {
@@ -74,13 +75,13 @@ export const Body = React.forwardRef<HTMLElement, BodyProps>(
           currentSize.lh,
           currentSize.ls,
           weightStyles[weight],
-          colourStyles[colour],
           alignStyles[align],
           truncate && !maxLines && "whitespace-nowrap overflow-hidden text-overflow-ellipsis",
           maxLines && "line-clamp-[var(--max-lines)]",
           className
         )}
-        style={{ 
+        style={{
+          color: colourVars[colour],
           ...style,
           ...(maxLines ? { '--max-lines': maxLines } as React.CSSProperties : {})
         }}
