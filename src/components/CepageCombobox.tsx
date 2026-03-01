@@ -106,7 +106,8 @@ const CepageCombobox: React.FC<CepageComboboxProps> = ({
         className={cn(
           'w-[var(--radix-popover-trigger-width)] p-0 border border-[var(--rc-border-emphasis)]',
           'bg-[var(--rc-surface-primary)] rounded-[var(--rc-radius-sm)] shadow-lg',
-          'max-h-[calc(2.25rem*8)] overflow-y-auto'
+          'max-h-[calc(2.25rem*8)] overflow-y-auto',
+          '!z-[70]'
         )}
       >
         <div ref={listRef} role="listbox">
