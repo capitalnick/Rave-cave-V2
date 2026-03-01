@@ -39,6 +39,7 @@ body {
 /* Text stroke utility — outline so acid-green fill stays visible */
 .text-stroke-black {
   -webkit-text-stroke: 3px var(--rc-ink-primary);
+  text-stroke: 3px var(--rc-ink-primary);
   paint-order: stroke fill;
 }
 

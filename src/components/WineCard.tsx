@@ -24,15 +24,13 @@ const getPriceSymbol = (price: number) => {
   return '$$$$$';
 };
 
-/** Map RC wine type to Heading colour token */
-const wineTypeToHeadingColour = {
-  red: 'accent-pink',
-  white: 'accent-acid',
-  rose: 'accent-coral',
-  sparkling: 'accent-acid',
-  dessert: 'accent-coral',
-  orange: 'accent-coral',
-} as const;
+/** Map wine type string to Heading colour token — uses includes() for robustness */
+const wineTypeToVintageColour = (type: string): 'accent-pink' | 'accent-acid' | 'accent-coral' => {
+  const t = type?.toLowerCase() || '';
+  if (t.includes('red') || t.includes('fortified')) return 'accent-pink';
+  if (t.includes('white') || t.includes('sparkling')) return 'accent-acid';
+  return 'accent-coral'; // rosé, dessert, orange
+};
 
 const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) => {
   const rcProps = toRCWineCardProps(wine);
@@ -40,7 +38,7 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
   // Grid view: prefer thumbnail for fast loading; fall back to full image
   const displayImageUrl = getDirectImageUrl(wine.thumbnailUrl || wine.resolvedImageUrl || wine.imageUrl);
   const stampRotation = React.useMemo(() => Math.random() * 6 - 3, []);
-  const vintageColour = wineTypeToHeadingColour[rcProps.type];
+  const vintageColour = wineTypeToVintageColour(wine.type ?? '');
 
   const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
   const qtyTimeoutRef = useRef<number | null>(null);
