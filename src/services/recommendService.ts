@@ -1,4 +1,4 @@
-import { CONFIG } from '../constants';
+import { CONFIG, OCCASION_DIRECTIVES, PERSONALITY_DIRECTIVES, EXPERIENCE_HINTS } from '../constants';
 import type {
   OccasionId,
   OccasionContext,
@@ -62,11 +62,30 @@ ${priceClause}`;
     }
     case 'gift': {
       const c = context as GiftContext;
-      return `The user is picking a wine gift.
-Recipient: ${c.recipient || 'Not specified'}
-Their taste: ${c.theirTaste || 'Not specified'}
-Gift occasion: ${c.occasion}
-Budget: ${c.budget === 'any' ? 'No budget constraint' : c.budget.replace('-', ' to $').replace('under-', 'Under $').replace('plus', '+')}`;
+      const occasionDir = OCCASION_DIRECTIVES[c.occasion] || '';
+      const personalityDir = PERSONALITY_DIRECTIVES[c.personality] || '';
+      const expHint = EXPERIENCE_HINTS[c.experienceLevel] || '';
+      const priceClause = c.priceRange
+        ? `Price per bottle: $${c.priceRange.min}\u2013$${c.priceRange.max}`
+        : 'Price: no constraint';
+      const styleClause = c.wineStyle === 'surprise'
+        ? 'no style preference \u2014 surprise them'
+        : c.wineStyle;
+      const regionClause = c.regionPreference && c.regionPreference !== 'either'
+        ? `Region preference: ${c.regionPreference}`
+        : '';
+
+      return `The user is choosing a wine gift.
+
+Occasion: ${c.occasion} \u2014 ${occasionDir}
+Recipient wine experience: ${c.experienceLevel} \u2014 ${expHint}
+Personality: ${c.personality} \u2014 ${personalityDir}
+
+Wine direction:
+- Colour: ${c.wineColour === 'no-preference' ? 'no preference' : c.wineColour}
+- Style: ${styleClause}
+${regionClause ? `- ${regionClause}` : ''}
+${priceClause}`;
     }
     case 'surprise':
       return 'The user wants a surprise wine recommendation. Pick something interesting and unexpected.';

@@ -134,12 +134,20 @@ export interface PartyContext {
   sourceMode: SourceMode;
 }
 
+export type GiftOccasion = 'birthday' | 'thank-you' | 'celebration' | 'congratulations' | 'just-because' | 'sympathy';
+export type ExperienceLevel = 'curious' | 'casual' | 'enthusiast' | 'collector';
+export type GiftPersonality = 'adventurous' | 'classic' | 'storyteller' | 'understated' | 'bold' | 'easy-going';
+export type WineColour = 'red' | 'white' | 'rose' | 'sparkling' | 'no-preference';
+
 export interface GiftContext {
-  recipient: string;
-  theirTaste: string;
-  occasion: 'birthday' | 'thank-you' | 'holiday' | 'just-because';
-  budget: 'any' | 'under-30' | '30-75' | '75-plus';
+  occasion: GiftOccasion;
+  experienceLevel: ExperienceLevel;
+  personality: GiftPersonality;
+  wineColour: WineColour;
+  wineStyle: string;
+  regionPreference: 'old-world' | 'new-world' | 'either' | null;
   sourceMode: SourceMode;
+  priceRange: { min: number; max: number } | null;
 }
 
 export interface WineListAnalysisContext {

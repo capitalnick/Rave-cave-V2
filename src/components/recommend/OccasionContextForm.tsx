@@ -4,6 +4,7 @@ import { Button, Input, Heading, MonoLabel, Body, PriceRangeSlider } from '@/com
 import { OCCASIONS, WINE_PER_PERSON_MULTIPLIER } from '@/constants';
 import { cn } from '@/lib/utils';
 import { ABSOLUTE_MAX_PRICE } from '@/utils/priceSlider';
+import GiftQuizForm from './GiftQuizForm';
 import type {
   OccasionId,
   OccasionContext,
@@ -11,7 +12,6 @@ import type {
   PartyContext,
   PartyVibe,
   WinePerPerson,
-  GiftContext,
   WineListAnalysisContext,
   Wine,
   SourceMode,
@@ -27,6 +27,19 @@ interface OccasionContextFormProps {
 const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, onSubmit, onBack, inventory }) => {
   const occasion = OCCASIONS.find(o => o.id === occasionId)!;
   const [submitting, setSubmitting] = useState(false);
+
+  // Gift quiz manages its own layout, header, and cancel
+  if (occasionId === 'gift') {
+    return (
+      <GiftQuizForm
+        onSubmit={onSubmit}
+        onCancel={onBack}
+        submitting={submitting}
+        setSubmitting={setSubmitting}
+        inventory={inventory}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -54,9 +67,6 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
         )}
         {occasionId === 'party' && (
           <PartyForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
-        )}
-        {occasionId === 'gift' && (
-          <GiftForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
         )}
         {occasionId === 'analyze_winelist' && (
           <WineListForm onSubmit={onSubmit} submitting={submitting} setSubmitting={setSubmitting} />
@@ -424,77 +434,6 @@ const PartyForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting })
         onChange={setPriceRange}
         absoluteMax={absoluteMax}
       />
-
-      <SourcePicker value={sourceMode} onChange={setSourceMode} />
-      <SubmitRow submitting={submitting} onClick={handleSubmit} />
-    </div>
-  );
-};
-
-// ── Gift Form ──
-
-const GiftForm: React.FC<FormProps> = ({ onSubmit, submitting, setSubmitting }) => {
-  const [recipient, setRecipient] = useState('');
-  const [theirTaste, setTheirTaste] = useState('');
-  const [occasion, setOccasion] = useState<'birthday' | 'thank-you' | 'holiday' | 'just-because'>('just-because');
-  const [budget, setBudget] = useState<'any' | 'under-30' | '30-75' | '75-plus'>('any');
-  const [sourceMode, setSourceMode] = useState<SourceMode>('both'); // Default "Both" for gifts
-
-  const handleSubmit = () => {
-    setSubmitting(true);
-    const ctx: GiftContext = { recipient, theirTaste, occasion, budget, sourceMode };
-    onSubmit(ctx);
-  };
-
-  return (
-    <div className="space-y-6">
-      <Heading scale="subhead" colour="primary">TELL RÉMY ABOUT THE GIFT</Heading>
-
-      <FieldGroup label="Who's it for?" hint={!recipient ? 'Helps Rémy personalise the pick' : undefined}>
-        <Input
-          placeholder="e.g., My wine-loving dad"
-          value={recipient}
-          onChange={(e) => setRecipient(e.target.value)}
-        />
-      </FieldGroup>
-
-      <div className="pt-2">
-        <MonoLabel size="label" colour="ghost" className="w-auto pb-3">EXTRAS (OPTIONAL)</MonoLabel>
-      </div>
-
-      <FieldGroup label="What do they like?">
-        <Input
-          placeholder="e.g., Bold reds, Italian wines..."
-          value={theirTaste}
-          onChange={(e) => setTheirTaste(e.target.value)}
-        />
-      </FieldGroup>
-
-      <FieldGroup label="Gift occasion">
-        <SegmentedControl
-          options={[
-            { value: 'birthday' as const, label: 'Birthday' },
-            { value: 'thank-you' as const, label: 'Thank You' },
-            { value: 'holiday' as const, label: 'Holiday' },
-            { value: 'just-because' as const, label: 'Just Because' },
-          ]}
-          value={occasion}
-          onChange={setOccasion}
-        />
-      </FieldGroup>
-
-      <FieldGroup label="Budget">
-        <SegmentedControl
-          options={[
-            { value: 'any' as const, label: 'Any' },
-            { value: 'under-30' as const, label: 'Under $30' },
-            { value: '30-75' as const, label: '$30–75' },
-            { value: '75-plus' as const, label: '$75+' },
-          ]}
-          value={budget}
-          onChange={setBudget}
-        />
-      </FieldGroup>
 
       <SourcePicker value={sourceMode} onChange={setSourceMode} />
       <SubmitRow submitting={submitting} onClick={handleSubmit} />

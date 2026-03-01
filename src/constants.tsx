@@ -205,6 +205,31 @@ export const RANK_BADGES: Record<RankLabel, { text: string; bgColor: string; tex
 
 export const REMYS_PICK_BADGE = { text: "RÉMY'S PICK", bgColor: 'var(--rc-accent-acid)', textColor: 'var(--rc-ink-primary)' };
 
+export const OCCASION_DIRECTIVES: Record<string, string> = {
+  'birthday':        'Consider something with a story, a meaningful vintage, or age-worthiness. A bottle the recipient will remember receiving.',
+  'thank-you':       'This is an expression of gratitude. Prioritise elegance and quality over boldness — something that feels considered, not showy.',
+  'celebration':     'Lead with sparkling or Champagne-style wines unless their colour preference says otherwise. The mood is joyful and generous.',
+  'congratulations': 'This marks an achievement. Lean toward wines with prestige, a notable producer, or a region with genuine cachet. Something to open on a special occasion.',
+  'just-because':    'No occasion means no expectations. This is a chance for something unexpected and personal — prioritise character over convention.',
+  'sympathy':        'Avoid anything ostentatious, celebratory, or demanding. Choose something comforting, approachable, and unpretentious — a wine that says "I\'m thinking of you" without fanfare.',
+};
+
+export const PERSONALITY_DIRECTIVES: Record<string, string> = {
+  'adventurous':  'Lean toward lesser-known varieties, emerging regions, or natural producers. Avoid the obvious. This person wants a discovery, not a safe bet.',
+  'classic':      'Choose from established regions and respected producers. This person trusts reputation and tradition — don\'t stray too far from the canon.',
+  'storyteller':  'Prioritise wines with a compelling narrative: a small family producer, an unusual history, a notable vintage year, or a region with a story worth telling.',
+  'understated':  'Avoid flashy labels, cult wines, or anything that feels like a performance. Choose something quietly excellent.',
+  'bold':         'Go for impact. Full-bodied, high-presence wines from confident producers. This person will appreciate something that commands attention.',
+  'easy-going':   'Keep it approachable and unpretentious. Nothing too challenging or requiring context to enjoy. The best bottle is one they\'ll open immediately and love without thinking about it.',
+};
+
+export const EXPERIENCE_HINTS: Record<string, string> = {
+  'curious':     'New to wine — avoid obscure references, pick something approachable with a clear flavour profile.',
+  'casual':      'Enjoys wine but not deep into it. Well-known producers and popular varieties are safe.',
+  'enthusiast':  'Knows their regions and grapes. You can recommend something more niche or terroir-driven.',
+  'collector':   'Serious about wine. They have their own cellar. Age-worthy, producer-specific, rare bottles will be appreciated.',
+};
+
 export const RECOMMEND_FOLLOWUP_CHIPS = [
   'Why this wine?',
   'Something bolder',
