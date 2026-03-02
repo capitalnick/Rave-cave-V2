@@ -14,8 +14,8 @@ interface OnboardingFlowProps {
 const FEATURES = [
   {
     icon: Camera,
-    title: 'Scan a Label',
-    description: 'Point your camera at any wine bottle and we\u2019ll capture everything.',
+    title: 'Add a Wine',
+    description: 'Scan a label, choose a photo, or type the details \u2014 however you prefer.',
   },
   {
     icon: Database,
@@ -116,9 +116,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ displayName, onComplete
               <div className="h-4" />
               <Heading scale="heading" align="centre">Ready to start?</Heading>
               <div className="h-3" />
-              <Body className="w-auto text-center">Scan your first wine label to begin building your cellar.</Body>
+              <Body className="w-auto text-center">Add your first wine to begin building your cellar.</Body>
               <div className="h-8" />
-              <Button variantType="Primary" label="Scan Your First Label" onClick={handleScanFirst} className="w-full max-w-[280px]" />
+              <Button variantType="Primary" label="Add Your First Wine" onClick={handleScanFirst} className="w-full max-w-[280px]" />
               <div className="h-4" />
               <Button variantType="Tertiary" label="I'll explore first" onClick={handleSkip} className="w-full max-w-[280px]" />
             </div>

@@ -98,7 +98,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
           Rémy couldn't find a strong match in your collection.
         </MonoLabel>
         <div className="flex flex-col items-center gap-3">
-          <Button variantType="Primary" label="SCAN A LABEL" onClick={onStartOver} />
+          <Button variantType="Primary" label="ADD WINE" onClick={onStartOver} />
           <Button variantType="Tertiary" label="Try without cellar filter →" onClick={onRetryWithoutCellar} />
         </div>
       </div>

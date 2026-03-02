@@ -61,7 +61,7 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
         "flex items-center justify-center w-[56px] h-[56px] rounded-full bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] shadow-[0_4px_12px_var(--rc-accent-pink-10)] transition-transform active:scale-90",
         className
       )}
-      aria-label="Scan label"
+      aria-label="Add wine"
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}

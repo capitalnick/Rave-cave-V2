@@ -126,13 +126,13 @@ const Layout: React.FC<LayoutProps> = ({
               className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] rounded-[var(--rc-radius-md)] font-[var(--rc-font-mono)] text-xs uppercase tracking-widest hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
             >
               <ScanBottleIcon size={16} />
-              SCAN
+              ADD WINE
             </button>
           ) : (
             <button
               onClick={onScanPress}
               className="w-10 h-10 mx-auto flex items-center justify-center rounded-full bg-[var(--rc-accent-pink)] text-[var(--rc-ink-on-accent)] hover:bg-[var(--rc-accent-pink-hover)] transition-colors"
-              aria-label="Scan label"
+              aria-label="Add wine"
             >
               <ScanBottleIcon size={18} />
             </button>
@@ -193,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({
 
       <main
         ref={scrollWrapperRef}
-        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] transition-[padding-right] duration-200"
+        className="flex-1 relative overflow-hidden flex flex-col bg-[var(--rc-surface-tertiary)] transition-[padding-right] duration-200 pt-[env(safe-area-inset-top)]"
         style={pinnedRightOffset ? { paddingRight: pinnedRightOffset } : undefined}
       >
         {subscriptionStatus === 'past_due' && (

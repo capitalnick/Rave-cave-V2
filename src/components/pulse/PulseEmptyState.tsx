@@ -15,7 +15,7 @@ const PulseEmptyState: React.FC<PulseEmptyStateProps> = ({ onScanPress }) => {
       <Body size="body" colour="secondary" align="centre" className="max-w-sm mb-8">
         Pulse needs at least 3 bottles to generate insights about your cellar.
       </Body>
-      <Button variantType="Primary" label="SCAN A LABEL" onClick={onScanPress} />
+      <Button variantType="Primary" label="ADD WINE" onClick={onScanPress} />
     </div>
   );
 };

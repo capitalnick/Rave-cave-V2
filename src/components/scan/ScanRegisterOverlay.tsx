@@ -527,7 +527,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
             : 'h-[90dvh] max-h-[90dvh] rounded-[var(--rc-radius-lg)]'
         }`}
       >
-        <DialogTitle className="sr-only">Scan &amp; Register Wine</DialogTitle>
+        <DialogTitle className="sr-only">Add Wine</DialogTitle>
 
         {/* Session Header */}
         {session.isActive && (

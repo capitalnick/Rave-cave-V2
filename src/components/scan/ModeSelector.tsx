@@ -49,9 +49,9 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
     <div className="flex flex-col items-center px-6 pt-10 pb-16 space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
-        <Heading scale="title">Add to Cellar</Heading>
+        <Heading scale="title">Add Wine</Heading>
         <MonoLabel size="micro" colour="ghost">
-          Capture a bottle label
+          Scan, upload or enter manually
         </MonoLabel>
       </div>
 
