@@ -1,25 +1,15 @@
 import type { Wine, WineType, MaturityBreakdown, DrinkingWindow, StoryCard, PulseStats } from '@/types';
 import type { Currency } from '@/context/ProfileContext';
 import { formatPrice } from '@/lib/formatPrice';
+import { getMaturityLabel } from '@/utils/maturityUtils';
 
 const currentYear = new Date().getFullYear();
-
-type CleanMaturity = 'Drink Now' | 'Hold' | 'Past Peak' | 'unknown';
-
-function getCleanMaturity(drinkFrom: number, drinkUntil: number): CleanMaturity {
-  const from = Number(drinkFrom);
-  const until = Number(drinkUntil);
-  if (isNaN(from) || isNaN(until) || from === 0 || until === 0) return 'unknown';
-  if (currentYear >= from && currentYear <= until) return 'Drink Now';
-  if (currentYear < from) return 'Hold';
-  return 'Past Peak';
-}
 
 export function computeMaturityBreakdown(inventory: Wine[]): MaturityBreakdown {
   const breakdown: MaturityBreakdown = { drinkNow: 0, hold: 0, pastPeak: 0, unknown: 0, total: 0 };
   for (const wine of inventory) {
     const qty = Number(wine.quantity) || 0;
-    const status = getCleanMaturity(wine.drinkFrom, wine.drinkUntil);
+    const status = getMaturityLabel(wine.drinkFrom, wine.drinkUntil);
     switch (status) {
       case 'Drink Now': breakdown.drinkNow += qty; break;
       case 'Hold': breakdown.hold += qty; break;
@@ -46,7 +36,7 @@ export function computeDrinkingWindows(inventory: Wine[]): DrinkingWindow[] {
       type: w.type,
       drinkFrom: Number(w.drinkFrom),
       drinkUntil: Number(w.drinkUntil),
-      maturity: getCleanMaturity(w.drinkFrom, w.drinkUntil) === 'unknown' ? 'Hold' : getCleanMaturity(w.drinkFrom, w.drinkUntil) as 'Drink Now' | 'Hold' | 'Past Peak',
+      maturity: getMaturityLabel(w.drinkFrom, w.drinkUntil) === 'Unknown' ? 'Hold' : getMaturityLabel(w.drinkFrom, w.drinkUntil) as 'Drink Now' | 'Hold' | 'Past Peak',
       totalValue: (Number(w.price) || 0) * (Number(w.quantity) || 0),
       quantity: Number(w.quantity) || 0,
     }))

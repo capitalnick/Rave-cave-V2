@@ -16,31 +16,16 @@ import type {
 
 import { WINE_PER_PERSON_MULTIPLIER } from '../constants';
 
+import { callGeminiProxy } from '@/utils/geminiProxy';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
-
-export async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }) {
-  const res = await authFetch(FUNCTION_URLS.gemini, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new RecommendError(`Gemini proxy error: ${res.status}`, 'PROXY_ERROR');
-  return res.json();
-}
+import { inventoryService } from './inventoryService';
 
 // ── Error Types ──
 
 export type RecommendErrorCode = 'PROXY_ERROR' | 'PARSE_ERROR' | 'EMPTY_RESULTS' | 'UNKNOWN';
 
-export class RecommendError extends Error {
-  code: RecommendErrorCode;
-  constructor(message: string, code: RecommendErrorCode = 'UNKNOWN') {
-    super(message);
-    this.name = 'RecommendError';
-    this.code = code;
-  }
-}
+export { RecommendError } from './errors';
 
 // ── Prompt Building ──
 
@@ -289,7 +274,7 @@ export async function getRecommendations(
     model: CONFIG.MODELS.TEXT,
     systemInstruction,
     contents: [{ role: 'user', parts: [{ text: 'Please recommend wines based on the context above.' }] }],
-  });
+  }, RecommendError as any);
 
   const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
@@ -314,7 +299,7 @@ export async function getSurpriseMe(
     model: CONFIG.MODELS.TEXT,
     systemInstruction,
     contents: [{ role: 'user', parts: [{ text: 'Surprise me with a wine pick!' }] }],
-  });
+  }, RecommendError as any);
 
   const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
@@ -405,7 +390,7 @@ export async function getPartyRecommendation(
     model: CONFIG.MODELS.TEXT,
     systemInstruction,
     contents: [{ role: 'user', parts: [{ text: 'Please build my crowd wine allocation based on the context above.' }] }],
-  });
+  }, RecommendError as any);
 
   const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI', 'EMPTY_RESULTS');
@@ -518,11 +503,5 @@ export async function getRecommendationsStream(
 // ── Helpers ──
 
 export function buildCellarSnapshotForPrompt(inventory: Wine[]): string {
-  if (inventory.length === 0) return 'Cellar is empty.';
-  const limited = inventory.slice(0, CONFIG.INVENTORY_LIMIT);
-  let context = `Showing ${limited.length} of ${inventory.length} bottles:\n`;
-  limited.forEach(w => {
-    context += `- [ID:${w.id}] ${w.vintage} ${w.producer} ${w.name} (${w.type}, $${w.price}, Qty: ${w.quantity}, Maturity: ${w.maturity})\n`;
-  });
-  return context;
+  return inventoryService.getCellarSnapshot(inventory, { includeIds: true });
 }

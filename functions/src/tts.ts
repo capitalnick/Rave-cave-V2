@@ -6,6 +6,7 @@ import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 import {logUsage} from "./usageLog";
+import {REGION} from "./config";
 import type {ReadableStream as NodeWebReadableStream} from "stream/web";
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
@@ -27,7 +28,7 @@ type TtsBody = {
 
 export const tts = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     secrets: [ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,

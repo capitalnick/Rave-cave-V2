@@ -168,7 +168,7 @@ function AppShell() {
         onClose={ctx.closeScan}
         inventory={ctx.inventory}
         onWineCommitted={ctx.handleWineCommitted}
-        onViewWine={ctx.handleViewWine}
+        onViewWine={ctx.setSelectedWine}
         prefillData={ctx.prefillData}
         onAskRemy={ctx.handleAskRemyAboutWine}
         manualEntryDirect={ctx.manualEntryDirect}

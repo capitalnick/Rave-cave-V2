@@ -6,17 +6,6 @@
 import { UtensilsCrossed, PartyPopper, Gift, Sparkles, ListChecks } from 'lucide-react';
 import type { Occasion, RankLabel, WinePerPerson } from './types';
 
-export const COLORS = {
-  bg: '#FAFAF9',        // --rc-surface-primary
-  paper: '#F5F0E8',     // --rc-surface-tertiary
-  cream: '#F3EFE4',     // --rc-surface-secondary (was #EBEBDF)
-  ink: '#0A0A0A',       // --rc-ink-primary
-  neonPink: '#FF006E',  // --rc-accent-pink
-  acidGreen: '#C7FF00', // --rc-accent-acid (was #CCFF00)
-  coral: '#FF6A4D',     // --rc-accent-coral (was #FF6B9D)
-};
-
-
 export const WINE_PER_PERSON_MULTIPLIER: Record<WinePerPerson, number> = {
   light: 0.25,
   moderate: 0.5,
@@ -41,51 +30,6 @@ export const CONFIG = {
   FEATURES: {
     TTS_ENABLED: false, // Set to true to re-enable Rémy's voice output
   },
-};
-
-export const getWineColors = (wineType: string) => {
-  const type = wineType?.toLowerCase() || '';
-  if (type.includes('rosé') || type.includes('rose')) {
-    return {
-      bg: 'bg-[var(--rc-surface-primary)]',
-      accent: 'bg-[var(--rc-accent-coral)]',
-      text: 'text-black',
-      border: 'border-[var(--rc-accent-coral)]',
-      glow: 'glow-coral',
-      stripColor: 'var(--rc-accent-coral)',
-      badgeHover: 'hover:bg-[var(--rc-accent-coral)] hover:text-white'
-    };
-  }
-  if (type.includes('red') || type.includes('fortified')) {
-    return {
-      bg: 'bg-[var(--rc-surface-primary)]',
-      accent: 'bg-[var(--rc-accent-pink)]',
-      text: 'text-black',
-      border: 'border-[var(--rc-border-emphasis)]',
-      glow: 'glow-pink',
-      stripColor: 'var(--rc-accent-pink)',
-      badgeHover: 'hover:bg-[var(--rc-accent-acid)] hover:text-black'
-    };
-  }
-  return {
-    bg: 'bg-[var(--rc-surface-primary)]',
-    accent: 'bg-[var(--rc-accent-acid)]',
-    text: 'text-black',
-    border: 'border-[var(--rc-border-emphasis)]',
-    glow: 'glow-green',
-    stripColor: 'var(--rc-accent-acid)',
-    badgeHover: 'hover:bg-[var(--rc-accent-pink)] hover:text-white'
-  };
-};
-
-export const getMaturityStatus = (drinkFrom: number | string, drinkUntil: number | string) => {
-  const currentYear = new Date().getFullYear();
-  const from = parseInt(drinkFrom as string);
-  const until = parseInt(drinkUntil as string);
-  if (isNaN(from) || isNaN(until)) return 'Unknown';
-  if (currentYear >= from && currentYear <= until) return '🍷 Drink Now';
-  if (currentYear < from) return '🟢 Hold';
-  return '⚠️ Past Peak';
 };
 
 export function buildSystemPrompt(inventoryContext: string | null, stagedWineJson?: string, includeBridge?: boolean): string {

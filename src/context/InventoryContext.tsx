@@ -4,7 +4,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { inventoryService } from '@/services/inventoryService';
 import { deleteLabelImage } from '@/services/storageService';
 import { showToast } from '@/components/rc';
-import { getMaturityStatus, CONFIG } from '@/constants';
+import { CONFIG } from '@/constants';
+import { getMaturityRank } from '@/utils/maturityUtils';
 import { useProfile } from '@/context/ProfileContext';
 import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey, WineBriefContext, WineDraft } from '@/types';
 import type { FiltersState, FacetOption } from '@/lib/faceted-filters';
@@ -66,7 +67,6 @@ interface InventoryContextValue {
   clearManualEntryDirect: () => void;
   closeScan: () => void;
   handleWineCommitted: (docId: string | string[]) => void;
-  handleViewWine: (wine: Wine) => void;
   scanFABRef: React.RefObject<HTMLButtonElement | null>;
 
   // Wine detail
@@ -108,11 +108,7 @@ export function useInventory(): InventoryContextValue {
 const NUMERIC_WINE_FIELDS = new Set(['vintage', 'quantity', 'drinkFrom', 'drinkUntil', 'vivinoRating', 'price']);
 
 function maturityRank(wine: Wine): number {
-  const status = getMaturityStatus(wine.drinkFrom, wine.drinkUntil);
-  if (status.includes('Past Peak')) return 0;   // urgent first
-  if (status.includes('Drink Now')) return 1;
-  if (status.includes('Hold')) return 2;
-  return 3; // unknown last
+  return getMaturityRank(wine.drinkFrom, wine.drinkUntil);
 }
 
 export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -367,10 +363,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   }, [navigate]);
 
-  const handleViewWine = useCallback((wine: Wine) => {
-    setSelectedWine(wine);
-  }, []);
-
   // ── Recommend / Chat handoff ──
   const handleHandoffToRemy = useCallback((ctx: RecommendChatContext) => {
     setRecommendContext(ctx);
@@ -443,7 +435,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     clearManualEntryDirect,
     closeScan,
     handleWineCommitted,
-    handleViewWine,
     scanFABRef,
     selectedWine,
     setSelectedWine,
@@ -464,7 +455,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
     sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
     totalBottlesFiltered, heroWineIds, totalBottles, canAddBottles, handleUpdate, handleDeleteWine, scanOpen, prefillData,
-    openScan, openManualAdd, manualEntryDirect, clearManualEntryDirect, closeScan, handleWineCommitted, handleViewWine, selectedWine,
+    openScan, openManualAdd, manualEntryDirect, clearManualEntryDirect, closeScan, handleWineCommitted, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
     handleAddToCellarFromChat, wineBriefContext, handleAskRemyAboutWine,
     mobileFiltersOpen, triggerRefreshFeedback,

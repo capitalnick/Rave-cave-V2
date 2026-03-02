@@ -2,30 +2,12 @@ import { CONFIG } from '@/constants';
 import type { Wine, ExtractionResult, ExtractionConfidence, ExtractedField } from '@/types';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
 import { cepageStringToVarieties } from '@/utils/grapeUtils';
-import { authFetch } from '@/utils/authFetch';
-import { FUNCTION_URLS } from '@/config/functionUrls';
-
-async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string }, signal?: AbortSignal) {
-  const res = await authFetch(FUNCTION_URLS.gemini, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  });
-  if (!res.ok) throw new ExtractionError(`Gemini proxy error: ${res.status}`, 'PROXY_ERROR');
-  return res.json();
-}
+import { getMaturityForWine } from '@/utils/maturityUtils';
+import { callGeminiProxy } from '@/utils/geminiProxy';
 
 export type ExtractionErrorCode = 'PROXY_ERROR' | 'PARSE_ERROR' | 'TIMEOUT' | 'UNKNOWN';
 
-export class ExtractionError extends Error {
-  code: ExtractionErrorCode;
-  constructor(message: string, code: ExtractionErrorCode = 'UNKNOWN') {
-    super(message);
-    this.name = 'ExtractionError';
-    this.code = code;
-  }
-}
+export { ExtractionError } from './errors';
 
 const SYSTEM_INSTRUCTION = `You are a wine label extraction AI. Analyze the provided wine label image and extract all visible information.
 
@@ -55,14 +37,6 @@ Rules:
 - For format, default to "750ml" if not visible (confidence: "low")
 - For drinkFrom/drinkUntil, estimate based on wine type and vintage if not stated (confidence: "low")
 - Return null values for fields you cannot determine at all`;
-
-function computeMaturity(drinkFrom: number | null, drinkUntil: number | null): string {
-  const year = new Date().getFullYear();
-  if (!drinkFrom || !drinkUntil) return 'Unknown';
-  if (year >= drinkFrom && year <= drinkUntil) return 'Drink Now';
-  if (year < drinkFrom) return 'Hold';
-  return 'Past Peak';
-}
 
 function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: ExtractionResult } {
   let cleaned = rawText.trim();
@@ -123,7 +97,7 @@ function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: Ex
   // Compute maturity
   const drinkFrom = wineFields.drinkFrom as number | undefined;
   const drinkUntil = wineFields.drinkUntil as number | undefined;
-  wineFields.maturity = computeMaturity(drinkFrom ?? null, drinkUntil ?? null) as Wine['maturity'];
+  wineFields.maturity = getMaturityForWine(drinkFrom ?? null, drinkUntil ?? null);
 
   const avgConfidence = filledCount > 0 ? totalConfidence / filledCount : 0;
   const status = filledCount >= 4 ? 'complete' : filledCount >= 2 ? 'partial' : 'failed';
@@ -172,7 +146,8 @@ export async function extractWineFromLabel(
             },
           ],
         },
-        controller.signal
+        ExtractionError as any,
+        controller.signal,
       );
 
       const text = response?.text;

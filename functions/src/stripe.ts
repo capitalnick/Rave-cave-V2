@@ -6,6 +6,7 @@ import Stripe from "stripe";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
+import {REGION, DOMAIN} from "./config";
 
 const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET =
@@ -44,7 +45,7 @@ const PROTECTED_FIELDS = [
 
 export const createCheckoutSession = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     cors: ALLOWED_ORIGINS,
     secrets: [STRIPE_SECRET_KEY, STRIPE_PRICE_MONTHLY],
   },
@@ -90,7 +91,7 @@ export const createCheckoutSession = onRequest(
         profileDoc.data()?.stripeCustomerId;
 
       const origin =
-        req.headers.origin || "https://ravecave.app";
+        req.headers.origin || DOMAIN;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params: any = {
@@ -135,7 +136,7 @@ export const createCheckoutSession = onRequest(
 
 export const createPortalSession = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     cors: ALLOWED_ORIGINS,
     secrets: [STRIPE_SECRET_KEY],
   },
@@ -181,7 +182,7 @@ export const createPortalSession = onRequest(
 
       const stripe = getStripe(STRIPE_SECRET_KEY.value());
       const origin =
-        req.headers.origin || "https://ravecave.app";
+        req.headers.origin || DOMAIN;
 
       const session =
         await stripe.billingPortal.sessions.create({
@@ -208,7 +209,7 @@ export const createPortalSession = onRequest(
 
 export const cancelSubscription = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     cors: ALLOWED_ORIGINS,
     secrets: [STRIPE_SECRET_KEY],
   },
@@ -452,7 +453,7 @@ async function handlePaymentFailed(
 
 export const stripeWebhook = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET],
     // No CORS — called by Stripe servers, not browsers
   },

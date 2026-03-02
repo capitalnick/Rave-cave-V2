@@ -3,7 +3,7 @@ import { FUNCTION_URLS } from '@/config/functionUrls';
 
 export const CHUNK_TIMEOUT_FIRST_MS = 8000;
 export const CHUNK_TIMEOUT_MS = 5000;
-const ELEVENLABS_VOICE_ID = 'EnyVcN59clJmkHKhiykg';
+import { ELEVENLABS_VOICE_ID } from '@/config/ttsConfig';
 
 /**
  * Voice settings sent to the Cloud Function → ElevenLabs.

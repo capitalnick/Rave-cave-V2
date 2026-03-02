@@ -6,40 +6,14 @@ import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 import {logUsage} from "./usageLog";
+import {QUERY_FIELDS} from "./fieldMaps";
+import {REGION, EMBEDDING_DIMENSIONS, EMBEDDING_MODEL} from "./config";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 const db = getFirestore();
 
-// Firestore field mapping (copied from client src/types.ts — cannot import)
-const FIELD_MAP: Record<string, string> = {
-  producer: "Producer",
-  name: "Wine name",
-  vintage: "Vintage",
-  type: "Wine type",
-  grapeVarieties: "Grape Varieties",
-  appellation: "Appellation",
-  region: "Region",
-  country: "Country",
-  quantity: "Quantity",
-  drinkFrom: "Drink From",
-  drinkUntil: "Drink Until",
-  maturity: "Maturity",
-  tastingNotes: "Tasting Notes",
-  myRating: "My Rating",
-  vivinoRating: "Vivino Rating",
-  personalNote: "Personal Note",
-  imageUrl: "Label image",
-  price: "Bottle Price",
-  format: "Format",
-  processingStatus: "Processing Status",
-};
-
-// Reverse map: Firestore key -> app key
-const REVERSE_MAP: Record<string, string> = {};
-for (const [app, fs] of Object.entries(FIELD_MAP)) {
-  REVERSE_MAP[fs] = app;
-}
+const FIELD_MAP = QUERY_FIELDS;
 
 interface QueryParams {
   wineType?: string;
@@ -110,7 +84,7 @@ function computeMaturity(
 
 export const queryInventory = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 30,
@@ -159,9 +133,9 @@ export const queryInventory = onRequest(
         const ai = new GoogleGenAI({apiKey});
 
         const embedResult = await ai.models.embedContent({
-          model: "gemini-embedding-001",
+          model: EMBEDDING_MODEL,
           contents: body.semanticQuery,
-          config: {outputDimensionality: 768},
+          config: {outputDimensionality: EMBEDDING_DIMENSIONS},
         });
         const queryVector = embedResult.embeddings?.[0]?.values;
         if (!queryVector || queryVector.length === 0) {

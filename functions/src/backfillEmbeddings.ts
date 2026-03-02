@@ -5,49 +5,17 @@ import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
+import {buildEmbeddingText} from "./embeddingUtils";
+import {REGION, EMBEDDING_DIMENSIONS, EMBEDDING_MODEL} from "./config";
 
 const db = getFirestore();
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
-
-const DESCRIPTIVE_FIELDS: Record<string, string> = {
-  producer: "Producer",
-  name: "Wine name",
-  vintage: "Vintage",
-  type: "Wine type",
-  cepage: "Cépage",
-  appellation: "Appellation",
-  region: "Region",
-  country: "Country",
-  tastingNotes: "Tasting Notes",
-  personalNote: "Personal Note",
-  maturity: "Maturity",
-  drinkFrom: "Drink From",
-  drinkUntil: "Drink Until",
-};
-
-/**
- * Builds a single text string from descriptive fields.
- * @param {Record<string, unknown>} data Wine document data.
- * @return {string} Concatenated descriptive text.
- */
-function buildEmbeddingText(
-  data: Record<string, unknown>
-): string {
-  const parts: string[] = [];
-  for (const [, fsKey] of Object.entries(DESCRIPTIVE_FIELDS)) {
-    const val = data[fsKey];
-    if (val !== undefined && val !== null && val !== "" && val !== 0) {
-      parts.push(String(val));
-    }
-  }
-  return parts.join(". ");
-}
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const backfillEmbeddings = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 540, // 9 minutes for large collections
@@ -110,9 +78,9 @@ export const backfillEmbeddings = onRequest(
 
           try {
             const result = await ai.models.embedContent({
-              model: "gemini-embedding-001",
+              model: EMBEDDING_MODEL,
               contents: text,
-              config: {outputDimensionality: 768},
+              config: {outputDimensionality: EMBEDDING_DIMENSIONS},
             });
 
             const embedding = result.embeddings?.[0]?.values;

@@ -153,13 +153,13 @@ export const inventoryService = {
     ].join(' ');
   },
 
-  getCellarSnapshot: (inventory: Wine[]): string => {
-    if (inventory.length === 0) return "Cellar is empty.";
-    // Limit to prevent token bloat
+  getCellarSnapshot: (inventory: Wine[], options?: { includeIds?: boolean }): string => {
+    if (inventory.length === 0) return 'Cellar is empty.';
     const limited = inventory.slice(0, CONFIG.INVENTORY_LIMIT);
-    let context = `INVENTORY (Showing top ${limited.length} bottles):\n`;
+    let context = `Showing ${limited.length} of ${inventory.length} bottles:\n`;
     limited.forEach(w => {
-      context += `- ${w.vintage} ${w.producer} ${w.name} (${w.type}, $${w.price}, Qty: ${w.quantity}, Maturity: ${w.maturity})\n`;
+      const id = options?.includeIds ? `[ID:${w.id}] ` : '';
+      context += `- ${id}${w.vintage} ${w.producer} ${w.name} (${w.type}, $${w.price}, Qty: ${w.quantity}, Maturity: ${w.maturity})\n`;
     });
     return context;
   },

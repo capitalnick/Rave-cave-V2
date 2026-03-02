@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { Wine } from '@/types';
 import { Wine as WineIcon, Plus, Minus } from 'lucide-react';
 import { Card, Heading, MonoLabel, Chip, WineTypeIndicator } from '@/components/rc';
@@ -8,6 +8,7 @@ import { formatGrapeDisplay } from '@/utils/grapeUtils';
 import { getDirectImageUrl } from '@/utils/imageUrl';
 import { cn } from '@/lib/utils';
 import type { WineType } from '@/components/rc/WineTypeIndicator';
+import { useQuantityUpdate } from '@/hooks/useQuantityUpdate';
 
 interface WineCardProps {
   wine: Wine;
@@ -40,24 +41,7 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
   const stampRotation = React.useMemo(() => Math.random() * 6 - 3, []);
   const vintageColour = wineTypeToVintageColour(wine.type ?? '');
 
-  const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
-  const qtyTimeoutRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    setLocalQty(Number(wine.quantity) || 0);
-  }, [wine.quantity]);
-
-  const updateQuantity = (newQty: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLocalQty(newQty);
-    if (qtyTimeoutRef.current) window.clearTimeout(qtyTimeoutRef.current);
-
-    qtyTimeoutRef.current = window.setTimeout(async () => {
-      if (onUpdate) {
-        await onUpdate('quantity', newQty.toString());
-      }
-    }, 500);
-  };
+  const { localQty, updateQuantity } = useQuantityUpdate(wine.quantity, onUpdate);
 
   const numericPrice = typeof wine.price === 'number' ? wine.price : parseFloat(wine.price as unknown as string) || 0;
 

@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "deploy:dev": "firebase deploy --only functions --project dev",
     "deploy:prod": "firebase deploy --only functions --project prod",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
     "deploy:rules:dev": "firebase deploy --only firestore:rules,storage --project dev",
     "deploy:rules:prod": "firebase deploy --only firestore:rules,storage --project prod"
   },
@@ -48,8 +51,11 @@
   "devDependencies": {
     "@sentry/vite-plugin": "^5.0.0",
     "@tailwindcss/vite": "^4.1.18",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^28.1.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.8.2",

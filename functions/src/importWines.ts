@@ -6,41 +6,13 @@ import Papa from "papaparse";
 import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
+import {FIRESTORE_FIELD_MAP} from "./fieldMaps";
+import {REGION} from "./config";
 
 const db = getFirestore();
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
 const FREE_TIER_MAX_BOTTLES = 50;
-
-/**
- * Maps camelCase Wine fields to their Title Case Firestore field names.
- * Must stay in sync with FIRESTORE_FIELD_MAP in src/types.ts.
- */
-const FIRESTORE_FIELD_MAP: Record<string, string> = {
-  producer: "Producer",
-  name: "Wine name",
-  vintage: "Vintage",
-  type: "Wine type",
-  cepage: "Cépage",
-  grapeVarieties: "Grape Varieties",
-  appellation: "Appellation",
-  region: "Region",
-  country: "Country",
-  quantity: "Quantity",
-  drinkFrom: "Drink From",
-  drinkUntil: "Drink Until",
-  maturity: "Maturity",
-  tastingNotes: "Tasting Notes",
-  myRating: "My Rating",
-  vivinoRating: "Vivino Rating",
-  personalNote: "Personal Note",
-  linkToWine: "Link to wine",
-  imageUrl: "Label image",
-  thumbnailUrl: "Thumbnail URL",
-  price: "Bottle Price",
-  format: "Format",
-  processingStatus: "Processing Status",
-};
 
 /**
  * Convert a camelCase wine object to Title Case Firestore doc.
@@ -386,7 +358,7 @@ function detectSourceFromHeaders(headers: string[]): string {
 
 export const mapImportFields = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     cors: ALLOWED_ORIGINS,
     secrets: [GEMINI_API_KEY],
     timeoutSeconds: 60,
@@ -779,7 +751,7 @@ interface ImportResult {
 
 export const commitImport = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     cors: ALLOWED_ORIGINS,
     secrets: [GEMINI_API_KEY],
     timeoutSeconds: 300,

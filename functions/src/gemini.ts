@@ -5,6 +5,7 @@ import {validateAuth, AuthError} from "./authMiddleware";
 import {ALLOWED_ORIGINS} from "./cors";
 import {checkRateLimit, RATE_LIMITS} from "./rateLimit";
 import {logUsage} from "./usageLog";
+import {REGION} from "./config";
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 
@@ -92,7 +93,7 @@ async function parseAndValidate(
 
 export const gemini = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,
@@ -143,7 +144,7 @@ export const gemini = onRequest(
 
 export const geminiStream = onRequest(
   {
-    region: "australia-southeast1",
+    region: REGION,
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,

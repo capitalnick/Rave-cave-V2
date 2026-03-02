@@ -1,5 +1,6 @@
 import { CONFIG } from '../constants';
-import { callGeminiProxy, matchToCellar, buildCellarSnapshotForPrompt, RecommendError } from './recommendService';
+import { callGeminiProxy } from '@/utils/geminiProxy';
+import { matchToCellar, buildCellarSnapshotForPrompt, RecommendError } from './recommendService';
 import type {
   WineListAnalysisContext,
   WineListEntry,
@@ -278,7 +279,7 @@ export async function extractWineListEntries(
         ...imageParts,
       ],
     }],
-  });
+  }, RecommendError as any);
 
   const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI for wine list extraction', 'EMPTY_RESULTS');
@@ -306,7 +307,7 @@ export async function generateWineListPicks(
       role: 'user',
       parts: [{ text: 'Select the best picks from this wine list based on my context.' }],
     }],
-  });
+  }, RecommendError as any);
 
   const text = response?.text;
   if (!text) throw new RecommendError('Empty response from AI for wine list picks', 'EMPTY_RESULTS');

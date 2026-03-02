@@ -1,6 +1,7 @@
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import {getFirestore} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
+import {REGION} from "./config";
 
 const db = getFirestore();
 
@@ -17,7 +18,7 @@ export const drinkingWindowNotifier = onSchedule(
   {
     schedule: "0 9 * * *",
     timeZone: "Australia/Sydney",
-    region: "australia-southeast1",
+    region: REGION,
   },
   async () => {
     const currentYear = new Date().getFullYear();

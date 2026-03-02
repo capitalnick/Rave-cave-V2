@@ -4,14 +4,7 @@ import type { Wine } from '@/types';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
 import { formatGrapeDisplay, cepageStringToVarieties } from '@/utils/grapeUtils';
-
-function computeMaturity(drinkFrom: number | null, drinkUntil: number | null): Wine['maturity'] {
-  const year = new Date().getFullYear();
-  if (!drinkFrom || !drinkUntil) return 'Unknown' as Wine['maturity'];
-  if (year >= drinkFrom && year <= drinkUntil) return 'Drink Now';
-  if (year < drinkFrom) return 'Hold';
-  return 'Past Peak';
-}
+import { getMaturityForWine } from '@/utils/maturityUtils';
 
 function buildEnrichmentPrompt(wine: Partial<Wine>): string {
   const parts = [
@@ -102,7 +95,7 @@ export async function enrichWine(docId: string, wine: Partial<Wine>): Promise<vo
     const finalDrinkFrom = updates.drinkFrom ?? wine.drinkFrom ?? null;
     const finalDrinkUntil = updates.drinkUntil ?? wine.drinkUntil ?? null;
     if (updates.drinkFrom || updates.drinkUntil) {
-      updates.maturity = computeMaturity(finalDrinkFrom, finalDrinkUntil);
+      updates.maturity = getMaturityForWine(finalDrinkFrom, finalDrinkUntil);
     }
 
     updates.processingStatus = 'complete';

@@ -7,9 +7,11 @@ import { fetchElevenLabsAudio, playAudioUrl, CHUNK_TIMEOUT_FIRST_MS, CHUNK_TIMEO
 import { formatForSpeech } from '../services/ttsFormatter';
 import { enrichWine } from '@/services/enrichmentService';
 import { sanitizeWineName } from '@/utils/wineNameGuard';
+import { callGeminiProxy } from '@/utils/geminiProxy';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
 import { useProfile } from '@/context/ProfileContext';
+import { WEB_SPEECH_RATE, SILENCE_TIMEOUT_MS } from '@/config/ttsConfig';
 
 const MAX_TOOL_ROUNDS = 5;
 
@@ -39,15 +41,6 @@ function isAffirmative(message: string): boolean {
   return AFFIRMATIVE_PATTERNS.some(p => p.test(message.trim()));
 }
 
-async function callGeminiProxy(body: { model: string; contents: any[]; systemInstruction?: string; tools?: any[] }) {
-  const res = await authFetch(FUNCTION_URLS.gemini, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Gemini proxy error: ${res.status}`);
-  return res.json();
-}
 
 /**
  * ANTI-GAP CHUNKING:
@@ -168,7 +161,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
     const utterance = new SpeechSynthesisUtterance(nextText);
     
     utterance.voice = getBestFrenchVoice();
-    utterance.rate = 1.25; // SNAPPY CADENCE
+    utterance.rate = WEB_SPEECH_RATE;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
@@ -537,7 +530,7 @@ export const useGeminiLive = (localCellar: Wine[], cellarSnapshot: string) => {
 
       // Reset silence timer on every result
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = setTimeout(finalizeAndSubmitVoice, 2000);
+      silenceTimerRef.current = setTimeout(finalizeAndSubmitVoice, SILENCE_TIMEOUT_MS);
     };
 
     recognition.onend = () => {

@@ -1,5 +1,5 @@
 import type { Wine, GrapeVariety } from '@/types';
-import { getMaturityStatus } from '@/constants';
+import { getMaturityLabel } from '@/utils/maturityUtils';
 
 // ── Types ──
 
@@ -56,8 +56,7 @@ export function parseGrapes(varieties: GrapeVariety[] | undefined): string[] {
 }
 
 export function computeMaturity(wine: Wine): string {
-  const raw = getMaturityStatus(wine.drinkFrom, wine.drinkUntil);
-  return raw.replace(/[🍷🟢⚠️]/g, '').trim();
+  return getMaturityLabel(wine.drinkFrom, wine.drinkUntil);
 }
 
 // ── Matchers ──
@@ -95,13 +94,7 @@ function matchesSearch(wine: Wine, query: string): boolean {
   );
 }
 
-// Price bucket matching for MultiSelectFacet-based price
-const PRICE_BUCKETS: { label: string; test: (p: number) => boolean }[] = [
-  { label: 'Under $30', test: p => p < 30 },
-  { label: '$30-$60', test: p => p >= 30 && p < 60 },
-  { label: '$60-$100', test: p => p >= 60 && p < 100 },
-  { label: '$100+', test: p => p >= 100 },
-];
+import { PRICE_BUCKETS } from '@/config/filterConfig';
 
 export function getPriceBucket(price: number): string {
   for (const b of PRICE_BUCKETS) {

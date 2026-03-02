@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useQuantityUpdate } from '@/hooks/useQuantityUpdate';
 import { Wine, GrapeVariety } from '@/types';
 import { Star, Wine as WineIcon, Plus, Minus, MapPin, ExternalLink, Trash2, Camera, X, Loader2 } from 'lucide-react';
 import { getDirectImageUrl } from '@/utils/imageUrl';
@@ -132,16 +133,7 @@ const WineDetailContent: React.FC<{
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [localQty, setLocalQty] = useState(Number(wine.quantity) || 0);
-  const qtyTimeoutRef = useRef<number | null>(null);
-
-  const updateQuantity = (newQty: number) => {
-    setLocalQty(newQty);
-    if (qtyTimeoutRef.current) window.clearTimeout(qtyTimeoutRef.current);
-    qtyTimeoutRef.current = window.setTimeout(async () => {
-      if (onUpdate) await onUpdate('quantity', newQty.toString());
-    }, 500);
-  };
+  const { localQty, updateQuantity } = useQuantityUpdate(wine.quantity, onUpdate);
 
   const handleUpdate = async (key: string) => {
     if (!onUpdate) return;
