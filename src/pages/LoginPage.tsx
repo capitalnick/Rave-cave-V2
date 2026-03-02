@@ -13,28 +13,29 @@ import {
 } from '@/components/rc';
 import WineIcon from '@/components/icons/WineIcon';
 
-type Mode = 'sign-in' | 'sign-up';
+type Step = 'credentials' | 'display-name';
 
 export default function LoginPage() {
-  const { error, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { error, signInWithGoogle, continueWithEmail, signUpWithEmail } = useAuth();
 
-  const [mode, setMode] = useState<Mode>('sign-in');
+  const [step, setStep] = useState<Step>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const isSignUp = mode === 'sign-up';
-  const disabled = submitting || !email || !password || (isSignUp && !displayName);
+  const needsSignup = step === 'display-name';
+  const disabled = submitting || !email || !password || (needsSignup && !displayName);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (isSignUp) {
+      if (needsSignup) {
         await signUpWithEmail(email, password, displayName);
       } else {
-        await signInWithEmail(email, password);
+        const result = await continueWithEmail(email, password);
+        if (result === 'needs-signup') setStep('display-name');
       }
     } finally {
       setSubmitting(false);
@@ -50,8 +51,9 @@ export default function LoginPage() {
     }
   };
 
-  const toggleMode = () => {
-    setMode(m => (m === 'sign-in' ? 'sign-up' : 'sign-in'));
+  const handleBack = () => {
+    setStep('credentials');
+    setDisplayName('');
   };
 
   return (
@@ -65,32 +67,38 @@ export default function LoginPage() {
               RAVE CAVE
             </Heading>
             <MonoLabel size="label" colour="ghost" className="w-auto">
-              Your personal wine cellar
+              {needsSignup
+                ? "Looks like you're new! Choose a display name."
+                : 'Your personal wine cellar'}
             </MonoLabel>
           </div>
 
           {/* Google sign-in */}
-          <Button
-            variantType="Primary"
-            label={submitting ? 'Connecting...' : 'Continue with Google'}
-            disabled={submitting}
-            onClick={handleGoogleSignIn}
-            className="w-full"
-          />
+          {!needsSignup && (
+            <>
+              <Button
+                variantType="Primary"
+                label={submitting ? 'Connecting...' : 'Continue with Google'}
+                disabled={submitting}
+                onClick={handleGoogleSignIn}
+                className="w-full"
+              />
 
-          {/* Divider row */}
-          <div className="flex items-center gap-3 w-full">
-            <Divider className="flex-1" />
-            <MonoLabel size="label" colour="ghost" className="w-auto">
-              or
-            </MonoLabel>
-            <Divider className="flex-1" />
-          </div>
+              {/* Divider row */}
+              <div className="flex items-center gap-3 w-full">
+                <Divider className="flex-1" />
+                <MonoLabel size="label" colour="ghost" className="w-auto">
+                  or
+                </MonoLabel>
+                <Divider className="flex-1" />
+              </div>
+            </>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
             <AnimatePresence initial={false}>
-              {isSignUp && (
+              {needsSignup && (
                 <motion.div
                   key="displayName"
                   initial={{ opacity: 0, height: 0 }}
@@ -106,6 +114,7 @@ export default function LoginPage() {
                     onChange={e => setDisplayName(e.target.value)}
                     state={submitting ? 'Disabled' : 'Default'}
                     autoComplete="name"
+                    autoFocus
                   />
                 </motion.div>
               )}
@@ -117,7 +126,7 @@ export default function LoginPage() {
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              state={submitting ? 'Disabled' : 'Default'}
+              state={needsSignup || submitting ? 'Disabled' : 'Default'}
               autoComplete="email"
             />
 
@@ -127,8 +136,8 @@ export default function LoginPage() {
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              state={submitting ? 'Disabled' : 'Default'}
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+              state={needsSignup || submitting ? 'Disabled' : 'Default'}
+              autoComplete={needsSignup ? 'new-password' : 'current-password'}
             />
 
             <Button
@@ -136,8 +145,8 @@ export default function LoginPage() {
               variantType="Primary"
               label={
                 submitting
-                  ? isSignUp ? 'Creating Account...' : 'Signing In...'
-                  : isSignUp ? 'Create Account' : 'Sign In'
+                  ? needsSignup ? 'Creating Account...' : 'Signing In...'
+                  : needsSignup ? 'Create Account' : 'Continue with Email'
               }
               disabled={disabled}
               className="w-full"
@@ -151,17 +160,14 @@ export default function LoginPage() {
             )}
           </AnimatePresence>
 
-          {/* Mode toggle */}
-          <div className="flex items-center gap-1">
-            <Body size="body" colour="secondary" className="w-auto">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-            </Body>
+          {/* Back link (only in display-name step) */}
+          {needsSignup && (
             <Button
               variantType="Tertiary"
-              label={isSignUp ? 'Sign in' : 'Sign up'}
-              onClick={toggleMode}
+              label="Back"
+              onClick={handleBack}
             />
-          </div>
+          )}
 
           {/* Learn more */}
           <a

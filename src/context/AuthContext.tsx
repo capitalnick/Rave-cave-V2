@@ -49,7 +49,7 @@ interface AuthContextValue {
   loading: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
+  continueWithEmail: (email: string, password: string) => Promise<'ok' | 'needs-signup'>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -93,13 +93,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signInWithEmail = useCallback(async (email: string, password: string) => {
+  const continueWithEmail = useCallback(async (email: string, password: string): Promise<'ok' | 'needs-signup'> => {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      return 'ok';
     } catch (e) {
+      const code = (e as AuthError).code;
+      if (code === 'auth/user-not-found') return 'needs-signup';
       const msg = mapAuthError(e as AuthError);
       if (msg) setError(msg);
+      return 'ok';
     }
   }, []);
 
@@ -129,10 +133,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     error,
     signInWithGoogle,
-    signInWithEmail,
+    continueWithEmail,
     signUpWithEmail,
     signOut,
-  }), [user, loading, error, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut]);
+  }), [user, loading, error, signInWithGoogle, continueWithEmail, signUpWithEmail, signOut]);
 
   return (
     <AuthContext.Provider value={value}>
