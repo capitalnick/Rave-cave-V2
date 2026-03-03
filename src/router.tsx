@@ -11,7 +11,7 @@ import {
 import Layout from '@/components/Layout';
 import ScanOverlay from '@/components/ScanOverlay';
 import WineModal from '@/components/WineModal';
-import ImportFlow from '@/components/import/ImportFlow';
+import ImportFlow, { IMPORT_PENDING_LS_KEY } from '@/components/import/ImportFlow';
 import UpgradePrompt from '@/components/UpgradePrompt';
 import PinnedRemyPanel from '@/components/PinnedRemyPanel';
 import SplashScreen from '@/components/SplashScreen';
@@ -66,6 +66,24 @@ function AppShell() {
     ctx.closeScan();
     setShowImport(true);
   }, [ctx]);
+
+  // ── Auto-resume import after Stripe upgrade ──
+  useEffect(() => {
+    const pending = localStorage.getItem(IMPORT_PENDING_LS_KEY);
+    if (!pending) return;
+    try {
+      const data = JSON.parse(pending);
+      if (Date.now() - data.savedAt > 15 * 60 * 1000) {
+        localStorage.removeItem(IMPORT_PENDING_LS_KEY);
+        return;
+      }
+      if (isPremium) {
+        setShowImport(true); // ImportFlow reads from localStorage on mount
+      }
+    } catch {
+      localStorage.removeItem(IMPORT_PENDING_LS_KEY);
+    }
+  }, [isPremium]);
 
   // ── Onboarding for new users ──
   const [showOnboarding, setShowOnboarding] = useState(false);

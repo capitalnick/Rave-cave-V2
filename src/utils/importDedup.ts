@@ -12,9 +12,19 @@ export interface DuplicateGroup {
   differingFields: string[];
 }
 
-interface FieldMapping {
+export interface FieldMapping {
   csvColumn: string;
   raveCaveField: string | null;
+}
+
+export interface ParsedWine {
+  rowIndex: number;    // 0-based data row index
+  lineIndex: number;   // 1-based line index in CSV (for rebuilding)
+  producer: string;
+  name: string;
+  vintage: string;
+  cepage: string;
+  quantity: number;    // parsed from qty column, default 1
 }
 
 // ── Normalise: lowercase, strip non-alphanumeric ──
@@ -259,4 +269,69 @@ export function mappingFingerprint(mappings: FieldMapping[]): string {
     .map(m => `${m.csvColumn}:${m.raveCaveField}`)
     .sort()
     .join('|');
+}
+
+// ── Parse all wines from CSV with field mappings ──
+
+export function parseAllWines(csvContent: string, mappings: FieldMapping[]): ParsedWine[] {
+  const lines = csvContent.split('\n');
+  if (lines.length < 2) return [];
+
+  const headers = parseCSVLine(lines[0]);
+
+  const fieldIndex = (field: string): number => {
+    const mapping = mappings.find(m => m.raveCaveField === field);
+    if (!mapping) return -1;
+    return headers.findIndex(h => h.trim() === mapping.csvColumn);
+  };
+
+  const producerIdx = fieldIndex('producer');
+  const nameIdx = fieldIndex('name');
+  const vintageIdx = fieldIndex('vintage');
+  const cepageIdx = fieldIndex('cepage');
+  const quantityIdx = fieldIndex('quantity');
+
+  const result: ParsedWine[] = [];
+  let rowIndex = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const values = parseCSVLine(lines[i]);
+
+    const producer = producerIdx >= 0 ? (values[producerIdx] || '').trim() : '';
+    const name = nameIdx >= 0 ? (values[nameIdx] || '').trim() : '';
+    const vintage = vintageIdx >= 0 ? (values[vintageIdx] || '').trim() : '';
+    const cepage = cepageIdx >= 0 ? (values[cepageIdx] || '').trim() : '';
+    const rawQty = quantityIdx >= 0 ? parseInt(values[quantityIdx] || '1', 10) : 1;
+    const quantity = isNaN(rawQty) || rawQty < 1 ? 1 : rawQty;
+
+    // Skip rows with no meaningful identity
+    if (!producer && !name) {
+      rowIndex++;
+      continue;
+    }
+
+    result.push({ rowIndex, lineIndex: i, producer, name, vintage, cepage, quantity });
+    rowIndex++;
+  }
+
+  return result;
+}
+
+// ── Rebuild CSV keeping only header + lines at specified lineIndices ──
+
+export function buildFilteredCSV(csvContent: string, selectedLineIndices: number[]): string {
+  const lines = csvContent.split('\n');
+  if (lines.length < 2) return csvContent;
+
+  const keepSet = new Set(selectedLineIndices);
+  const result: string[] = [lines[0]]; // always keep header
+
+  for (let i = 1; i < lines.length; i++) {
+    if (keepSet.has(i)) {
+      result.push(lines[i]);
+    }
+  }
+
+  return result.join('\n');
 }
