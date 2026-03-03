@@ -187,7 +187,7 @@ const CellarPage: React.FC = () => {
                 />
               ))}
               {filteredInventory.length === 0 && (
-                <div className="col-span-full py-20 sm:py-40 text-center border-4 sm:border-8 border-dashed border-[var(--rc-ink-ghost)] bg-[var(--rc-surface-elevated)]/50 px-4">
+                <div className="col-span-full py-20 sm:py-40 text-center border-2 border-dashed border-[var(--rc-ink-ghost)] bg-[var(--rc-surface-elevated)]/50 px-4 flex flex-col items-center">
                   <p className="font-display text-4xl sm:text-6xl text-[var(--rc-ink-ghost)]">Your cellar awaits its first libation.</p>
                   <p className="mt-3 font-mono text-sm text-[var(--rc-ink-ghost)]">Add a bottle to begin.</p>
                   <div className="mt-6">
