@@ -516,7 +516,10 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
 
               {mappingResult.notes && (
                 <div className="mb-4">
-                  <InlineMessage tone="info" message={mappingResult.notes} />
+                  <InlineMessage
+                    tone={/all.*matched|matched.*automatically/i.test(mappingResult.notes) ? 'success' : 'info'}
+                    message={mappingResult.notes}
+                  />
                 </div>
               )}
 

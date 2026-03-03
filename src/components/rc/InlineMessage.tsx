@@ -1,10 +1,10 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Info, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Info, AlertCircle, AlertTriangle, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export interface InlineMessageProps {
-  tone?: 'info' | 'warning' | 'error';
+  tone?: 'info' | 'success' | 'warning' | 'error';
   message: string;
   secondaryMessage?: string;
   icon?: React.ReactNode;
@@ -25,6 +25,11 @@ export const InlineMessage = React.forwardRef<HTMLDivElement, InlineMessageProps
         bar: 'bg-[var(--rc-inline-msg-warning-bar)]',
         bg: 'bg-[var(--rc-inline-msg-warning-bg)]',
         icon: <AlertCircle size={16} className="text-[var(--rc-inline-msg-warning-icon)]" />,
+      },
+      success: {
+        bar: 'bg-[var(--rc-accent-acid)]',
+        bg: 'bg-[var(--rc-badge-success-bg)]',
+        icon: <CheckCircle size={16} className="text-[var(--rc-accent-acid)]" />,
       },
       error: {
         bar: 'bg-[var(--rc-inline-msg-error-bar)]',
