@@ -36,7 +36,7 @@ export const Chip: React.FC<ChipProps> = ({
 
   // Phase 1.3: Font and transform
   const baseStyles = cn(
-    "inline-flex items-center justify-center transition-all duration-150 ease-out select-none rounded-full cursor-pointer uppercase tracking-wider font-['Space_Mono',monospace]",
+    "inline-flex items-center justify-center transition-all duration-150 ease-out select-none rounded-full cursor-pointer uppercase tracking-wider font-[family-name:var(--rc-font-mono)]",
     isMaturity && isSelected && maturityValue && "gap-1.5"
   );
   

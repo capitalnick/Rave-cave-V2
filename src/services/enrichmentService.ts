@@ -1,10 +1,25 @@
 import { CONFIG } from '@/constants';
 import { inventoryService } from './inventoryService';
-import type { Wine } from '@/types';
+import type { Wine, GrapeVariety } from '@/types';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
 import { formatGrapeDisplay, cepageStringToVarieties } from '@/utils/grapeUtils';
 import { getMaturityForWine } from '@/utils/maturityUtils';
+
+export interface ImportedWineData {
+  id: string;
+  producer: string;
+  name: string;
+  vintage: number;
+  type: string;
+  region: string;
+  country: string;
+  appellation: string;
+  cepage: string;
+  tastingNotes: string;
+  drinkFrom: number;
+  drinkUntil: number;
+}
 
 function buildEnrichmentPrompt(wine: Partial<Wine>): string {
   const parts = [
@@ -103,5 +118,41 @@ export async function enrichWine(docId: string, wine: Partial<Wine>): Promise<vo
   } catch (e) {
     console.error('Enrichment failed:', e);
     await inventoryService.updateField(docId, 'processingStatus', 'error').catch(() => {});
+  }
+}
+
+/**
+ * Batch-enrich imported wines. Processes in sequential chunks of 5 concurrent
+ * calls to avoid Gemini rate limits. Fire-and-forget from caller.
+ */
+export async function batchEnrichWines(wines: ImportedWineData[]): Promise<void> {
+  const MAX_ENRICH = 100;
+  const CHUNK_SIZE = 5;
+
+  const batch = wines.slice(0, MAX_ENRICH);
+  if (batch.length < wines.length) {
+    console.warn(`batchEnrichWines: capping enrichment at ${MAX_ENRICH} of ${wines.length} wines`);
+  }
+
+  for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
+    const chunk = batch.slice(i, i + CHUNK_SIZE);
+    await Promise.allSettled(
+      chunk.map(w => {
+        const partial: Partial<Wine> = {
+          producer: w.producer || undefined,
+          name: w.name || undefined,
+          vintage: w.vintage || undefined,
+          type: (w.type as Wine['type']) || undefined,
+          region: w.region || undefined,
+          country: w.country || undefined,
+          appellation: w.appellation || undefined,
+          grapeVarieties: cepageStringToVarieties(w.cepage),
+          tastingNotes: w.tastingNotes || undefined,
+          drinkFrom: w.drinkFrom || undefined,
+          drinkUntil: w.drinkUntil || undefined,
+        };
+        return enrichWine(w.id, partial);
+      })
+    );
   }
 }

@@ -123,7 +123,7 @@ const CepageCombobox: React.FC<CepageComboboxProps> = ({
               onMouseEnter={() => setHighlightIndex(i)}
               className={cn(
                 'w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors',
-                "font-['Instrument_Sans'] text-[var(--rc-ink-primary)]",
+                "font-[family-name:var(--rc-font-body)] text-[var(--rc-ink-primary)]",
                 i === highlightIndex
                   ? 'bg-[var(--rc-accent-pink)]/15'
                   : 'hover:bg-[var(--rc-surface-secondary)]'

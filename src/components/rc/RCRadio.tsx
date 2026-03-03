@@ -41,7 +41,7 @@ export const Radio: React.FC<RadioProps> = ({
         )}
       </div>
       {label && (
-        <span className={cn("text-[15px] font-['Instrument_Sans']", isDisabled ? "text-[var(--rc-control-disabled-icon)]" : "text-[var(--rc-ink-primary)]")}>
+        <span className={cn("text-[15px] font-[family-name:var(--rc-font-body)]", isDisabled ? "text-[var(--rc-control-disabled-icon)]" : "text-[var(--rc-ink-primary)]")}>
           {label}
         </span>
       )}

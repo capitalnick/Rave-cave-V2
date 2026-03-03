@@ -72,11 +72,11 @@ export const Row = React.forwardRef<HTMLElement, RowProps>(
 
         {/* Content */}
         <div className="flex flex-1 flex-col justify-center min-w-0">
-          <span className="font-['Instrument_Sans'] text-[15px] md:text-[16px] font-normal text-[var(--rc-ink-primary)] truncate">
+          <span className="font-[family-name:var(--rc-font-body)] text-[15px] md:text-[16px] font-normal text-[var(--rc-ink-primary)] truncate">
             {title}
           </span>
           {subtitle && (
-            <span className="font-['Instrument_Sans'] text-[13px] md:text-[14px] text-[var(--rc-ink-tertiary)] truncate mt-[var(--rc-space-xs)]">
+            <span className="font-[family-name:var(--rc-font-body)] text-[13px] md:text-[14px] text-[var(--rc-ink-tertiary)] truncate mt-[var(--rc-space-xs)]">
               {subtitle}
             </span>
           )}
@@ -89,7 +89,7 @@ export const Row = React.forwardRef<HTMLElement, RowProps>(
               <ChevronRight className="w-4 h-4 text-[var(--rc-ink-ghost)]" />
             )}
             {trailingAction === 'value' && (
-              <span className="font-['Instrument_Sans'] text-[15px] md:text-[16px] text-[var(--rc-ink-tertiary)]">
+              <span className="font-[family-name:var(--rc-font-body)] text-[15px] md:text-[16px] text-[var(--rc-ink-tertiary)]">
                 {trailingValue}
               </span>
             )}

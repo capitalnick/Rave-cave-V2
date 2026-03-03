@@ -62,7 +62,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         </div>
 
         {/* Message */}
-        <p className="flex-1 font-['Instrument_Sans',sans-serif] text-[15px] md:text-[16px] text-[var(--rc-ink-primary)] leading-[1.4] line-clamp-2">
+        <p className="flex-1 font-[family-name:var(--rc-font-body)] text-[15px] md:text-[16px] text-[var(--rc-ink-primary)] leading-[1.4] line-clamp-2">
           {message}
         </p>
 
@@ -71,7 +71,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
           <button
             type="button"
             onClick={onAction}
-            className="ml-[var(--rc-toast-icon-gap)] px-2 py-1 font-['Space_Mono',monospace] text-[11px] md:text-[12px] font-bold uppercase tracking-wider text-[var(--rc-toast-action-colour)] hover:opacity-80 transition-opacity whitespace-nowrap"
+            className="ml-[var(--rc-toast-icon-gap)] px-2 py-1 font-[family-name:var(--rc-font-mono)] text-[11px] md:text-[12px] font-bold uppercase tracking-wider text-[var(--rc-toast-action-colour)] hover:opacity-80 transition-opacity whitespace-nowrap"
           >
             {actionLabel}
           </button>

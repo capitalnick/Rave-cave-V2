@@ -35,10 +35,10 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-md text-[12px] font-bold font-['Instrument_Sans'] uppercase tracking-wider",
+        "inline-flex items-center justify-center rounded-md text-[12px] font-bold font-[family-name:var(--rc-font-body)] uppercase tracking-wider",
         toneStyles[tone],
         isCount && "rounded-full min-w-[22px] px-1.5 h-6",
-        isRating ? "font-['Satoshi',sans-serif] font-black h-7 bg-[var(--rc-badge-rating-bg)] text-[var(--rc-badge-rating-text)] px-2" : "h-6 px-2",
+        isRating ? "font-[family-name:var(--rc-font-display)] font-black h-7 bg-[var(--rc-badge-rating-bg)] text-[var(--rc-badge-rating-text)] px-2" : "h-6 px-2",
         className
       )}
       {...props}

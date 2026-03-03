@@ -34,7 +34,7 @@ export const IconLabel = React.forwardRef<HTMLSpanElement, IconLabelProps>(
       sm: {
         iconSize: 'w-[var(--rc-iconlabel-icon-sm)] h-[var(--rc-iconlabel-icon-sm)]',
         iconStroke: '1.5px',
-        labelFont: "font-['Space_Mono',monospace]",
+        labelFont: "font-[family-name:var(--rc-font-mono)]",
         labelSize: 'text-[9px] md:text-[10px]',
         labelTransform: 'uppercase',
         gap: isHorizontal ? 'gap-[var(--rc-iconlabel-gap-h-sm)]' : 'gap-[var(--rc-iconlabel-gap-v-sm)]',
@@ -42,7 +42,7 @@ export const IconLabel = React.forwardRef<HTMLSpanElement, IconLabelProps>(
       md: {
         iconSize: 'w-[var(--rc-iconlabel-icon-md)] h-[var(--rc-iconlabel-icon-md)]',
         iconStroke: '1.5px',
-        labelFont: "font-['Instrument_Sans',sans-serif]",
+        labelFont: "font-[family-name:var(--rc-font-body)]",
         labelSize: 'text-[15px] md:text-[16px]',
         labelTransform: 'normal-case',
         gap: isHorizontal ? 'gap-[var(--rc-iconlabel-gap-h-md)]' : 'gap-[var(--rc-iconlabel-gap-v-md)]',
@@ -50,7 +50,7 @@ export const IconLabel = React.forwardRef<HTMLSpanElement, IconLabelProps>(
       lg: {
         iconSize: 'w-[var(--rc-iconlabel-icon-lg)] h-[var(--rc-iconlabel-icon-lg)]',
         iconStroke: '2px',
-        labelFont: "font-['Satoshi',sans-serif] font-black",
+        labelFont: "font-[family-name:var(--rc-font-display)] font-black",
         labelSize: 'text-[22px] md:text-[32px]',
         labelTransform: 'normal-case',
         gap: isHorizontal ? 'gap-[var(--rc-iconlabel-gap-h-lg)]' : 'gap-[var(--rc-iconlabel-gap-v-lg)]',

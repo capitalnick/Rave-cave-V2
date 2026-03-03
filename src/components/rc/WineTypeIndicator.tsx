@@ -100,7 +100,7 @@ export const WineTypeIndicator = React.forwardRef<HTMLDivElement, WineTypeIndica
         ref={ref}
         className={cn(
           "inline-flex items-center h-6 px-3 rounded-full overflow-hidden",
-          "font-['Space_Mono',monospace] text-[11px] md:text-[12px] uppercase tracking-wider font-bold",
+          "font-[family-name:var(--rc-font-mono)] text-[11px] md:text-[12px] uppercase tracking-wider font-bold",
           className
         )}
         style={{ backgroundColor: color, color: textColor }}

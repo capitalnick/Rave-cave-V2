@@ -42,7 +42,7 @@ const AccountSection: React.FC = () => {
             />
           ) : (
             <div
-              className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center font-['Satoshi'] font-bold text-lg"
+              className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center font-[family-name:var(--rc-font-display)] font-bold text-lg"
               style={{
                 backgroundColor: 'var(--rc-accent-pink)',
                 color: 'var(--rc-ink-on-accent)',

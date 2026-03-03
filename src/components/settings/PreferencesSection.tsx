@@ -99,7 +99,7 @@ const PreferencesSection: React.FC = () => {
                   onClick={() => {
                     showToast({ tone: 'neutral', message: 'Open your browser settings → Site Settings → Notifications → Allow' });
                   }}
-                  className="mt-2 font-[var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-wider text-[var(--rc-accent-pink)] hover:underline"
+                  className="mt-2 font-[family-name:var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-wider text-[var(--rc-accent-pink)] hover:underline"
                 >
                   How to fix →
                 </button>

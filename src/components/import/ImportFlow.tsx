@@ -21,13 +21,14 @@ import { CONFIG } from '@/constants';
 import { cn } from '@/lib/utils';
 import {
   detectDuplicates,
-  buildMergedCSV,
+  buildMergedCSVWithNotes,
   buildFilteredCSV,
   parseAllWines,
   mappingFingerprint,
   type DuplicateGroup,
   type ParsedWine,
 } from '@/utils/importDedup';
+import { batchEnrichWines, type ImportedWineData } from '@/services/enrichmentService';
 import DuplicateReview from './DuplicateReview';
 import BottleSelectGate from './BottleSelectGate';
 
@@ -116,6 +117,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
   const [mergedCSV, setMergedCSV] = useState<string | null>(null);
+  const [importMappings, setImportMappings] = useState<{ csvColumn: string; raveCaveField: string | null }[] | null>(null);
   const lastMappingFP = useRef<string>('');
 
   // ── Bottle-select state ──
@@ -165,7 +167,13 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
       setMappingResult(data.mappingResult);
       if (data.duplicateGroups?.length > 0 && data.csvContent) {
         setDuplicateGroups(data.duplicateGroups);
-        setMergedCSV(buildMergedCSV(data.csvContent, data.duplicateGroups, data.confirmedMappings));
+        const noteResult = buildMergedCSVWithNotes(data.csvContent, data.duplicateGroups, data.confirmedMappings);
+        setMergedCSV(noteResult.csv);
+        setImportMappings(noteResult.mappings);
+      } else if (data.csvContent) {
+        const noteResult = buildMergedCSVWithNotes(data.csvContent, [], data.confirmedMappings);
+        setMergedCSV(noteResult.csv);
+        setImportMappings(noteResult.mappings);
       }
       if (data.lastMappingFP) lastMappingFP.current = data.lastMappingFP;
       // User is now premium (or will be shortly) — skip to preview
@@ -268,7 +276,8 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
   // ── Preview data ──
   const previewWines = useMemo(() => {
     const csv = effectiveCSV;
-    if (!csv || !confirmedMappings.length) return [];
+    const activeMappings = importMappings ?? confirmedMappings;
+    if (!csv || !activeMappings.length) return [];
 
     // Quick client-side parse for preview
     const lines = csv.split('\n');
@@ -281,7 +290,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
       if (!lines[i].trim()) continue;
       const values = parseCSVLine(lines[i]);
       const wine: Record<string, string> = {};
-      for (const m of confirmedMappings) {
+      for (const m of activeMappings) {
         if (!m.raveCaveField) continue;
         const colIndex = headers.findIndex(h => h.trim() === m.csvColumn);
         if (colIndex >= 0 && values[colIndex]) {
@@ -292,7 +301,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
     }
 
     return wines;
-  }, [effectiveCSV, confirmedMappings]);
+  }, [effectiveCSV, confirmedMappings, importMappings]);
 
   // ── Save import state to localStorage (for Stripe upgrade-and-return) ──
   const saveImportState = useCallback(() => {
@@ -342,13 +351,15 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
     setError(null);
     setImportProgress({ total: effectiveRowCount, imported: 0, skipped: 0, duplicates: 0 });
 
+    const activeMappings = importMappings ?? confirmedMappings;
+
     try {
       const res = await authFetch(FUNCTION_URLS.commitImport, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           csv: effectiveCSV,
-          mappings: confirmedMappings.map(m => ({
+          mappings: activeMappings.map(m => ({
             csvColumn: m.csvColumn,
             raveCaveField: m.raveCaveField,
           })),
@@ -378,11 +389,23 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
         skipped: result.skipped,
         source: mappingResult?.detectedSource || 'unknown',
       });
+
+      // Post-import enrichment: if tasting notes, drink from, or drink to are unmapped
+      const needsEnrichment =
+        !confirmedMappings.some(m => m.raveCaveField === 'tastingNotes') ||
+        !confirmedMappings.some(m => m.raveCaveField === 'drinkFrom') ||
+        !confirmedMappings.some(m => m.raveCaveField === 'drinkUntil');
+
+      const createdWines = result.createdWines as ImportedWineData[] | undefined;
+      if (needsEnrichment && createdWines && createdWines.length > 0) {
+        showToast({ message: 'Remy is enriching your wines...' });
+        batchEnrichWines(createdWines).catch(console.error);
+      }
     } catch (e: any) {
       setError(e.message || 'Import failed. Please try again.');
       setStage('preview');
     }
-  }, [effectiveRowCount, effectiveCSV, confirmedMappings, mappingResult]);
+  }, [effectiveRowCount, effectiveCSV, confirmedMappings, importMappings, mappingResult]);
 
   // ── Source label ──
   const sourceLabel = mappingResult?.detectedSource === 'cellartracker'
@@ -414,10 +437,16 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                 <button
                   onClick={() => {
                     if (stage === 'mapping') setStage('upload');
-                    if (stage === 'dedup-review') setStage('mapping');
+                    if (stage === 'dedup-review') {
+                      setMergedCSV(null);
+                      setImportMappings(null);
+                      setStage('mapping');
+                    }
                     if (stage === 'bottle-select') {
                       // Clear bottle-select state since merge changes invalidate row indices
                       setParsedWines([]);
+                      setMergedCSV(null);
+                      setImportMappings(null);
                       setStage(duplicateGroups.length > 0 ? 'dedup-review' : 'mapping');
                     }
                     if (stage === 'preview') {
@@ -426,6 +455,8 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                         setFilteredCSV(null);
                         setStage('bottle-select');
                       } else {
+                        setMergedCSV(null);
+                        setImportMappings(null);
                         setStage(duplicateGroups.length > 0 ? 'dedup-review' : 'mapping');
                       }
                     }
@@ -557,6 +588,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                       groups = detectDuplicates(csvContent, confirmedMappings);
                       setDuplicateGroups(groups);
                       setMergedCSV(null);
+                      setImportMappings(null);
                       setFilteredCSV(null);
                       setParsedWines([]);
                       setPassedThroughBottleSelect(false);
@@ -565,9 +597,12 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                     if (groups.length > 0) {
                       setStage('dedup-review');
                     } else {
-                      setMergedCSV(null);
+                      // No duplicates — inject unmapped notes into CSV
+                      const noteResult = buildMergedCSVWithNotes(csvContent, [], confirmedMappings);
+                      setMergedCSV(noteResult.csv);
+                      setImportMappings(noteResult.mappings);
                       // Check if bottle-select gate is needed
-                      const wines = parseAllWines(csvContent, confirmedMappings);
+                      const wines = parseAllWines(noteResult.csv, noteResult.mappings);
                       setParsedWines(wines);
                       const bottleCount = wines.reduce((sum, w) => sum + w.quantity, 0);
                       if (!isPremium && bottleCount > remainingCapacity) {
@@ -594,22 +629,18 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
             <DuplicateReview
               groups={duplicateGroups}
               onConfirm={(resolved) => {
-                const anyMerged = resolved.some(g => g.merged);
-                const csv = anyMerged && csvContent
-                  ? buildMergedCSV(csvContent, resolved, confirmedMappings)
-                  : null;
-                setMergedCSV(csv);
+                if (!csvContent) return;
+                const noteResult = buildMergedCSVWithNotes(csvContent, resolved, confirmedMappings);
+                setMergedCSV(noteResult.csv);
+                setImportMappings(noteResult.mappings);
 
                 // Parse wines from effective CSV to check bottle count
-                const effectiveSource = csv ?? csvContent;
-                if (effectiveSource) {
-                  const wines = parseAllWines(effectiveSource, confirmedMappings);
-                  setParsedWines(wines);
-                  const bottleCount = wines.reduce((sum, w) => sum + w.quantity, 0);
-                  if (!isPremium && bottleCount > remainingCapacity) {
-                    setStage('bottle-select');
-                    return;
-                  }
+                const wines = parseAllWines(noteResult.csv, noteResult.mappings);
+                setParsedWines(wines);
+                const bottleCount = wines.reduce((sum, w) => sum + w.quantity, 0);
+                if (!isPremium && bottleCount > remainingCapacity) {
+                  setStage('bottle-select');
+                  return;
                 }
                 setStage('preview');
               }}
@@ -777,6 +808,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                     setConfirmedMappings([]);
                     setDuplicateGroups([]);
                     setMergedCSV(null);
+                    setImportMappings(null);
                     setParsedWines([]);
                     setFilteredCSV(null);
                     setPassedThroughBottleSelect(false);

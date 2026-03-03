@@ -47,7 +47,7 @@ export const Input: React.FC<InputProps> = ({
   };
 
   const baseStyles = cn(
-    "w-full flex items-center transition-all duration-200 font-['Instrument_Sans'] bg-[var(--rc-input-bg)] border",
+    "w-full flex items-center transition-all duration-200 font-[family-name:var(--rc-font-body)] bg-[var(--rc-input-bg)] border",
     isDesktop ? "rounded-[var(--rc-input-radius)]" : "rounded-[var(--rc-input-radius)]",
     !isError ? "border-[var(--rc-input-border)]" : "border-[var(--rc-input-border-error)]",
     isDisabled && "bg-[var(--rc-input-disabled-bg)] cursor-not-allowed",

@@ -133,7 +133,7 @@ const CellarPage: React.FC = () => {
                   />
                 ) : (
                   <div
-                    className="w-full h-full flex items-center justify-center font-['Satoshi'] font-bold text-sm"
+                    className="w-full h-full flex items-center justify-center font-[family-name:var(--rc-font-display)] font-bold text-sm"
                     style={{ backgroundColor: 'var(--rc-accent-pink)', color: 'var(--rc-ink-on-accent)' }}
                   >
                     {avatarInitial}

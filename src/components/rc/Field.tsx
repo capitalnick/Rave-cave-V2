@@ -44,7 +44,7 @@ export const Field: React.FC<FieldProps> = ({
     <div className={cn("flex flex-col w-full gap-[var(--rc-space-md,8px)] h-fit", className)}>
       <label 
         htmlFor={id}
-        className="font-['Instrument_Sans'] text-[14px] font-semibold text-[var(--rc-ink-primary)] select-none"
+        className="font-[family-name:var(--rc-font-body)] text-[14px] font-semibold text-[var(--rc-ink-primary)] select-none"
       >
         {labelText}
       </label>
@@ -54,13 +54,13 @@ export const Field: React.FC<FieldProps> = ({
       </div>
 
       {isHelperVisible && (
-        <span className="font-['Instrument_Sans'] text-[13px] text-[var(--rc-ink-ghost)]">
+        <span className="font-[family-name:var(--rc-font-body)] text-[13px] text-[var(--rc-ink-ghost)]">
           {helperText}
         </span>
       )}
 
       {isErrorVisible && (
-        <span className="font-['Instrument_Sans'] text-[13px] text-[var(--rc-accent-coral)] font-medium">
+        <span className="font-[family-name:var(--rc-font-body)] text-[13px] text-[var(--rc-accent-coral)] font-medium">
           {errorText}
         </span>
       )}

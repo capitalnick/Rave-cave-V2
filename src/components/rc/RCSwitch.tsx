@@ -50,7 +50,7 @@ export const Switch: React.FC<SwitchProps> = ({
         />
       </div>
       {label && (
-        <span className={cn("text-[15px] font-['Instrument_Sans']", isDisabled ? "text-[var(--rc-disabled-text)]" : "text-[var(--rc-ink-primary)]")}>
+        <span className={cn("text-[15px] font-[family-name:var(--rc-font-body)]", isDisabled ? "text-[var(--rc-disabled-text)]" : "text-[var(--rc-ink-primary)]")}>
           {label}
         </span>
       )}

@@ -65,11 +65,11 @@ export const InlineMessage = React.forwardRef<HTMLDivElement, InlineMessageProps
 
         {/* Text Group */}
         <div className="flex flex-col flex-1 min-w-0">
-          <span className="font-['Instrument_Sans',sans-serif] text-[15px] md:text-[16px] font-medium text-[var(--rc-ink-primary)] leading-[1.4]">
+          <span className="font-[family-name:var(--rc-font-body)] text-[15px] md:text-[16px] font-medium text-[var(--rc-ink-primary)] leading-[1.4]">
             {message}
           </span>
           {secondaryMessage && (
-            <span className="mt-[var(--rc-space-xs)] font-['Instrument_Sans',sans-serif] text-[13px] md:text-[14px] text-[var(--rc-ink-secondary)] leading-[1.4]">
+            <span className="mt-[var(--rc-space-xs)] font-[family-name:var(--rc-font-body)] text-[13px] md:text-[14px] text-[var(--rc-ink-secondary)] leading-[1.4]">
               {secondaryMessage}
             </span>
           )}

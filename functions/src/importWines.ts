@@ -742,11 +742,27 @@ interface CommitRequest {
   maxWines?: number;
 }
 
+interface CreatedWine {
+  id: string;
+  producer: string;
+  name: string;
+  vintage: number;
+  type: string;
+  region: string;
+  country: string;
+  appellation: string;
+  cepage: string;
+  tastingNotes: string;
+  drinkFrom: number;
+  drinkUntil: number;
+}
+
 interface ImportResult {
   imported: number;
   duplicatesMerged: number;
   skipped: number;
   errors: { row: number; reason: string }[];
+  createdWines: CreatedWine[];
 }
 
 export const commitImport = onRequest(
@@ -895,6 +911,7 @@ export const commitImport = onRequest(
       // 7. Batch write to Firestore (max 400 per batch)
       const BATCH_SIZE = 400;
       let importedCount = 0;
+      const createdWines: CreatedWine[] = [];
 
       for (let i = 0; i < winesToCreate.length; i += BATCH_SIZE) {
         const batch = db.batch();
@@ -905,6 +922,20 @@ export const commitImport = onRequest(
           batch.set(docRef, {
             ...wineToFirestoreDoc(wine),
             createdAt: FieldValue.serverTimestamp(),
+          });
+          createdWines.push({
+            id: docRef.id,
+            producer: String(wine.producer || ""),
+            name: String(wine.name || ""),
+            vintage: Number(wine.vintage) || 0,
+            type: String(wine.type || ""),
+            region: String(wine.region || ""),
+            country: String(wine.country || ""),
+            appellation: String(wine.appellation || ""),
+            cepage: String(wine.cepage || ""),
+            tastingNotes: String(wine.tastingNotes || ""),
+            drinkFrom: Number(wine.drinkFrom) || 0,
+            drinkUntil: Number(wine.drinkUntil) || 0,
           });
           importedCount++;
         }
@@ -932,6 +963,7 @@ export const commitImport = onRequest(
         duplicatesMerged: duplicatesMerged.length,
         skipped: skippedRows.length,
         errors: skippedRows.slice(0, 20),
+        createdWines,
       };
 
       logger.info("Import completed", {uid, ...result});
