@@ -78,7 +78,7 @@ export default function BottleSelectGate({
   }, []);
 
   return (
-    <div className="flex flex-col min-h-0">
+    <div style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       {/* Section A — Upgrade banner */}
       <div className="mb-4">
         <InlineMessage
@@ -111,31 +111,14 @@ export default function BottleSelectGate({
       </div>
 
       {/* Section B — Wine selection list */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div>
         {wines.map((wine, idx) => (
-          <div
+          <WineRow
             key={`${wine.lineIndex}-${idx}`}
-            className="flex items-center gap-3 min-h-[48px] py-2 border-b border-[var(--rc-border-subtle)] last:border-0 cursor-pointer overflow-hidden"
-            onClick={() => toggleWine(idx)}
-          >
-            <Checkbox
-              variant={selected.has(idx) ? 'Checked' : 'Unchecked'}
-              onChange={() => toggleWine(idx)}
-            />
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="truncate text-[13px] font-medium font-['Instrument_Sans',sans-serif] text-[var(--rc-ink-primary)]">
-                {wine.producer && wine.name
-                  ? `${wine.producer} ${wine.name}`
-                  : wine.name || wine.producer}
-              </div>
-              {(wine.vintage || wine.cepage) && (
-                <MonoLabel size="micro" colour="ghost" className="w-auto mt-0.5">
-                  {[wine.vintage, wine.cepage].filter(Boolean).join(' \u00B7 ')}
-                </MonoLabel>
-              )}
-            </div>
-            <Badge typeVariant="Count" tone="Neutral" label={wine.quantity} className="shrink-0" />
-          </div>
+            wine={wine}
+            checked={selected.has(idx)}
+            onToggle={() => toggleWine(idx)}
+          />
         ))}
       </div>
 
@@ -185,6 +168,61 @@ export default function BottleSelectGate({
             className="flex-1"
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Wine row ──
+
+function WineRow({
+  wine,
+  checked,
+  onToggle,
+}: {
+  wine: ParsedWine;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onToggle}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+      className="border-b border-[var(--rc-border-subtle)] last:border-0 cursor-pointer py-2"
+      style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '48px', width: '100%' }}
+    >
+      <div style={{ flexShrink: 0 }}>
+        <Checkbox
+          variant={checked ? 'Checked' : 'Unchecked'}
+          onChange={onToggle}
+        />
+      </div>
+      <div style={{ flex: '1 1 0', minWidth: 0, overflow: 'hidden' }}>
+        <div
+          style={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: '13px',
+            fontWeight: 500,
+            fontFamily: "'Instrument Sans', sans-serif",
+            color: 'var(--rc-ink-primary)',
+          }}
+        >
+          {wine.producer && wine.name
+            ? `${wine.producer} ${wine.name}`
+            : wine.name || wine.producer}
+        </div>
+        {(wine.vintage || wine.cepage) && (
+          <MonoLabel size="micro" colour="ghost" className="w-auto mt-0.5">
+            {[wine.vintage, wine.cepage].filter(Boolean).join(' \u00B7 ')}
+          </MonoLabel>
+        )}
+      </div>
+      <div style={{ flexShrink: 0 }}>
+        <Badge typeVariant="Count" tone="Neutral" label={wine.quantity} />
       </div>
     </div>
   );

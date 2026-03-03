@@ -399,7 +399,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
       }
     }}>
       <DialogContent
-        className="max-w-[640px] max-h-[90dvh] overflow-y-auto overflow-x-hidden bg-[var(--rc-surface-primary)] p-0"
+        className="!block max-w-[640px] max-h-[90dvh] overflow-y-auto overflow-x-hidden bg-[var(--rc-surface-primary)] p-0"
         onPointerDownOutside={(e) => {
           if (stage === 'importing') e.preventDefault();
         }}
