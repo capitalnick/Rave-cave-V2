@@ -34,6 +34,7 @@ export async function checkRateLimit(
         return true;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const data = snap.data()!;
       const windowStart = data.windowStart as Timestamp;
       const elapsed = now.seconds - windowStart.seconds;

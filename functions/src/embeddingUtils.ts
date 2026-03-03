@@ -3,6 +3,8 @@ import {EMBEDDING_FIELDS} from "./fieldMaps";
 /**
  * Builds a single text string from descriptive fields for embedding.
  * Includes both legacy "Cépage" and modern "Grape Varieties" fields.
+ * @param {Record<string, unknown>} data The wine document data.
+ * @return {string} Concatenated embedding text.
  */
 export function buildEmbeddingText(
   data: Record<string, unknown>
@@ -14,7 +16,12 @@ export function buildEmbeddingText(
       // Handle Grape Varieties array format
       if (Array.isArray(val)) {
         const names = val
-          .map((v: unknown) => (typeof v === "object" && v && "name" in v ? (v as {name: string}).name : String(v)))
+          .map((v: unknown) => {
+            if (typeof v === "object" && v && "name" in v) {
+              return (v as {name: string}).name;
+            }
+            return String(v);
+          })
           .filter(Boolean);
         if (names.length > 0) parts.push(names.join(", "));
       } else {
@@ -27,6 +34,9 @@ export function buildEmbeddingText(
 
 /**
  * Checks whether embedding-relevant fields changed between writes.
+ * @param {Record<string, unknown>} before Data before write.
+ * @param {Record<string, unknown>} after Data after write.
+ * @return {boolean} Whether reembedding is needed.
  */
 export function needsReembedding(
   before: Record<string, unknown> | undefined,
