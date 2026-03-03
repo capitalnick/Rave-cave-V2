@@ -18,6 +18,13 @@ import { useInventory } from '@/context/InventoryContext';
 import { trackEvent } from '@/config/analytics';
 import { CONFIG } from '@/constants';
 import { cn } from '@/lib/utils';
+import {
+  detectDuplicates,
+  buildMergedCSV,
+  mappingFingerprint,
+  type DuplicateGroup,
+} from '@/utils/importDedup';
+import DuplicateReview from './DuplicateReview';
 
 // ── Types ──
 
@@ -49,6 +56,7 @@ type ImportStage =
   | 'upload'
   | 'mapping-loading'
   | 'mapping'
+  | 'dedup-review'
   | 'preview'
   | 'importing'
   | 'complete';
@@ -97,6 +105,9 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [duplicateGroups, setDuplicateGroups] = useState<DuplicateGroup[]>([]);
+  const [mergedCSV, setMergedCSV] = useState<string | null>(null);
+  const lastMappingFP = useRef<string>('');
 
   // ── Tier cap ──
   const remainingCapacity = isPremium
@@ -198,10 +209,11 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
 
   // ── Preview data ──
   const previewWines = useMemo(() => {
-    if (!csvContent || !confirmedMappings.length) return [];
+    const csv = mergedCSV ?? csvContent;
+    if (!csv || !confirmedMappings.length) return [];
 
     // Quick client-side parse for preview
-    const lines = csvContent.split('\n');
+    const lines = csv.split('\n');
     if (lines.length < 2) return [];
 
     const headers = parseCSVLine(lines[0]);
@@ -222,7 +234,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
     }
 
     return wines;
-  }, [csvContent, confirmedMappings]);
+  }, [csvContent, mergedCSV, confirmedMappings]);
 
   // ── Import handler ──
   const handleImport = useCallback(async () => {
@@ -235,7 +247,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          csv: csvContent,
+          csv: mergedCSV ?? csvContent,
           mappings: confirmedMappings.map(m => ({
             csvColumn: m.csvColumn,
             raveCaveField: m.raveCaveField,
@@ -270,7 +282,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
       setError(e.message || 'Import failed. Please try again.');
       setStage('preview');
     }
-  }, [canImport, csvContent, confirmedMappings, mappingResult]);
+  }, [canImport, csvContent, mergedCSV, confirmedMappings, mappingResult]);
 
   // ── Source label ──
   const sourceLabel = mappingResult?.detectedSource === 'cellartracker'
@@ -282,7 +294,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
-        className="max-w-[640px] max-h-[90dvh] overflow-y-auto bg-[var(--rc-surface-primary)] p-0"
+        className="max-w-[640px] max-h-[90dvh] overflow-y-auto overflow-x-hidden bg-[var(--rc-surface-primary)] p-0"
         onPointerDownOutside={(e) => {
           if (stage === 'importing') e.preventDefault();
         }}
@@ -297,7 +309,10 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                 <button
                   onClick={() => {
                     if (stage === 'mapping') setStage('upload');
-                    if (stage === 'preview') setStage('mapping');
+                    if (stage === 'dedup-review') setStage('mapping');
+                    if (stage === 'preview') {
+                      setStage(duplicateGroups.length > 0 ? 'dedup-review' : 'mapping');
+                    }
                   }}
                   className="text-[var(--rc-ink-ghost)] hover:text-[var(--rc-ink-primary)] transition-colors text-sm"
                 >
@@ -414,7 +429,24 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                 <Button
                   variantType="Primary"
                   label="Continue"
-                  onClick={() => setStage('preview')}
+                  onClick={() => {
+                    if (!csvContent) return;
+                    const fp = mappingFingerprint(confirmedMappings);
+                    let groups = duplicateGroups;
+                    // Only re-detect if mappings changed since last detection
+                    if (fp !== lastMappingFP.current) {
+                      groups = detectDuplicates(csvContent, confirmedMappings);
+                      setDuplicateGroups(groups);
+                      setMergedCSV(null);
+                      lastMappingFP.current = fp;
+                    }
+                    if (groups.length > 0) {
+                      setStage('dedup-review');
+                    } else {
+                      setMergedCSV(null);
+                      setStage('preview');
+                    }
+                  }}
                   disabled={!hasRequiredMapping}
                 />
               </div>
@@ -425,6 +457,33 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                 </Body>
               )}
             </div>
+          )}
+
+          {/* ── Dedup Review Stage ── */}
+          {stage === 'dedup-review' && duplicateGroups.length > 0 && (
+            <DuplicateReview
+              groups={duplicateGroups}
+              onConfirm={(resolved) => {
+                const anyMerged = resolved.some(g => g.merged);
+                if (anyMerged && csvContent) {
+                  setMergedCSV(buildMergedCSV(csvContent, resolved, confirmedMappings));
+                } else {
+                  setMergedCSV(null);
+                }
+                setStage('preview');
+              }}
+              onToggle={(index, merged) => {
+                setDuplicateGroups(prev =>
+                  prev.map((g, i) => (i === index ? { ...g, merged } : g)),
+                );
+              }}
+              onBulkMerge={() => {
+                setDuplicateGroups(prev => prev.map(g => ({ ...g, merged: true })));
+              }}
+              onBulkKeep={() => {
+                setDuplicateGroups(prev => prev.map(g => ({ ...g, merged: false })));
+              }}
+            />
           )}
 
           {/* ── Preview Stage ── */}
@@ -575,6 +634,9 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                     setFileName('');
                     setMappingResult(null);
                     setConfirmedMappings([]);
+                    setDuplicateGroups([]);
+                    setMergedCSV(null);
+                    lastMappingFP.current = '';
                     setError(null);
                   }}
                 />
@@ -601,14 +663,14 @@ function MappingRow({
   onChange: (field: ImportableField | null) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 py-2.5 border-b border-[var(--rc-border-subtle)] last:border-0">
+    <div className="flex items-center gap-1.5 py-2 border-b border-[var(--rc-border-subtle)] last:border-0">
       {/* CSV column */}
-      <div className="w-[130px] shrink-0 truncate">
-        <MonoLabel size="label">{mapping.csvColumn}</MonoLabel>
+      <div className="w-[100px] shrink-0 truncate">
+        <MonoLabel size="label" className="text-[11px]">{mapping.csvColumn}</MonoLabel>
       </div>
 
       {/* Arrow */}
-      <ArrowRight size={14} className="text-[var(--rc-ink-ghost)] shrink-0" />
+      <ArrowRight size={12} className="text-[var(--rc-ink-ghost)] shrink-0" />
 
       {/* Target field dropdown */}
       <select
@@ -616,7 +678,7 @@ function MappingRow({
         onChange={(e) =>
           onChange(e.target.value === 'skip' ? null : e.target.value as ImportableField)
         }
-        className="flex-1 min-w-0 bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)] rounded-lg px-2.5 py-1.5 text-sm text-[var(--rc-ink-primary)]"
+        className="flex-1 min-w-0 bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)] rounded-lg px-2 py-1 text-xs text-[var(--rc-ink-primary)]"
       >
         <option value="skip">Skip</option>
         {IMPORTABLE_FIELDS.map((f) => (
@@ -643,8 +705,8 @@ function MappingRow({
       />
 
       {/* Sample values */}
-      <div className="w-[140px] shrink-0 truncate hidden sm:block">
-        <Body size="caption" colour="ghost" className="w-auto truncate">
+      <div className="w-[110px] shrink-0 truncate hidden sm:block">
+        <Body size="caption" colour="ghost" className="w-auto truncate text-[11px]">
           {mapping.sampleValues.join(', ')}
         </Body>
       </div>
