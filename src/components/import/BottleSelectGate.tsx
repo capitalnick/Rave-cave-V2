@@ -78,7 +78,7 @@ export default function BottleSelectGate({
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col min-h-0">
       {/* Section A — Upgrade banner */}
       <div className="mb-4">
         <InlineMessage
@@ -111,23 +111,23 @@ export default function BottleSelectGate({
       </div>
 
       {/* Section B — Wine selection list */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {wines.map((wine, idx) => (
           <div
             key={`${wine.lineIndex}-${idx}`}
-            className="flex items-center gap-3 min-h-[48px] py-2 border-b border-[var(--rc-border-subtle)] last:border-0 cursor-pointer"
+            className="flex items-center gap-3 min-h-[48px] py-2 border-b border-[var(--rc-border-subtle)] last:border-0 cursor-pointer overflow-hidden"
             onClick={() => toggleWine(idx)}
           >
             <Checkbox
               variant={selected.has(idx) ? 'Checked' : 'Unchecked'}
               onChange={() => toggleWine(idx)}
             />
-            <div className="flex-1 min-w-0">
-              <Body size="caption" weight="medium" className="w-auto truncate">
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="truncate text-[13px] font-medium font-['Instrument_Sans',sans-serif] text-[var(--rc-ink-primary)]">
                 {wine.producer && wine.name
                   ? `${wine.producer} ${wine.name}`
                   : wine.name || wine.producer}
-              </Body>
+              </div>
               {(wine.vintage || wine.cepage) && (
                 <MonoLabel size="micro" colour="ghost" className="w-auto mt-0.5">
                   {[wine.vintage, wine.cepage].filter(Boolean).join(' \u00B7 ')}
@@ -139,8 +139,8 @@ export default function BottleSelectGate({
         ))}
       </div>
 
-      {/* Sticky footer */}
-      <div className="sticky bottom-0 bg-[var(--rc-surface-primary)] border-t border-[var(--rc-border-subtle)] pt-3 -mx-6 px-6 pb-1">
+      {/* Footer */}
+      <div className="border-t border-[var(--rc-border-subtle)] pt-3 mt-2">
         {/* Progress bar */}
         <div className="h-2 rounded-full bg-[var(--rc-surface-tertiary)] overflow-hidden mb-2">
           <div
