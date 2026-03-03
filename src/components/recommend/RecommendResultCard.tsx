@@ -97,7 +97,7 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
             <Heading scale="subhead" as="p">
               {recommendation.name}
             </Heading>
-            <Heading scale="subhead" as="p" colour={getWineTypeHeadingColour(recommendation.type)}>
+            <Heading scale="subhead" as="p" colour={getWineTypeHeadingColour(recommendation.type)} style={{ '--stroke-width': '1px' } as React.CSSProperties}>
               {recommendation.vintage} · {recommendation.type}
             </Heading>
           </div>
@@ -119,7 +119,7 @@ const RecommendResultCard: React.FC<RecommendResultCardProps> = ({
             </span>
 
             {recommendation.rating != null && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--rc-badge-rating-bg,#f5f0e8)] text-[12px] font-bold font-[var(--rc-font-display)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--rc-ink-primary)] text-[var(--rc-accent-acid)] text-[12px] font-bold font-[var(--rc-font-display)]">
                 ★ {recommendation.rating.toFixed(1)}
               </span>
             )}
