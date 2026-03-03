@@ -129,6 +129,9 @@ const WineDetailContent: React.FC<{
   const [updating, setUpdating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Wine type picker
+  const [typePickerOpen, setTypePickerOpen] = useState(false);
+
   // Delete confirmation
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -461,22 +464,34 @@ const WineDetailContent: React.FC<{
           {renderField('Tasting Notes', 'tastingNotes', wine.tastingNotes, true)}
           {renderField('Wine name', 'name', wine.name)}
           {renderField('Bottle Price', 'price', wine.price)}
-          {/* Wine Type — chip picker */}
-          <div className="space-y-1 p-[var(--rc-space-md)] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] rounded-[var(--rc-radius-sm)]">
+          {/* Wine Type — chip picker (collapsed = selected only, tap to expand) */}
+          <div
+            className="space-y-1 p-[var(--rc-space-md)] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] rounded-[var(--rc-radius-sm)] cursor-pointer"
+            onClick={() => setTypePickerOpen(prev => !prev)}
+          >
             <dt>
               <MonoLabel size="micro" weight="bold" colour="accent-pink" as="span" className="w-auto">Wine Type</MonoLabel>
             </dt>
             <dd className="flex flex-wrap gap-1.5 mt-1">
-              {WINE_TYPES.map(t => (
-                <Chip
-                  key={t}
-                  variant="WineType"
-                  state={wine.type === t ? 'Selected' : 'Default'}
-                  label={t}
-                  onClick={() => onUpdate?.('type', t)}
-                  className="cursor-pointer"
-                />
-              ))}
+              {typePickerOpen
+                ? WINE_TYPES.map(t => (
+                    <Chip
+                      key={t}
+                      variant="WineType"
+                      state={wine.type === t ? 'Selected' : 'Default'}
+                      label={t}
+                      onClick={(e) => { e.stopPropagation(); onUpdate?.('type', t); setTypePickerOpen(false); }}
+                      className="cursor-pointer"
+                    />
+                  ))
+                : wine.type && (
+                    <Chip
+                      variant="WineType"
+                      state="Selected"
+                      label={wine.type}
+                    />
+                  )
+              }
             </dd>
           </div>
           {renderField('Format', 'format', wine.format)}
