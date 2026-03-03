@@ -141,30 +141,27 @@ function GroupCard({
         </Body>
       )}
 
-      {/* Toggle: Merge / Keep separate */}
-      <div className="flex mt-3 rounded-lg overflow-hidden border border-[var(--rc-border-subtle)]">
-        <button
-          onClick={() => onToggle(index, true)}
-          className={cn(
-            'flex-1 py-2.5 text-xs font-medium transition-colors min-h-[48px]',
-            merged
-              ? 'bg-[var(--rc-accent-pink)] text-white'
-              : 'bg-transparent text-[var(--rc-ink-secondary)] hover:bg-[var(--rc-surface-secondary)]',
-          )}
-        >
+      {/* Toggle: Merge */}
+      <div className="flex items-center justify-between mt-3">
+        <MonoLabel size="label" colour={merged ? 'accent-pink' : 'ghost'}>
           Merge
-        </button>
-        <button
-          onClick={() => onToggle(index, false)}
+        </MonoLabel>
+        <div
+          role="switch"
+          aria-checked={merged}
+          onClick={() => onToggle(index, !merged)}
           className={cn(
-            'flex-1 py-2.5 text-xs font-medium transition-colors min-h-[48px]',
-            !merged
-              ? 'bg-[var(--rc-surface-secondary)] text-[var(--rc-ink-primary)]'
-              : 'bg-transparent text-[var(--rc-ink-secondary)] hover:bg-[var(--rc-surface-secondary)]',
+            'relative w-[44px] h-[24px] rounded-full transition-colors duration-200 cursor-pointer',
+            merged ? 'bg-[var(--rc-accent-pink)]' : 'bg-[var(--rc-switch-track-off,#555)]',
           )}
         >
-          Keep separate
-        </button>
+          <div
+            className={cn(
+              'absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 shadow-sm',
+              merged && 'translate-x-5',
+            )}
+          />
+        </div>
       </div>
     </Card>
   );
