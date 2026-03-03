@@ -78,7 +78,7 @@ export default function BottleSelectGate({
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Section A — Upgrade banner */}
       <div className="mb-4">
         <InlineMessage
@@ -134,9 +134,7 @@ export default function BottleSelectGate({
                 </MonoLabel>
               )}
             </div>
-            {wine.quantity > 1 && (
-              <Badge typeVariant="Count" tone="Neutral" label={wine.quantity} />
-            )}
+            <Badge typeVariant="Count" tone="Neutral" label={wine.quantity} className="shrink-0" />
           </div>
         ))}
       </div>
@@ -172,18 +170,18 @@ export default function BottleSelectGate({
         <div className="flex gap-3 mt-3">
           <Button
             variantType="Primary"
-            label={`Continue with ${selectedBottles} bottle${selectedBottles !== 1 ? 's' : ''}`}
+            label="Upgrade to add all wines"
+            onClick={onUpgrade}
+            className="flex-1"
+          />
+          <Button
+            variantType="Secondary"
+            label={`Continue with ${selectedBottles}`}
             disabled={overCap || selectedBottles === 0}
             onClick={() => {
               const selectedWines = wines.filter((_, i) => selected.has(i));
               onConfirm(selectedWines);
             }}
-            className="flex-1"
-          />
-          <Button
-            variantType="Secondary"
-            label="Upgrade"
-            onClick={onUpgrade}
             className="flex-1"
           />
         </div>
