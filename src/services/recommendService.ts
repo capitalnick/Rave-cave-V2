@@ -25,7 +25,8 @@ import { inventoryService } from './inventoryService';
 
 export type RecommendErrorCode = 'PROXY_ERROR' | 'PARSE_ERROR' | 'EMPTY_RESULTS' | 'UNKNOWN';
 
-export { RecommendError } from './errors';
+import { RecommendError } from './errors';
+export { RecommendError };
 
 // ── Prompt Building ──
 
