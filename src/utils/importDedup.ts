@@ -354,9 +354,6 @@ export function buildMergedCSVWithNotes(
     return pairs && pairs.length > 0 ? pairs.join(' | ') : null;
   };
 
-  // Track which group's representative line has been seen (for dedup merge logic)
-  const groupFirstLine = new Map<number, number>(); // groupIndex → first lineIndex
-
   // Now rebuild the CSV with notes injected
   const addColumn = personalNoteColIdx < 0; // need to add _RC_Notes column
   const newMappings = [...mappings];

@@ -1,6 +1,6 @@
 import { CONFIG } from '@/constants';
 import { inventoryService } from './inventoryService';
-import type { Wine, GrapeVariety } from '@/types';
+import type { Wine } from '@/types';
 import { authFetch } from '@/utils/authFetch';
 import { FUNCTION_URLS } from '@/config/functionUrls';
 import { formatGrapeDisplay, cepageStringToVarieties } from '@/utils/grapeUtils';
