@@ -12,6 +12,7 @@ import Layout from '@/components/Layout';
 import ScanOverlay from '@/components/ScanOverlay';
 import WineModal from '@/components/WineModal';
 import ImportFlow from '@/components/import/ImportFlow';
+import UpgradePrompt from '@/components/UpgradePrompt';
 import PinnedRemyPanel from '@/components/PinnedRemyPanel';
 import SplashScreen from '@/components/SplashScreen';
 import LoginPage from '@/pages/LoginPage';
@@ -175,6 +176,10 @@ function AppShell() {
         onClearManualEntryDirect={ctx.clearManualEntryDirect}
         onImport={handleOpenImport}
       />
+
+      {ctx.bottleUpgradeOpen && (
+        <UpgradePrompt variant="modal" feature="bottles" onDismiss={ctx.closeBottleUpgrade} />
+      )}
 
       {showImport && <ImportFlow onClose={() => setShowImport(false)} />}
 

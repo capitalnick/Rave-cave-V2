@@ -67,6 +67,8 @@ interface InventoryContextValue {
   clearManualEntryDirect: () => void;
   closeScan: () => void;
   handleWineCommitted: (docId: string | string[]) => void;
+  bottleUpgradeOpen: boolean;
+  closeBottleUpgrade: () => void;
   scanFABRef: React.RefObject<HTMLButtonElement | null>;
 
   // Wine detail
@@ -138,6 +140,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [scanOpen, setScanOpen] = useState(false);
   const [prefillData, setPrefillData] = useState<Partial<Wine> | null>(null);
   const scanFABRef = useRef<HTMLButtonElement | null>(null);
+  const [bottleUpgradeOpen, setBottleUpgradeOpen] = useState(false);
 
   // ── Manual entry direct (FAB long-press) ──
   const [manualEntryDirect, setManualEntryDirect] = useState(false);
@@ -325,15 +328,23 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // ── Scan callbacks ──
   const openScan = useCallback((prefill?: Partial<Wine> | null) => {
+    if (!canAddBottles()) {
+      setBottleUpgradeOpen(true);
+      return;
+    }
     setPrefillData(prefill ?? null);
     setScanOpen(true);
-  }, []);
+  }, [canAddBottles]);
 
   const openManualAdd = useCallback(() => {
+    if (!canAddBottles()) {
+      setBottleUpgradeOpen(true);
+      return;
+    }
     setPrefillData(null);
     setManualEntryDirect(true);
     setScanOpen(true);
-  }, []);
+  }, [canAddBottles]);
 
   const clearManualEntryDirect = useCallback(() => {
     setManualEntryDirect(false);
@@ -343,6 +354,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setScanOpen(false);
     setPrefillData(null);
     requestAnimationFrame(() => scanFABRef.current?.focus());
+  }, []);
+
+  const closeBottleUpgrade = useCallback(() => {
+    setBottleUpgradeOpen(false);
   }, []);
 
   const handleWineCommitted = useCallback((docId: string | string[]) => {
@@ -435,6 +450,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     clearManualEntryDirect,
     closeScan,
     handleWineCommitted,
+    bottleUpgradeOpen,
+    closeBottleUpgrade,
     scanFABRef,
     selectedWine,
     setSelectedWine,
@@ -455,7 +472,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     inventory, loading, isSynced, search, setSearch, filters, facetOptions,
     sortedInventory, sortField, toggleFacet, clearFilters, activeFilterCount,
     totalBottlesFiltered, heroWineIds, totalBottles, canAddBottles, handleUpdate, handleDeleteWine, scanOpen, prefillData,
-    openScan, openManualAdd, manualEntryDirect, clearManualEntryDirect, closeScan, handleWineCommitted, selectedWine,
+    openScan, openManualAdd, manualEntryDirect, clearManualEntryDirect, closeScan, handleWineCommitted, bottleUpgradeOpen, closeBottleUpgrade, selectedWine,
     recommendContext, handleHandoffToRemy, handleAddToCellarFromRecommend,
     handleAddToCellarFromChat, wineBriefContext, handleAskRemyAboutWine,
     mobileFiltersOpen, triggerRefreshFeedback,
