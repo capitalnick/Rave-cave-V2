@@ -7,7 +7,8 @@ import { callGeminiProxy } from '@/utils/geminiProxy';
 
 export type ExtractionErrorCode = 'PROXY_ERROR' | 'PARSE_ERROR' | 'TIMEOUT' | 'UNKNOWN';
 
-export { ExtractionError } from './errors';
+import { ExtractionError } from './errors';
+export { ExtractionError };
 
 const SYSTEM_INSTRUCTION = `You are a wine label extraction AI. Analyze the provided wine label image and extract all visible information.
 
