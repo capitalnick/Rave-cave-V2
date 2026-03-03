@@ -186,15 +186,38 @@ export function detectDuplicates(
 
 // ── CSV encoding helpers ──
 
-function quoteCSVField(v: string): string {
-  if (v.includes(',') || v.includes('"') || v.includes('\t') || v.includes('\n')) {
+function detectDelimiter(headerLine: string): string {
+  // Count unquoted tabs vs commas in the header to detect delimiter
+  let inQuotes = false;
+  let tabs = 0;
+  let commas = 0;
+  for (let i = 0; i < headerLine.length; i++) {
+    const ch = headerLine[i];
+    if (ch === '"') {
+      if (inQuotes && headerLine[i + 1] === '"') { i++; continue; }
+      inQuotes = !inQuotes;
+    } else if (!inQuotes) {
+      if (ch === '\t') tabs++;
+      else if (ch === ',') commas++;
+    }
+  }
+  return tabs > commas ? '\t' : ',';
+}
+
+function quoteCSVField(v: string, delimiter = ','): string {
+  if (v.includes(delimiter) || v.includes('"') || v.includes('\n') || v.includes('\r')) {
     return '"' + v.replace(/"/g, '""') + '"';
   }
   return v;
 }
 
-function encodeCSVLine(values: string[]): string {
-  return values.map(quoteCSVField).join(',');
+function encodeCSVLine(values: string[], delimiter = ','): string {
+  return values.map(v => quoteCSVField(v, delimiter)).join(delimiter);
+}
+
+/** Strip trailing \r from a line (handles Windows line endings after split('\n')) */
+function stripCR(line: string): string {
+  return line.endsWith('\r') ? line.slice(0, -1) : line;
 }
 
 // ── Build a merged CSV from the original, applying user's merge decisions ──
@@ -207,15 +230,15 @@ export function buildMergedCSV(
   const lines = originalCSV.split('\n');
   if (lines.length < 2) return originalCSV;
 
+  const delimiter = detectDelimiter(lines[0]);
   const headers = parseCSVLine(lines[0]);
   const quantityMapping = mappings.find(m => m.raveCaveField === 'quantity');
   const quantityColIdx = quantityMapping
     ? headers.findIndex(h => h.trim() === quantityMapping.csvColumn)
     : -1;
 
-  // Collect line indices to remove and lines to update quantity
   const linesToRemove = new Set<number>();
-  const quantityUpdates = new Map<number, number>(); // lineIndex → new quantity
+  const quantityUpdates = new Map<number, number>();
 
   for (const group of groups) {
     if (!group.merged || group.rowIndices.length <= 1) continue;
@@ -232,16 +255,13 @@ export function buildMergedCSV(
 
     if (dataLines.length <= 1) continue;
 
-    const keepLine = dataLines[0];
-    quantityUpdates.set(keepLine, group.totalQuantity);
-
+    quantityUpdates.set(dataLines[0], group.totalQuantity);
     for (let d = 1; d < dataLines.length; d++) {
       linesToRemove.add(dataLines[d]);
     }
   }
 
-  // Rebuild CSV
-  const result: string[] = [lines[0]]; // header row
+  const result: string[] = [lines[0]];
 
   for (let i = 1; i < lines.length; i++) {
     if (linesToRemove.has(i)) continue;
@@ -249,7 +269,7 @@ export function buildMergedCSV(
     if (quantityUpdates.has(i) && quantityColIdx >= 0) {
       const values = parseCSVLine(lines[i]);
       values[quantityColIdx] = String(quantityUpdates.get(i));
-      result.push(encodeCSVLine(values));
+      result.push(encodeCSVLine(values, delimiter));
     } else {
       result.push(lines[i]);
     }
@@ -268,6 +288,7 @@ export function buildMergedCSVWithNotes(
   const lines = originalCSV.split('\n');
   if (lines.length < 2) return { csv: originalCSV, mappings };
 
+  const delimiter = detectDelimiter(lines[0]);
   const headers = parseCSVLine(lines[0]);
 
   // Identify unmapped columns (raveCaveField === null)
@@ -285,11 +306,10 @@ export function buildMergedCSVWithNotes(
   }
 
   // Build lineIndex → groupIndex map for merged groups
-  const lineToGroup = new Map<number, number>(); // lineIndex → group array index
+  const lineToGroup = new Map<number, number>();
   const mergedGroups = groups.filter(g => g.merged && g.rowIndices.length > 1);
   for (let gi = 0; gi < mergedGroups.length; gi++) {
     const group = mergedGroups[gi];
-    // Map row indices to line indices
     let dataRowIdx = 0;
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i].trim()) continue;
@@ -300,8 +320,8 @@ export function buildMergedCSVWithNotes(
     }
   }
 
-  // Collect unmapped values per group
-  const groupNotes = new Map<number, string[]>(); // groupIndex → deduplicated "Col:Val" pairs
+  // Collect unmapped values per group (deduplicated)
+  const groupNotes = new Map<number, string[]>();
   for (let gi = 0; gi < mergedGroups.length; gi++) {
     const pairs: string[] = [];
     const group = mergedGroups[gi];
@@ -324,10 +344,10 @@ export function buildMergedCSVWithNotes(
   }
 
   // Collect unmapped values per standalone line
-  const standaloneNotes = new Map<number, string[]>(); // lineIndex → "Col:Val" pairs
+  const standaloneNotes = new Map<number, string[]>();
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
-    if (lineToGroup.has(i)) continue; // handled by group
+    if (lineToGroup.has(i)) continue;
     const values = parseCSVLine(lines[i]);
     const pairs: string[] = [];
     for (const uc of unmappedCols) {
@@ -343,7 +363,6 @@ export function buildMergedCSVWithNotes(
     ? headers.findIndex(h => h.trim() === personalNoteMapping.csvColumn)
     : -1;
 
-  // Build the notes string for a line
   const getNotesForLine = (lineIdx: number): string | null => {
     const gi = lineToGroup.get(lineIdx);
     if (gi !== undefined) {
@@ -354,19 +373,18 @@ export function buildMergedCSVWithNotes(
     return pairs && pairs.length > 0 ? pairs.join(' | ') : null;
   };
 
-  // Now rebuild the CSV with notes injected
-  const addColumn = personalNoteColIdx < 0; // need to add _RC_Notes column
+  const addColumn = personalNoteColIdx < 0;
   const newMappings = [...mappings];
   if (addColumn) {
     newMappings.push({ csvColumn: '_RC_Notes', raveCaveField: 'personalNote' });
   }
 
-  // Rebuild header
+  // Rebuild header with correct delimiter
   const newHeader = addColumn
-    ? lines[0] + ',_RC_Notes'
+    ? stripCR(lines[0]) + delimiter + '_RC_Notes'
     : lines[0];
 
-  // Now apply merge logic + notes injection in one pass
+  // Merge logic: determine lines to remove and quantity updates
   const quantityMapping = mappings.find(m => m.raveCaveField === 'quantity');
   const quantityColIdx = quantityMapping
     ? headers.findIndex(h => h.trim() === quantityMapping.csvColumn)
@@ -387,8 +405,7 @@ export function buildMergedCSVWithNotes(
     }
     if (dataLines.length <= 1) continue;
 
-    const keepLine = dataLines[0];
-    quantityUpdates.set(keepLine, group.totalQuantity);
+    quantityUpdates.set(dataLines[0], group.totalQuantity);
     for (let d = 1; d < dataLines.length; d++) {
       linesToRemove.add(dataLines[d]);
     }
@@ -400,31 +417,35 @@ export function buildMergedCSVWithNotes(
     if (linesToRemove.has(i)) continue;
     if (!lines[i].trim()) continue;
 
-    const values = parseCSVLine(lines[i]);
-
-    // Apply quantity update
-    if (quantityUpdates.has(i) && quantityColIdx >= 0) {
-      values[quantityColIdx] = String(quantityUpdates.get(i));
-    }
-
-    // Inject notes
     const notes = getNotesForLine(i);
-    if (addColumn) {
-      // Append new column value
-      if (notes) {
-        values.push(notes);
-      } else {
-        values.push('');
-      }
-    } else if (personalNoteColIdx >= 0 && notes) {
-      // Append to existing personalNote column
-      const existing = (values[personalNoteColIdx] || '').trim();
-      values[personalNoteColIdx] = existing
-        ? `${existing} | ${notes}`
-        : notes;
-    }
+    const needsQuantityUpdate = quantityUpdates.has(i) && quantityColIdx >= 0;
+    const needsPersonalNoteUpdate = !addColumn && personalNoteColIdx >= 0 && !!notes;
 
-    result.push(encodeCSVLine(values));
+    // Only parse/re-encode if we need to modify individual column values
+    if (needsQuantityUpdate || needsPersonalNoteUpdate) {
+      const values = parseCSVLine(lines[i]);
+      if (needsQuantityUpdate) {
+        values[quantityColIdx] = String(quantityUpdates.get(i));
+      }
+      if (needsPersonalNoteUpdate) {
+        const existing = (values[personalNoteColIdx] || '').trim();
+        values[personalNoteColIdx] = existing
+          ? `${existing} | ${notes}`
+          : notes!;
+      }
+      if (addColumn) {
+        values.push(notes || '');
+      }
+      result.push(encodeCSVLine(values, delimiter));
+    } else if (addColumn) {
+      // Preserve original line format — just append the notes column
+      const cleaned = stripCR(lines[i]);
+      const quotedNotes = quoteCSVField(notes || '', delimiter);
+      result.push(cleaned + delimiter + quotedNotes);
+    } else {
+      // No changes needed
+      result.push(lines[i]);
+    }
   }
 
   return { csv: result.join('\n'), mappings: newMappings };
