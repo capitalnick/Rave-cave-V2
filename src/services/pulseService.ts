@@ -57,6 +57,7 @@ export function generateStoryCards(
   mostValuable: Wine | null,
   typeDistribution: Record<string, number>,
   currency: Currency = 'AUD',
+  rates: Record<string, number> = {},
 ): StoryCard[] {
   const cards: StoryCard[] = [];
 
@@ -93,7 +94,7 @@ export function generateStoryCards(
       type: 'most-valuable',
       icon: '$',
       headline: `${mostValuable.vintage} ${mostValuable.producer}`,
-      subtext: `Your most valuable bottle. ${formatPrice(Number(mostValuable.price), currency)}.`,
+      subtext: `Your most valuable bottle. ${formatPrice(convertToHome(Number(mostValuable.price) || 0, mostValuable.priceCurrency, currency, rates), currency)}.`,
       accentColor: 'var(--rc-accent-pink)',
       cta: { label: 'View bottle', action: 'view-wine', payload: mostValuable.id },
     });
@@ -200,7 +201,7 @@ export function computePulseStats(
       }, inventory[0])
     : null;
 
-  const storyCards = generateStoryCards(inventory, maturityBreakdown, mostValuableWine, typeDistribution, currency);
+  const storyCards = generateStoryCards(inventory, maturityBreakdown, mostValuableWine, typeDistribution, currency, rates);
 
   return {
     totalBottles,

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { useQuantityUpdate } from '@/hooks/useQuantityUpdate';
 import { Wine, GrapeVariety } from '@/types';
 import { Star, Wine as WineIcon, Plus, Minus, MapPin, ExternalLink, Trash2, Camera, X, Loader2 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useIsMobile } from '@/components/ui/use-mobile';
 import { useKeyboardVisible } from '@/hooks/useKeyboardVisible';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/formatPrice';
+import { BUILT_IN_CURRENCIES, getCurrencySymbol } from '@/lib/currencyConversion';
 import { GrapeVarietiesEditor } from '@/components/GrapeVarietiesEditor';
 import { formatGrapeDisplay, formatGrapeDetailed } from '@/utils/grapeUtils';
 import { useProfile } from '@/context/ProfileContext';
@@ -131,6 +132,14 @@ const WineDetailContent: React.FC<{
 
   // Wine type picker
   const [typePickerOpen, setTypePickerOpen] = useState(false);
+
+  // Currency picker
+  const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
+  const availableCurrencies = useMemo(() => {
+    const codes = new Set([...BUILT_IN_CURRENCIES, ...profile.customCurrencies]);
+    return Array.from(codes);
+  }, [profile.customCurrencies]);
+  const priceCurrency = wine.priceCurrency || profile.currency;
 
   // Delete confirmation
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -465,6 +474,36 @@ const WineDetailContent: React.FC<{
           {renderField('Tasting Notes', 'tastingNotes', wine.tastingNotes, true)}
           {renderField('Wine name', 'name', wine.name)}
           {renderField('Bottle Price', 'price', wine.price)}
+          {/* Currency picker — below Bottle Price */}
+          <div className="space-y-1 p-[var(--rc-space-md)] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] rounded-[var(--rc-radius-sm)]">
+            <dt>
+              <MonoLabel size="micro" weight="bold" colour="accent-pink" as="span" className="w-auto">Currency</MonoLabel>
+            </dt>
+            <dd>
+              <button
+                onClick={() => setCurrencyPickerOpen(prev => !prev)}
+                className="font-[family-name:var(--rc-font-mono)] text-[10px] font-bold uppercase tracking-wider text-[var(--rc-accent-pink)] hover:underline"
+              >
+                {priceCurrency} ({getCurrencySymbol(priceCurrency).trim()}) ▾
+              </button>
+              {currencyPickerOpen && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {availableCurrencies.map(code => (
+                    <Chip
+                      key={code}
+                      variant="WineType"
+                      label={code}
+                      state={priceCurrency === code ? 'Selected' : 'Default'}
+                      onClick={() => {
+                        onUpdate?.('priceCurrency', code);
+                        setCurrencyPickerOpen(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </dd>
+          </div>
           {/* Wine Type — chip picker (collapsed = selected only, tap to expand) */}
           <div
             className="space-y-1 p-[var(--rc-space-md)] border border-[var(--rc-border-emphasis)] bg-[var(--rc-surface-primary)] rounded-[var(--rc-radius-sm)] cursor-pointer"

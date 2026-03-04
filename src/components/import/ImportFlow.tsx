@@ -19,6 +19,7 @@ import { useInventory } from '@/context/InventoryContext';
 import { trackEvent } from '@/config/analytics';
 import { CONFIG } from '@/constants';
 import { cn } from '@/lib/utils';
+import { getCurrencySymbol } from '@/lib/currencyConversion';
 import {
   detectDuplicates,
   buildMergedCSVWithNotes,
@@ -36,8 +37,8 @@ import BottleSelectGate from './BottleSelectGate';
 
 const IMPORTABLE_FIELDS = [
   'producer', 'name', 'vintage', 'type', 'cepage', 'region', 'country',
-  'appellation', 'quantity', 'drinkFrom', 'drinkUntil', 'price', 'format',
-  'tastingNotes', 'personalNote', 'myRating', 'vivinoRating', 'linkToWine',
+  'appellation', 'quantity', 'drinkFrom', 'drinkUntil', 'price', 'priceCurrency',
+  'format', 'tastingNotes', 'personalNote', 'myRating', 'vivinoRating', 'linkToWine',
   'imageUrl',
 ] as const;
 
@@ -718,7 +719,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
                     {(wine.price || wine.drinkFrom || wine.drinkUntil) && (
                       <Body size="caption" colour="ghost" className="w-auto mt-0.5">
                         {[
-                          wine.price ? `$${wine.price}` : null,
+                          wine.price ? `${getCurrencySymbol(wine.priceCurrency || profile.currency).trim()}${wine.price}` : null,
                           wine.drinkFrom && wine.drinkUntil
                             ? `Drink ${wine.drinkFrom}–${wine.drinkUntil}`
                             : wine.drinkUntil

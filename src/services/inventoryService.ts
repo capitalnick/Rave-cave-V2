@@ -187,17 +187,6 @@ export const inventoryService = {
     return context;
   },
 
-  getStats: (inventory: Wine[]) => {
-    const totalBottles = inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
-    const totalValue = inventory.reduce((sum, w) => sum + ((Number(w.price) || 0) * (Number(w.quantity) || 0)), 0);
-    const typeDistribution: Record<string, number> = {};
-    inventory.forEach(w => typeDistribution[w.type] = (typeDistribution[w.type] || 0) + (Number(w.quantity) || 0));
-    const producers: Record<string, number> = {};
-    inventory.forEach(w => producers[w.producer] = (producers[w.producer] || 0) + (Number(w.quantity) || 0));
-    const topProducers = Object.entries(producers).map(([name, count]) => ({ name, count })).sort((a,b) => b.count - a.count).slice(0,5);
-    return { totalBottles, totalValue, typeDistribution, topProducers };
-  },
-
   localQuery: (inventory: Wine[], filters: any): Wine[] => {
     return inventory.filter(w => {
       if (filters.type && w.type !== filters.type) return false;
