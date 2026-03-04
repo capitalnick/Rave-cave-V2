@@ -68,13 +68,6 @@ Examples:
 async function main() {
   const config = parseArgs();
 
-  // Validate API key
-  if (!config.skipJudge && !process.env.GEMINI_API_KEY) {
-    console.error('\nError: GEMINI_API_KEY environment variable is required.');
-    console.error('Set it before running evals, or use --skip-judge for structural checks only.\n');
-    process.exit(1);
-  }
-
   // Preview what will run
   const tests = getTestCases(config);
   if (tests.length === 0) {

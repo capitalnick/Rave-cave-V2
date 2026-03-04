@@ -6,17 +6,38 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 const MODEL = 'gemini-3-flash-preview';
 
 let _ai: InstanceType<typeof GoogleGenAI> | null = null;
 
+/**
+ * Load GEMINI_API_KEY from environment or .env.local file automatically.
+ */
+function loadApiKey(): string {
+  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+
+  // Auto-load from .env.local at project root
+  try {
+    const __dir = dirname(fileURLToPath(import.meta.url));
+    const envPath = resolve(__dir, '../../.env.local');
+    const content = readFileSync(envPath, 'utf-8');
+    const match = content.match(/^GEMINI_API_KEY=(.+)$/m);
+    if (match) {
+      process.env.GEMINI_API_KEY = match[1].trim();
+      return match[1].trim();
+    }
+  } catch { /* file not found — fall through */ }
+
+  throw new Error('GEMINI_API_KEY not found. Add it to .env.local or set it as an environment variable.');
+}
+
 function getClient(): InstanceType<typeof GoogleGenAI> {
   if (_ai) return _ai;
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is required. Set it before running evals.');
-  }
+  const apiKey = loadApiKey();
   _ai = new GoogleGenAI({ apiKey });
   return _ai;
 }
