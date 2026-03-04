@@ -5,9 +5,7 @@ import { BUILT_IN_CURRENCIES, getCurrencySymbol } from '@/lib/currencyConversion
 import {
   Button,
   Divider,
-  Body,
   Caption,
-  MonoLabel,
   showToast,
 } from '@/components/rc';
 
@@ -20,24 +18,25 @@ const MAX_CUSTOM = 10;
 
 /** Shared inline styles for inputs — avoids Tailwind v4 class detection issues */
 const rateInputStyle: React.CSSProperties = {
-  width: 96,
+  width: 88,
+  minWidth: 88,
   borderRadius: 'var(--rc-input-radius)',
   border: '1px solid var(--rc-input-border)',
   backgroundColor: 'var(--rc-input-bg)',
-  padding: '8px 12px',
+  padding: '6px 10px',
   textAlign: 'right',
-  fontSize: 14,
+  fontSize: 15,
   color: 'var(--rc-input-text)',
   outline: 'none',
-  fontFamily: 'var(--rc-font-body)',
+  fontFamily: 'var(--rc-font-mono)',
 };
 
 const codeInputStyle: React.CSSProperties = {
-  width: 80,
+  width: 72,
   borderRadius: 'var(--rc-input-radius)',
   border: '1px solid var(--rc-input-border)',
   backgroundColor: 'var(--rc-input-bg)',
-  padding: '8px 12px',
+  padding: '6px 10px',
   fontSize: 14,
   color: 'var(--rc-input-text)',
   outline: 'none',
@@ -62,7 +61,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
     return [...builtIn, ...custom];
   }, [profile.currency, profile.customCurrencies]);
 
-  // Sync from profile → local state when profile changes
+  // Sync from profile -> local state when profile changes
   useEffect(() => {
     const rateStrings: Record<string, string> = {};
     for (const code of allCurrencies) {
@@ -156,59 +155,137 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
   const isCustomCode = (code: string) => profile.customCurrencies.includes(code);
 
   return (
-    <div className="px-[var(--rc-row-padding-h)] pb-4 space-y-3">
-      <Caption className="text-[var(--rc-text-secondary)]">
+    <div style={{ padding: '0 var(--rc-row-padding-h) 16px' }}>
+      <Caption className="mb-3" style={{ color: 'var(--rc-ink-tertiary)' }}>
         How many {homeSym} does 1 unit of each foreign currency buy?
       </Caption>
 
-      {allCurrencies.map(code => {
-        const rateStr = localRates[code] ?? '';
-        const rateNum = parseFloat(rateStr);
-        const foreignSym = getCurrencySymbol(code).trim();
-        const inverse = !isNaN(rateNum) && rateNum > 0 ? (1 / rateNum).toFixed(4) : '—';
-        const isCustom = isCustomCode(code);
-        const isUsed = usedCurrencies.has(code);
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {allCurrencies.map((code, idx) => {
+          const rateStr = localRates[code] ?? '';
+          const rateNum = parseFloat(rateStr);
+          const foreignSym = getCurrencySymbol(code).trim();
+          const inverse = !isNaN(rateNum) && rateNum > 0 ? (1 / rateNum).toFixed(4) : '\u2014';
+          const isCustom = isCustomCode(code);
+          const isUsed = usedCurrencies.has(code);
+          const isLast = idx === allCurrencies.length - 1;
 
-        return (
-          <div key={code} className="flex items-center gap-2 flex-wrap">
-            <MonoLabel className="w-10 shrink-0 text-[var(--rc-text-primary)]">{code}</MonoLabel>
-            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{foreignSym}1 =</Body>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="any"
-              min="0.0001"
-              value={rateStr}
-              onChange={e => handleRateChange(code, e.target.value)}
-              style={rateInputStyle}
-              placeholder="0.00"
-            />
-            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{homeSym}</Body>
-            <Caption className="ml-auto text-[var(--rc-text-tertiary)] whitespace-nowrap">
-              {homeSym}1 = {inverse} {foreignSym}
-            </Caption>
-            {isCustom && (
-              <button
-                onClick={() => handleDeleteCurrency(code)}
-                className={`ml-1 p-1 rounded transition-colors ${
-                  isUsed
-                    ? 'text-[var(--rc-text-tertiary)] cursor-not-allowed opacity-40'
-                    : 'text-[var(--rc-text-secondary)] hover:text-[var(--rc-accent-coral)]'
-                }`}
-                title={isUsed ? `In use by wines — cannot delete` : `Remove ${code}`}
-                disabled={isUsed}
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={code}
+              style={{
+                padding: '10px 0',
+                borderBottom: isLast ? 'none' : '1px solid var(--rc-border-subtle)',
+              }}
+            >
+              {/* Line 1: code + equation + input + home symbol + delete */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--rc-font-mono)',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: 'var(--rc-ink-primary)',
+                    width: 40,
+                    flexShrink: 0,
+                  }}
+                >
+                  {code}
+                </span>
+
+                <span
+                  style={{
+                    fontFamily: 'var(--rc-font-body)',
+                    fontSize: 14,
+                    color: 'var(--rc-ink-tertiary)',
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {foreignSym}1 =
+                </span>
+
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  min="0.0001"
+                  value={rateStr}
+                  onChange={e => handleRateChange(code, e.target.value)}
+                  style={rateInputStyle}
+                  placeholder="0.00"
+                />
+
+                <span
+                  style={{
+                    fontFamily: 'var(--rc-font-body)',
+                    fontSize: 14,
+                    color: 'var(--rc-ink-tertiary)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {homeSym}
+                </span>
+
+                {/* Spacer pushes delete button right */}
+                <span style={{ flex: 1 }} />
+
+                {isCustom && (
+                  <button
+                    onClick={() => handleDeleteCurrency(code)}
+                    disabled={isUsed}
+                    title={isUsed ? `In use by wines — cannot delete` : `Remove ${code}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 28,
+                      height: 28,
+                      borderRadius: 4,
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: isUsed ? 'not-allowed' : 'pointer',
+                      opacity: isUsed ? 0.4 : 1,
+                      color: 'var(--rc-ink-ghost)',
+                      transition: 'color 150ms',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => {
+                      if (!isUsed) (e.currentTarget.style.color = 'var(--rc-accent-coral)');
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget.style.color = 'var(--rc-ink-ghost)');
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Line 2: inverse rate caption */}
+              <div style={{ paddingLeft: 48, marginTop: 2 }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--rc-font-body)',
+                    fontSize: 12,
+                    color: 'var(--rc-ink-ghost)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {homeSym}1 = {inverse} {foreignSym}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       <Divider />
 
       {/* Add custom currency */}
-      <div className="flex items-center gap-2">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
         <input
           type="text"
           value={newCode}
@@ -220,7 +297,22 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
         <button
           onClick={handleAddCurrency}
           disabled={newCode.length !== 3}
-          className="flex items-center gap-1 font-[family-name:var(--rc-font-mono)] text-[11px] font-bold uppercase tracking-wider text-[var(--rc-accent-pink)] hover:underline disabled:opacity-40 disabled:no-underline"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            fontFamily: 'var(--rc-font-mono)',
+            fontSize: 11,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--rc-accent-pink)',
+            background: 'none',
+            border: 'none',
+            cursor: newCode.length !== 3 ? 'default' : 'pointer',
+            opacity: newCode.length !== 3 ? 0.4 : 1,
+            padding: 0,
+          }}
         >
           <Plus size={14} /> Add Currency
         </button>
@@ -228,7 +320,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
 
       {/* Save button */}
       {dirty && (
-        <div className="flex justify-end pt-1">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
           <Button
             variantType="Primary"
             label={saving ? 'Saving...' : 'Save Rates'}
