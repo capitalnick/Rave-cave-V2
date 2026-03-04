@@ -95,8 +95,8 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     }
   }, [message, isSubmitting, category, route, isPremium]);
 
-  // Hide when scan is open or user is not authenticated
-  if (scanOpen || !user) return null;
+  // Hide when scan is open, not authenticated, or on Remy page (overlaps chat input)
+  if (scanOpen || !user || route === '/remy') return null;
 
   const trimmedMessage = message.trim();
   const canSubmit = trimmedMessage.length > 0 && !isSubmitting;
@@ -181,14 +181,14 @@ const FeedbackWidget = memo(function FeedbackWidget() {
       type="button"
       onClick={isMobile ? handleOpen : undefined}
       className={cn(
-        'fixed z-[49] flex items-center justify-center',
+        'fixed z-[51] flex items-center justify-center',
         'w-11 h-11 rounded-full',
         'bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)]',
         'shadow-[var(--rc-shadow-elevated)]',
         'text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)]',
         'transition-colors cursor-pointer',
-        // Mobile: above tab bar
-        'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+12px)]',
+        // Mobile: above tab bar (56px + safe area + 20px gap)
+        'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+20px)]',
         // Desktop: fixed bottom-right
         'lg:right-6 lg:bottom-6'
       )}
