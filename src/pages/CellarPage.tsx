@@ -72,8 +72,7 @@ const CellarPage: React.FC = () => {
     openScan,
   } = useInventory();
 
-  const { inventory } = useInventory();
-  const homePrices = useHomePrices(inventory);
+  const homePrices = useHomePrices(filteredInventory);
   const { user } = useAuth();
   const navigate = useNavigate();
   const avatarInitial = (user?.displayName?.[0] || user?.email?.[0] || '?').toUpperCase();

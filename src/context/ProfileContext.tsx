@@ -32,6 +32,7 @@ interface UserProfile {
   upgradedAt: Timestamp | null;
   cancelAtPeriodEnd: boolean;
   cancelAt: string | null;
+  currencyBackfillComplete: boolean;
 }
 
 interface ProfileContextValue {
@@ -58,6 +59,7 @@ const DEFAULT_PROFILE: UserProfile = {
   upgradedAt: null,
   cancelAtPeriodEnd: false,
   cancelAt: null,
+  currencyBackfillComplete: false,
 };
 
 // ── Context ──
@@ -103,6 +105,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           upgradedAt: data.upgradedAt ?? null,
           cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
           cancelAt: data.cancelAt ?? null,
+          currencyBackfillComplete: data.currencyBackfillComplete ?? false,
         });
       } else {
         // New user — create default profile doc
@@ -162,14 +165,24 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [user]);
 
   // ── One-time backfill: stamp wines missing priceCurrency with home currency ──
+  // Skip if profile already has the flag set (avoids reading entire wines collection every session)
   const backfillRan = useRef(false);
   useEffect(() => {
     if (!user || profileLoading || backfillRan.current) return;
+    if (profile.currencyBackfillComplete) return;
     backfillRan.current = true;
-    stampMissingCurrency(user.uid, profile.currency).catch(e =>
-      console.error('Currency backfill failed:', e)
-    );
-  }, [user, profileLoading, profile.currency]);
+    (async () => {
+      try {
+        const stamped = await stampMissingCurrency(user.uid, profile.currency);
+        // Mark backfill complete so future sessions skip this
+        const profileRef = doc(db, 'users', user.uid, 'profile', 'preferences');
+        await updateDoc(profileRef, { currencyBackfillComplete: true });
+        if (stamped > 0) console.info(`Currency backfill: stamped ${stamped} wines`);
+      } catch (e) {
+        console.error('Currency backfill failed:', e);
+      }
+    })();
+  }, [user, profileLoading, profile.currency, profile.currencyBackfillComplete]);
 
   const isPremium = profile.tier === 'premium';
   const hasSubscription = !!profile.subscriptionId;
