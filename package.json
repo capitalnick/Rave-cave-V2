@@ -13,7 +13,12 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "deploy:rules:dev": "firebase deploy --only firestore:rules,storage --project dev",
-    "deploy:rules:prod": "firebase deploy --only firestore:rules,storage --project prod"
+    "deploy:rules:prod": "firebase deploy --only firestore:rules,storage --project prod",
+    "eval": "tsx evals/run.ts",
+    "eval:fast": "tsx evals/run.ts --skip-judge",
+    "eval:baseline": "tsx evals/run.ts --tag=regression",
+    "eval:general": "tsx evals/run.ts --section=A",
+    "eval:cellar": "tsx evals/run.ts --section=B"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
@@ -58,6 +63,7 @@
     "jsdom": "^28.1.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.2.0",

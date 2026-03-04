@@ -7,3 +7,5 @@ firebase-debug.log
 .DS_Store
 .vercel
 serviceAccount.json
+evals/results/*.md
+evals/results/*.json
