@@ -17,6 +17,7 @@ import PinnedRemyPanel from '@/components/PinnedRemyPanel';
 import SplashScreen from '@/components/SplashScreen';
 import LoginPage from '@/pages/LoginPage';
 import { RCToaster } from '@/components/rc';
+import FeedbackWidget from '@/components/FeedbackWidget';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProfileProvider, useProfile } from '@/context/ProfileContext';
 import OnboardingFlow from '@/components/OnboardingFlow';
@@ -213,6 +214,8 @@ function AppShell() {
       )}
 
       <RCToaster />
+
+      <FeedbackWidget />
 
       {pinnedRemyVisible && (
         <PinnedRemyPanel open={remyPanelOpen} onClose={closeRemyPanel} />

@@ -71,4 +71,5 @@ export const RATE_LIMITS = {
   checkout: {maxRequests: 10, windowSeconds: 3600},
   mapImportFields: {maxRequests: 10, windowSeconds: 3600},
   commitImport: {maxRequests: 5, windowSeconds: 3600},
+  feedback: {maxRequests: 10, windowSeconds: 3600},
 };

@@ -14,4 +14,5 @@ export const FUNCTION_URLS = {
   cancelSubscription: `${BASE}/cancelSubscription`,
   mapImportFields: `${BASE}/mapImportFields`,
   commitImport: `${BASE}/commitImport`,
+  submitFeedback: `${BASE}/submitFeedback`,
 } as const;

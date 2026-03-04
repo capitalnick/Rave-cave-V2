@@ -17,3 +17,4 @@ export {
 } from "./stripe";
 export {mapImportFields, commitImport} from "./importWines";
 export {drinkingWindowNotifier} from "./drinkingWindowNotifier";
+export {submitFeedback} from "./feedback";
