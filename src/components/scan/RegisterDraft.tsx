@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { RefreshCw, Plus, Minus, Search } from 'lucide-react';
 import { Heading, MonoLabel, Button, Input, Divider, Chip, InlineMessage } from '@/components/rc';
 import ConfidenceIndicator from './ConfidenceIndicator';
@@ -6,6 +6,8 @@ import MoreFieldsSection from './MoreFieldsSection';
 import CommitTransition from './CommitTransition';
 import { GrapeVarietiesEditor } from '@/components/GrapeVarietiesEditor';
 import { useScrollFieldIntoView } from '@/hooks/useScrollFieldIntoView';
+import { useProfile } from '@/context/ProfileContext';
+import { BUILT_IN_CURRENCIES, getCurrencySymbol } from '@/lib/currencyConversion';
 import type { Wine, WineType, WineDraft, ExtractionConfidence, CommitStage, GrapeVariety } from '@/types';
 
 interface RegisterDraftProps {
@@ -53,9 +55,21 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
 }) => {
   const { fields, extraction, image, source } = draft;
   const isManual = source === 'manual';
+  const { profile } = useProfile();
   const [priceInput, setPriceInput] = useState(fields.price ? String(fields.price) : '');
+  const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Available currencies for the picker
+  const availableCurrencies = useMemo(() => {
+    const codes = new Set([...BUILT_IN_CURRENCIES, ...profile.customCurrencies]);
+    return Array.from(codes);
+  }, [profile.customCurrencies]);
+
+  // Current price currency — default to home currency
+  const priceCurrency = fields.priceCurrency || profile.currency;
+  const currencySymbol = getCurrencySymbol(priceCurrency);
 
   useScrollFieldIntoView(scrollRef);
 
@@ -279,7 +293,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
               </MonoLabel>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--rc-ink-ghost)] text-sm font-bold">
-                  $
+                  {currencySymbol.trim()}
                 </span>
                 <Input
                   type="number"
@@ -289,6 +303,28 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
                   className={`pl-7 ${!priceValid ? 'border-[var(--rc-accent-coral)]' : ''}`}
                 />
               </div>
+              <button
+                onClick={() => setCurrencyPickerOpen(prev => !prev)}
+                className="font-[family-name:var(--rc-font-mono)] text-[10px] font-bold uppercase tracking-wider text-[var(--rc-accent-pink)] hover:underline"
+              >
+                {priceCurrency} ▾
+              </button>
+              {currencyPickerOpen && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {availableCurrencies.map(code => (
+                    <Chip
+                      key={code}
+                      variant="WineType"
+                      label={code}
+                      state={priceCurrency === code ? 'Selected' : 'Default'}
+                      onClick={() => {
+                        onUpdateFields({ priceCurrency: code });
+                        setCurrencyPickerOpen(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
               {!priceValid && (
                 <MonoLabel size="micro" colour="accent-coral">Required</MonoLabel>
               )}

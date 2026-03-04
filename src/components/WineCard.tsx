@@ -15,6 +15,8 @@ interface WineCardProps {
   isHero?: boolean;
   onClick: () => void;
   onUpdate?: (key: string, value: string) => Promise<void>;
+  /** Home-converted price for consistent tier bucketing across currencies */
+  homePrice?: number;
 }
 
 const getPriceSymbol = (price: number) => {
@@ -33,7 +35,7 @@ const wineTypeToVintageColour = (type: string): 'accent-pink' | 'accent-acid' | 
   return 'accent-coral'; // rosé, dessert, orange
 };
 
-const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) => {
+const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate, homePrice }) => {
   const rcProps = toRCWineCardProps(wine);
   const indicatorType = rcProps.type as WineType;
   // Grid view: prefer thumbnail for fast loading; fall back to full image
@@ -43,7 +45,9 @@ const WineCard: React.FC<WineCardProps> = ({ wine, isHero, onClick, onUpdate }) 
 
   const { localQty, updateQuantity } = useQuantityUpdate(wine.quantity, onUpdate);
 
-  const numericPrice = typeof wine.price === 'number' ? wine.price : parseFloat(wine.price as unknown as string) || 0;
+  const rawPrice = typeof wine.price === 'number' ? wine.price : parseFloat(wine.price as unknown as string) || 0;
+  // Use home-converted price for tier bucketing (consistent regardless of purchase currency)
+  const numericPrice = homePrice ?? rawPrice;
 
   return (
     <Card

@@ -7,6 +7,7 @@ import { showToast } from '@/components/rc';
 import { CONFIG } from '@/constants';
 import { getMaturityRank } from '@/utils/maturityUtils';
 import { useProfile } from '@/context/ProfileContext';
+import { convertToHome } from '@/lib/currencyConversion';
 import type { Wine, RecommendChatContext, Recommendation, SortField, FacetKey, WineBriefContext, WineDraft } from '@/types';
 import type { FiltersState, FacetOption } from '@/lib/faceted-filters';
 import {
@@ -14,6 +15,7 @@ import {
   matchesAllFacets,
   aggregateFacetOptions,
   countActiveFilters,
+  type PriceContext,
 } from '@/lib/faceted-filters';
 
 // ── Dynamic facet options shape ──
@@ -115,7 +117,7 @@ function maturityRank(wine: Wine): number {
 
 export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  const { isPremium } = useProfile();
+  const { isPremium, profile } = useProfile();
 
   // ── Core state ──
   const [inventory, setInventory] = useState<Wine[]>([]);
@@ -168,14 +170,23 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => unsubscribe();
   }, []);
 
+  const { currency: homeCurrency, conversionRates } = profile;
+
+  // ── Price context for currency-aware filters ──
+  const priceCtx = useMemo<PriceContext>(
+    () => ({ homeCurrency, rates: conversionRates }),
+    [homeCurrency, conversionRates],
+  );
+
   // ── Faceted filter logic ──
   const filteredInventory = useMemo(
-    () => inventory.filter(w => matchesAllFacets(w, filters)),
-    [inventory, filters],
+    () => inventory.filter(w => matchesAllFacets(w, filters, priceCtx)),
+    [inventory, filters, priceCtx],
   );
 
   const sortedInventory = useMemo(() => {
     const sorted = [...filteredInventory];
+    const hp = (w: Wine) => convertToHome(Number(w.price) || 0, w.priceCurrency, homeCurrency, conversionRates);
     sorted.sort((a, b) => {
       switch (sortField) {
         case 'maturity':
@@ -205,9 +216,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         case 'rating':
           return (b.vivinoRating || 0) - (a.vivinoRating || 0);
         case 'price-desc':
-          return (b.price || 0) - (a.price || 0);
+          return hp(b) - hp(a);
         case 'price-asc':
-          return (a.price || 0) - (b.price || 0);
+          return hp(a) - hp(b);
         case 'producer':
           return a.producer.localeCompare(b.producer);
         case 'country':
@@ -217,20 +228,20 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     });
     return sorted;
-  }, [filteredInventory, sortField]);
+  }, [filteredInventory, sortField, homeCurrency, conversionRates]);
 
   // ── Dynamic self-excluding facet options ──
   const facetOptions = useMemo<FacetOptionsMap>(() => ({
-    wineType: aggregateFacetOptions(inventory, filters, 'wineType'),
-    maturityStatus: aggregateFacetOptions(inventory, filters, 'maturityStatus'),
-    country: aggregateFacetOptions(inventory, filters, 'country'),
-    region: aggregateFacetOptions(inventory, filters, 'region'),
-    appellation: aggregateFacetOptions(inventory, filters, 'appellation'),
-    producer: aggregateFacetOptions(inventory, filters, 'producer'),
-    grapeVariety: aggregateFacetOptions(inventory, filters, 'grapeVariety'),
-    vintage: aggregateFacetOptions(inventory, filters, 'vintage'),
-    price: aggregateFacetOptions(inventory, filters, 'price'),
-  }), [inventory, filters]);
+    wineType: aggregateFacetOptions(inventory, filters, 'wineType', priceCtx),
+    maturityStatus: aggregateFacetOptions(inventory, filters, 'maturityStatus', priceCtx),
+    country: aggregateFacetOptions(inventory, filters, 'country', priceCtx),
+    region: aggregateFacetOptions(inventory, filters, 'region', priceCtx),
+    appellation: aggregateFacetOptions(inventory, filters, 'appellation', priceCtx),
+    producer: aggregateFacetOptions(inventory, filters, 'producer', priceCtx),
+    grapeVariety: aggregateFacetOptions(inventory, filters, 'grapeVariety', priceCtx),
+    vintage: aggregateFacetOptions(inventory, filters, 'vintage', priceCtx),
+    price: aggregateFacetOptions(inventory, filters, 'price', priceCtx),
+  }), [inventory, filters, priceCtx]);
 
   const toggleFacet = useCallback((key: FacetKey, value: string) => {
     setFilters(prev => {

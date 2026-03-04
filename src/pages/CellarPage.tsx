@@ -6,6 +6,7 @@ import { useInventory } from '@/context/InventoryContext';
 import { useAuth } from '@/context/AuthContext';
 import { useScrollSentinel } from '@/hooks/useScrollSentinel';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useHomePrices } from '@/hooks/useHomePrices';
 import { IconButton, Heading, MonoLabel, Body, PageHeader, Button } from '@/components/rc';
 import { SortMenu } from '@/components/SortMenu';
 import type { SortField } from '@/types';
@@ -71,6 +72,8 @@ const CellarPage: React.FC = () => {
     openScan,
   } = useInventory();
 
+  const { inventory } = useInventory();
+  const homePrices = useHomePrices(inventory);
   const { user } = useAuth();
   const navigate = useNavigate();
   const avatarInitial = (user?.displayName?.[0] || user?.email?.[0] || '?').toUpperCase();
@@ -184,6 +187,7 @@ const CellarPage: React.FC = () => {
                   isHero={heroWineIds.includes(wine.id)}
                   onClick={() => setSelectedWine(wine)}
                   onUpdate={(key, value) => handleUpdate(wine, key, value)}
+                  homePrice={homePrices.get(wine.id)}
                 />
               ))}
               {filteredInventory.length === 0 && (

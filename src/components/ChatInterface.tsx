@@ -11,6 +11,7 @@ import { getRandomGreeting } from '@/greetings';
 import { CONFIG } from '@/constants';
 import { Heading, MonoLabel, Body, IconButton } from '@/components/rc';
 import { useRemyThinking } from '@/hooks/useRemyThinking';
+import { useProfile } from '@/context/ProfileContext';
 import type { RemyWineData } from '@/utils/remyParser';
 import { trackEvent } from '@/config/analytics';
 
@@ -39,7 +40,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onViewWine,
 }) => {
   const { text: thinkingText, fading: thinkingFading } = useRemyThinking();
-  const cellarSnapshot = useMemo(() => inventoryService.buildCellarSummary(inventory), [inventory]);
+  const { profile } = useProfile();
+  const cellarSnapshot = useMemo(
+    () => inventoryService.buildCellarSummary(inventory, profile.currency, profile.conversionRates),
+    [inventory, profile.currency, profile.conversionRates],
+  );
 
   const {
     transcript,

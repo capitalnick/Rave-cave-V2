@@ -26,6 +26,7 @@ export const FIRESTORE_FIELD_MAP: Record<string, string> = {
   imageUrl: "Label image",
   thumbnailUrl: "Thumbnail URL",
   price: "Bottle Price",
+  priceCurrency: "Price Currency",
   format: "Format",
   processingStatus: "Processing Status",
 };
@@ -78,6 +79,7 @@ export const QUERY_FIELDS: Record<string, string> = {
   personalNote: "Personal Note",
   imageUrl: "Label image",
   price: "Bottle Price",
+  priceCurrency: "Price Currency",
   format: "Format",
   processingStatus: "Processing Status",
 };

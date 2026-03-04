@@ -167,7 +167,8 @@ const WineDetailContent: React.FC<{
 
   const formatPriceLabel = (p: string | number) => {
     const val = typeof p === 'string' ? parseFloat(p) : p;
-    return formatPrice(val, profile.currency);
+    // Display in the wine's purchase currency, falling back to home currency
+    return formatPrice(val, wine.priceCurrency || profile.currency);
   };
 
   const renderField = (label: string, key: string, value: string | number, fullWidth: boolean = false) => {

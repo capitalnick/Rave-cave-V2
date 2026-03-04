@@ -1,6 +1,7 @@
 import type { Wine, WineType, MaturityBreakdown, DrinkingWindow, StoryCard, PulseStats } from '@/types';
 import type { Currency } from '@/context/ProfileContext';
 import { formatPrice } from '@/lib/formatPrice';
+import { convertToHome } from '@/lib/currencyConversion';
 import { getMaturityLabel } from '@/utils/maturityUtils';
 
 const currentYear = new Date().getFullYear();
@@ -21,25 +22,32 @@ export function computeMaturityBreakdown(inventory: Wine[]): MaturityBreakdown {
   return breakdown;
 }
 
-export function computeDrinkingWindows(inventory: Wine[]): DrinkingWindow[] {
+export function computeDrinkingWindows(
+  inventory: Wine[],
+  homeCurrency: string = 'AUD',
+  rates: Record<string, number> = {},
+): DrinkingWindow[] {
   return inventory
     .filter(w => {
       const from = Number(w.drinkFrom);
       const until = Number(w.drinkUntil);
       return !isNaN(from) && !isNaN(until) && from > 0 && until > 0;
     })
-    .map(w => ({
-      wineId: w.id,
-      producer: w.producer,
-      name: w.name,
-      vintage: w.vintage,
-      type: w.type,
-      drinkFrom: Number(w.drinkFrom),
-      drinkUntil: Number(w.drinkUntil),
-      maturity: getMaturityLabel(w.drinkFrom, w.drinkUntil) === 'Unknown' ? 'Hold' : getMaturityLabel(w.drinkFrom, w.drinkUntil) as 'Drink Now' | 'Hold' | 'Past Peak',
-      totalValue: (Number(w.price) || 0) * (Number(w.quantity) || 0),
-      quantity: Number(w.quantity) || 0,
-    }))
+    .map(w => {
+      const homePrice = convertToHome(Number(w.price) || 0, w.priceCurrency, homeCurrency, rates);
+      return {
+        wineId: w.id,
+        producer: w.producer,
+        name: w.name,
+        vintage: w.vintage,
+        type: w.type,
+        drinkFrom: Number(w.drinkFrom),
+        drinkUntil: Number(w.drinkUntil),
+        maturity: getMaturityLabel(w.drinkFrom, w.drinkUntil) === 'Unknown' ? 'Hold' : getMaturityLabel(w.drinkFrom, w.drinkUntil) as 'Drink Now' | 'Hold' | 'Past Peak',
+        totalValue: homePrice * (Number(w.quantity) || 0),
+        quantity: Number(w.quantity) || 0,
+      };
+    })
     .sort((a, b) => b.totalValue - a.totalValue);
 }
 
@@ -122,12 +130,17 @@ export function generateStoryCards(
   return cards.slice(0, 3);
 }
 
-export function computeTopProducers(inventory: Wine[]): { name: string; count: number; totalValue: number }[] {
+export function computeTopProducers(
+  inventory: Wine[],
+  homeCurrency: string = 'AUD',
+  rates: Record<string, number> = {},
+): { name: string; count: number; totalValue: number }[] {
   const map: Record<string, { count: number; totalValue: number }> = {};
   for (const wine of inventory) {
     if (!wine.producer) continue;
     const qty = Number(wine.quantity) || 0;
-    const val = (Number(wine.price) || 0) * qty;
+    const homePrice = convertToHome(Number(wine.price) || 0, wine.priceCurrency, homeCurrency, rates);
+    const val = homePrice * qty;
     if (!map[wine.producer]) map[wine.producer] = { count: 0, totalValue: 0 };
     map[wine.producer].count += qty;
     map[wine.producer].totalValue += val;
@@ -161,19 +174,30 @@ export function computeTimelineRange(windows: DrinkingWindow[]): { min: number; 
   return { min, max };
 }
 
-export function computePulseStats(inventory: Wine[], currency: Currency = 'AUD'): PulseStats {
+export function computePulseStats(
+  inventory: Wine[],
+  currency: Currency = 'AUD',
+  rates: Record<string, number> = {},
+): PulseStats {
   const maturityBreakdown = computeMaturityBreakdown(inventory);
-  const drinkingWindows = computeDrinkingWindows(inventory);
+  const drinkingWindows = computeDrinkingWindows(inventory, currency, rates);
   const typeDistribution = computeTypeDistribution(inventory);
-  const topProducers = computeTopProducers(inventory);
+  const topProducers = computeTopProducers(inventory, currency, rates);
   const timelineRange = computeTimelineRange(drinkingWindows);
 
   const totalBottles = inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
-  const totalValue = inventory.reduce((sum, w) => sum + ((Number(w.price) || 0) * (Number(w.quantity) || 0)), 0);
+  const totalValue = inventory.reduce((sum, w) => {
+    const homePrice = convertToHome(Number(w.price) || 0, w.priceCurrency, currency, rates);
+    return sum + (homePrice * (Number(w.quantity) || 0));
+  }, 0);
 
-  // Most valuable single bottle (by unit price)
+  // Most valuable single bottle (by home-converted unit price)
   const mostValuableWine = inventory.length > 0
-    ? inventory.reduce((best, w) => (Number(w.price) || 0) > (Number(best.price) || 0) ? w : best, inventory[0])
+    ? inventory.reduce((best, w) => {
+        const wHome = convertToHome(Number(w.price) || 0, w.priceCurrency, currency, rates);
+        const bHome = convertToHome(Number(best.price) || 0, best.priceCurrency, currency, rates);
+        return wHome > bHome ? w : best;
+      }, inventory[0])
     : null;
 
   const storyCards = generateStoryCards(inventory, maturityBreakdown, mostValuableWine, typeDistribution, currency);

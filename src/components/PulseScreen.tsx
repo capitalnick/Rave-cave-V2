@@ -50,7 +50,10 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   const { profile } = useProfile();
   const currencySymbol = getCurrencySymbol(profile.currency);
 
-  const stats = useMemo(() => computePulseStats(inventory, profile.currency), [inventory, profile.currency]);
+  const stats = useMemo(
+    () => computePulseStats(inventory, profile.currency, profile.conversionRates),
+    [inventory, profile.currency, profile.conversionRates],
+  );
 
   // Staleness check on tab visibility
   useEffect(() => {
@@ -296,6 +299,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
           readyToDrinkCount={stats.readyToDrinkCount}
           averageBottleValue={stats.averageBottleValue}
           currencySymbol={currencySymbol}
+          homeCurrencyCode={profile.currency}
         />
 
         {/* Charts — masonry on desktop, single-column mobile */}

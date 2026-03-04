@@ -47,7 +47,7 @@ interface ScanRegisterOverlayProps {
 }
 
 const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose, inventory, onWineCommitted, onViewWine, prefillData, onAskRemy, manualEntryDirect, onClearManualEntryDirect, onImport }) => {
-  const { isPremium } = useProfile();
+  const { isPremium, profile } = useProfile();
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
   const isMobile = useIsMobile();
   const { keyboardVisible } = useKeyboardVisible();
@@ -227,6 +227,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
         maturity: cleanedFields.maturity || 'Unknown',
         tastingNotes: cleanedFields.tastingNotes || '',
         price: cleanedFields.price || 0,
+        priceCurrency: cleanedFields.priceCurrency || profile.currency,
         format: cleanedFields.format || '750ml',
         appellation: cleanedFields.appellation || '',
         personalNote: cleanedFields.personalNote || '',

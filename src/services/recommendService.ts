@@ -503,6 +503,10 @@ export async function getRecommendationsStream(
 
 // ── Helpers ──
 
-export function buildCellarSnapshotForPrompt(inventory: Wine[]): string {
-  return inventoryService.getCellarSnapshot(inventory, { includeIds: true });
+export function buildCellarSnapshotForPrompt(
+  inventory: Wine[],
+  homeCurrency: string = 'AUD',
+  rates: Record<string, number> = {},
+): string {
+  return inventoryService.getCellarSnapshot(inventory, { includeIds: true }, homeCurrency, rates);
 }

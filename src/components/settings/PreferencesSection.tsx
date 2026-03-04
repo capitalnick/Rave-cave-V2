@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/context/AuthContext';
 import { useProfile, type Currency } from '@/context/ProfileContext';
+import { useInventory } from '@/context/InventoryContext';
 import {
   Card,
   Row,
@@ -13,6 +14,7 @@ import {
   showToast,
 } from '@/components/rc';
 import { requestNotificationPermission, getNotificationStatus } from '@/config/notifications';
+import ConversionRatesEditor from './ConversionRatesEditor';
 
 // ── Constants ──
 
@@ -26,9 +28,20 @@ const CURRENCY_LABELS: Record<Currency, string> = {
 const PreferencesSection: React.FC = () => {
   const { user } = useAuth();
   const { profile, updateCurrency } = useProfile();
+  const { inventory } = useInventory();
 
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [ratesOpen, setRatesOpen] = useState(false);
   const [notifStatus, setNotifStatus] = useState<'granted' | 'denied' | 'default' | 'unsupported' | 'loading'>('loading');
+
+  // Collect all priceCurrency values currently in use across wines
+  const usedCurrencies = useMemo(() => {
+    const set = new Set<string>();
+    for (const w of inventory) {
+      if (w.priceCurrency) set.add(w.priceCurrency);
+    }
+    return set;
+  }, [inventory]);
 
   // Check notification permission on mount
   useEffect(() => {
@@ -131,6 +144,29 @@ const PreferencesSection: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <Divider />
+        <Row
+          title="Conversion Rates"
+          subtitle="Manual rates for multi-currency cellar value"
+          trailingAction="value"
+          trailingValue={ratesOpen ? 'Hide' : 'Edit'}
+          onClick={() => setRatesOpen(prev => !prev)}
+          divider={false}
+        />
+        <AnimatePresence initial={false}>
+          {ratesOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <Divider />
+              <ConversionRatesEditor usedCurrencies={usedCurrencies} />
             </motion.div>
           )}
         </AnimatePresence>

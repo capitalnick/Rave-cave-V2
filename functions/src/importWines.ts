@@ -44,6 +44,7 @@ const IMPORTABLE_FIELDS = [
   "drinkFrom",
   "drinkUntil",
   "price",
+  "priceCurrency",
   "format",
   "tastingNotes",
   "personalNote",
@@ -140,9 +141,11 @@ const KNOWN_COLUMN_MAP: Record<string, ImportableField | null> = {
   "price": "price",
   "cost": "price",
   "bottle price": "price",
-  // Valuation / currency — skip
+  // Valuation — skip
   "valuation": null,
-  "currency": null,
+  // Currency
+  "currency": "priceCurrency",
+  "price currency": "priceCurrency",
 
   // Drinking window
   "beginconsume": "drinkFrom",
@@ -736,10 +739,32 @@ export const mapImportFields = onRequest(
 
 // ── commitImport ──
 
+/** Detect currency from a raw price string's symbol prefix/suffix */
+function detectCurrencyFromPrice(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("€")) return "EUR";
+  if (trimmed.startsWith("£")) return "GBP";
+  if (trimmed.startsWith("A$")) return "AUD";
+  if (trimmed.startsWith("NZ$")) return "NZD";
+  if (trimmed.startsWith("C$")) return "CAD";
+  if (trimmed.startsWith("HK$")) return "HKD";
+  if (trimmed.startsWith("S$")) return "SGD";
+  if (trimmed.startsWith("R$")) return "BRL";
+  if (trimmed.startsWith("¥")) return "JPY";
+  if (trimmed.startsWith("₹")) return "INR";
+  if (trimmed.startsWith("₩")) return "KRW";
+  if (trimmed.startsWith("CHF")) return "CHF";
+  // Plain $ — ambiguous, return null (handled by defaultCurrency)
+  if (trimmed.startsWith("$")) return null;
+  return null;
+}
+
 interface CommitRequest {
   csv: string;
   mappings: { csvColumn: string; raveCaveField: string | null }[];
   maxWines?: number;
+  /** User's home currency — used as default for $ prices */
+  defaultCurrency?: string;
 }
 
 interface CreatedWine {
@@ -798,7 +823,8 @@ export const commitImport = onRequest(
       return;
     }
 
-    const {csv, mappings, maxWines} = req.body as CommitRequest;
+    const {csv, mappings, maxWines, defaultCurrency} =
+      req.body as CommitRequest;
 
     if (!csv || !mappings) {
       res.status(400).json({error: "Missing csv or mappings"});
@@ -853,6 +879,18 @@ export const commitImport = onRequest(
           const rawValue = row[m.csvColumn]?.trim() || "";
           if (!rawValue) continue;
           const field = m.raveCaveField as string;
+
+          // Detect currency from price string BEFORE stripping symbols
+          if (field === "price" && !wine.priceCurrency) {
+            const detected = detectCurrencyFromPrice(rawValue);
+            if (detected) {
+              wine.priceCurrency = detected;
+            } else if (rawValue.includes("$") && defaultCurrency) {
+              // Ambiguous $ — use user's home currency or USD
+              wine.priceCurrency = defaultCurrency;
+            }
+          }
+
           wine[field] = coerceValue(field, rawValue);
         }
 
@@ -1009,6 +1047,11 @@ function coerceValue(field: string, raw: string): unknown {
   case "myRating": {
     const num = parseFloat(raw.replace(/[^0-9.]/g, ""));
     return isNaN(num) ? 0 : num;
+  }
+  case "priceCurrency": {
+    // Validate: 3-letter uppercase code
+    const code = raw.trim().toUpperCase();
+    return /^[A-Z]{3}$/.test(code) ? code : "";
   }
   case "type": {
     const lower = raw.toLowerCase();

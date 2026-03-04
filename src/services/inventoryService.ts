@@ -3,6 +3,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, Uns
 import { db } from "../firebase";
 import { Wine, FIRESTORE_FIELD_MAP } from '../types';
 import { migrateLegacyFields } from '../utils/grapeUtils';
+import { convertToHome, getCurrencySymbol } from '@/lib/currencyConversion';
 // Fixed: Import CONFIG from constants instead of types
 import { CONFIG } from '../constants';
 import { requireUid } from '@/utils/authHelpers';
@@ -98,8 +99,13 @@ export const inventoryService = {
     }
   },
 
-  buildCellarSummary: (inventory: Wine[]): string => {
+  buildCellarSummary: (
+    inventory: Wine[],
+    homeCurrency: string = 'AUD',
+    rates: Record<string, number> = {},
+  ): string => {
     if (inventory.length === 0) return "Cellar is empty.";
+    const sym = getCurrencySymbol(homeCurrency);
 
     const totalBottles = inventory.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
 
@@ -122,9 +128,13 @@ export const inventoryService = {
       if (w.producer) producers[w.producer] = (producers[w.producer] || 0) + qty;
     });
 
-    // Price range
-    const prices = inventory.map(w => Number(w.price) || 0).filter(p => p > 0);
-    const priceRange = prices.length > 0 ? `$${Math.min(...prices)}-$${Math.max(...prices)}` : 'N/A';
+    // Price range (home-converted)
+    const homePrices = inventory
+      .map(w => convertToHome(Number(w.price) || 0, w.priceCurrency, homeCurrency, rates))
+      .filter(p => p > 0);
+    const priceRange = homePrices.length > 0
+      ? `${sym}${Math.min(...homePrices)}-${sym}${Math.max(...homePrices)}`
+      : 'N/A';
 
     // Vintage range
     const vintages = inventory.map(w => Number(w.vintage) || 0).filter(v => v > 0);
@@ -142,24 +152,37 @@ export const inventoryService = {
     const recent = inventory.slice(-3).reverse().map(w => `${w.vintage} ${w.producer}${w.name ? ' ' + w.name : ''}`).join('; ');
 
     return [
-      `${totalBottles} bottles.`,
+      `${totalBottles} bottles. Home currency: ${homeCurrency}.`,
       `Types: ${typeStr}.`,
       `Countries: ${top5(countries)}.`,
       `Regions: ${top5(regions)}.`,
       `Producers: ${top5(producers)}.`,
-      `Prices: ${priceRange}. Vintages: ${vintageRange}.`,
+      `Prices (converted to ${homeCurrency}): ${priceRange}. Vintages: ${vintageRange}.`,
       `Maturity: ${maturityStr}.`,
       `Recent: ${recent}.`,
     ].join(' ');
   },
 
-  getCellarSnapshot: (inventory: Wine[], options?: { includeIds?: boolean }): string => {
+  getCellarSnapshot: (
+    inventory: Wine[],
+    options?: { includeIds?: boolean },
+    homeCurrency: string = 'AUD',
+    rates: Record<string, number> = {},
+  ): string => {
     if (inventory.length === 0) return 'Cellar is empty.';
     const limited = inventory.slice(0, CONFIG.INVENTORY_LIMIT);
-    let context = `Showing ${limited.length} of ${inventory.length} bottles:\n`;
+    let context = `Showing ${limited.length} of ${inventory.length} bottles (home currency: ${homeCurrency}):\n`;
     limited.forEach(w => {
       const id = options?.includeIds ? `[ID:${w.id}] ` : '';
-      context += `- ${id}${w.vintage} ${w.producer} ${w.name} (${w.type}, $${w.price}, Qty: ${w.quantity}, Maturity: ${w.maturity})\n`;
+      const rawPrice = Number(w.price) || 0;
+      const wineCcy = w.priceCurrency || homeCurrency;
+      const sym = getCurrencySymbol(wineCcy);
+      let priceStr = `${sym}${rawPrice}`;
+      if (wineCcy !== homeCurrency && rawPrice > 0) {
+        const homeVal = convertToHome(rawPrice, wineCcy, homeCurrency, rates);
+        priceStr += ` (~${getCurrencySymbol(homeCurrency)}${Math.round(homeVal)})`;
+      }
+      context += `- ${id}${w.vintage} ${w.producer} ${w.name} (${w.type}, ${priceStr}, Qty: ${w.quantity}, Maturity: ${w.maturity})\n`;
     });
     return context;
   },

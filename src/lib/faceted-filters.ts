@@ -1,5 +1,6 @@
 import type { Wine, GrapeVariety } from '@/types';
 import { getMaturityLabel } from '@/utils/maturityUtils';
+import { convertToHome } from '@/lib/currencyConversion';
 
 // ── Types ──
 
@@ -96,11 +97,23 @@ function matchesSearch(wine: Wine, query: string): boolean {
 
 import { PRICE_BUCKETS } from '@/config/filterConfig';
 
+/** Optional currency context for price conversion in filters */
+export interface PriceContext {
+  homeCurrency: string;
+  rates: Record<string, number>;
+}
+
 export function getPriceBucket(price: number): string {
   for (const b of PRICE_BUCKETS) {
     if (b.test(price)) return b.label;
   }
   return 'Under $30';
+}
+
+function getHomePrice(wine: Wine, ctx?: PriceContext): number {
+  const raw = Number(wine.price) || 0;
+  if (!ctx) return raw;
+  return convertToHome(raw, wine.priceCurrency, ctx.homeCurrency, ctx.rates);
 }
 
 function matchesPriceFacet(price: number, facet: MultiSelectFacet): boolean {
@@ -111,7 +124,7 @@ function matchesPriceFacet(price: number, facet: MultiSelectFacet): boolean {
 
 // ── Core filter functions ──
 
-function wineMatchesFacet(wine: Wine, key: FacetKey, filters: FiltersState): boolean {
+function wineMatchesFacet(wine: Wine, key: FacetKey, filters: FiltersState, priceCtx?: PriceContext): boolean {
   switch (key) {
     case 'wineType':
       return matchesMulti(wine.type, filters.wineType);
@@ -132,7 +145,7 @@ function wineMatchesFacet(wine: Wine, key: FacetKey, filters: FiltersState): boo
     case 'rating':
       return matchesRange(wine.vivinoRating, filters.rating);
     case 'price':
-      return matchesPriceFacet(wine.price, filters.price);
+      return matchesPriceFacet(getHomePrice(wine, priceCtx), filters.price);
   }
 }
 
@@ -141,19 +154,19 @@ const ALL_FACET_KEYS: FacetKey[] = [
   'producer', 'grapeVariety', 'vintage', 'rating', 'price',
 ];
 
-export function matchesAllFacets(wine: Wine, filters: FiltersState): boolean {
+export function matchesAllFacets(wine: Wine, filters: FiltersState, priceCtx?: PriceContext): boolean {
   if (!matchesSearch(wine, filters.searchQuery)) return false;
-  return ALL_FACET_KEYS.every(key => wineMatchesFacet(wine, key, filters));
+  return ALL_FACET_KEYS.every(key => wineMatchesFacet(wine, key, filters, priceCtx));
 }
 
-function matchesAllFacetsExcept(wine: Wine, filters: FiltersState, exceptKey: FacetKey): boolean {
+function matchesAllFacetsExcept(wine: Wine, filters: FiltersState, exceptKey: FacetKey, priceCtx?: PriceContext): boolean {
   if (!matchesSearch(wine, filters.searchQuery)) return false;
-  return ALL_FACET_KEYS.every(key => key === exceptKey || wineMatchesFacet(wine, key, filters));
+  return ALL_FACET_KEYS.every(key => key === exceptKey || wineMatchesFacet(wine, key, filters, priceCtx));
 }
 
 // ── Facet value extractors ──
 
-function extractFacetValue(wine: Wine, key: FacetKey): string[] {
+function extractFacetValue(wine: Wine, key: FacetKey, priceCtx?: PriceContext): string[] {
   switch (key) {
     case 'wineType':
       return wine.type ? [wine.type] : [];
@@ -174,7 +187,7 @@ function extractFacetValue(wine: Wine, key: FacetKey): string[] {
     case 'rating':
       return wine.vivinoRating !== undefined ? [String(wine.vivinoRating)] : [];
     case 'price':
-      return [getPriceBucket(wine.price)];
+      return [getPriceBucket(getHomePrice(wine, priceCtx))];
   }
 }
 
@@ -189,12 +202,13 @@ export function aggregateFacetOptions(
   wines: Wine[],
   filters: FiltersState,
   key: FacetKey,
+  priceCtx?: PriceContext,
 ): FacetOption[] {
   const counts = new Map<string, number>();
 
   for (const wine of wines) {
-    if (!matchesAllFacetsExcept(wine, filters, key)) continue;
-    const values = extractFacetValue(wine, key);
+    if (!matchesAllFacetsExcept(wine, filters, key, priceCtx)) continue;
+    const values = extractFacetValue(wine, key, priceCtx);
     for (const v of values) {
       counts.set(v, (counts.get(v) ?? 0) + 1);
     }

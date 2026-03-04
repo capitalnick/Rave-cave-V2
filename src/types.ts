@@ -35,6 +35,7 @@ export interface Wine {
   thumbnailUrl?: string;
   resolvedImageUrl?: string;
   price: number;
+  priceCurrency?: string;
   format: string;
   processingStatus?: 'pending' | 'complete' | 'error';
   notifiedForYear?: number;
@@ -414,6 +415,7 @@ export const FIRESTORE_FIELD_MAP: Record<string, string> = {
   imageUrl: 'Label image',
   thumbnailUrl: 'Thumbnail URL',
   price: 'Bottle Price',
+  priceCurrency: 'Price Currency',
   format: 'Format',
   processingStatus: 'Processing Status',
 };

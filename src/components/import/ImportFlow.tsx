@@ -84,6 +84,7 @@ const FIELD_LABELS: Record<string, string> = {
   drinkFrom: 'Drink From',
   drinkUntil: 'Drink Until',
   price: 'Price',
+  priceCurrency: 'Price Currency',
   format: 'Format',
   tastingNotes: 'Tasting Notes',
   personalNote: 'Personal Note',
@@ -101,7 +102,7 @@ interface ImportFlowProps {
 
 export default function ImportFlow({ onClose }: ImportFlowProps) {
   const navigate = useNavigate();
-  const { isPremium } = useProfile();
+  const { isPremium, profile } = useProfile();
   const { totalBottles } = useInventory();
 
   const [stage, setStage] = useState<ImportStage>('upload');
@@ -364,6 +365,7 @@ export default function ImportFlow({ onClose }: ImportFlowProps) {
             raveCaveField: m.raveCaveField,
           })),
           maxWines: effectiveRowCount,
+          defaultCurrency: profile.currency,
         }),
       });
 
