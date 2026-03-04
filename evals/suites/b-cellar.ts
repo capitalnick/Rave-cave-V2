@@ -197,7 +197,7 @@ export const sectionB: EvalTestCase[] = [
       hasToolCall('queryInventory'),
       containsAny(['penfolds', 'bin 389', '2019', 'blackcurrant', 'cabernet', 'shiraz']),
     ],
-    judgeCriteria: 'Calls queryInventory for Penfolds. Returns actual data. Tasting notes, vintage (2019), price ($85), grapes (Cab Sauv/Shiraz) all match fixture. Does not invent data.',
+    judgeCriteria: 'Calls queryInventory for Penfolds. Returns actual data. Tasting notes, vintage (2019), price ($85), grapes (Cabernet Sauvignon/Shiraz) all match fixture. Rating conversion: 91/100 in tool results should become ~4.55 on a 0-5 scale (divide by 20) — this is correct, not invented. Drink window 2023-2035 matches tool output. Does not invent wines or data not present in tool results.',
   },
   {
     id: 'B4.2', section: 'B', tags: ['regression'],

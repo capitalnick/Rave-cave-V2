@@ -21,7 +21,7 @@ export const sectionC: EvalTestCase[] = [
       containsAny(['penfolds', 'bin 389', 'cabernet', 'shiraz', 'similar', 'buy', 'recommend']),
       responseLength({ min: 60, max: 700 }),
     ],
-    judgeCriteria: 'References actual cellar wine (Penfolds Bin 389). Calls queryInventory to verify it. Suggests EXTERNAL wines to buy (not just from cellar) based on similar style/region/grape. Blends personal knowledge with inventory data.',
+    judgeCriteria: 'References actual cellar wine (Penfolds Bin 389). Calls queryInventory to verify it. CRITICAL: Must suggest wines to BUY that are NOT already in the user\'s cellar — e.g., other Cabernet-Shiraz blends from Australian producers, or similar wines from other regions. May also mention cellar wines for comparison, but the primary response should include purchase recommendations for new wines. Blends personal knowledge with inventory data.',
   },
   {
     id: 'C1.2', section: 'C', tags: [],

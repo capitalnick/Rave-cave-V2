@@ -142,7 +142,7 @@ export const sectionG: EvalTestCase[] = [
       noToolCalls(),
       responseLength({ min: 30, max: 500 }),
     ],
-    judgeCriteria: 'ZERO emoji in response. Prompt explicitly forbids them. Response uses markdown formatting instead. Check every character for emoji.',
+    judgeCriteria: 'ZERO emoji in response. This test ONLY checks for emoji — ignore all other aspects like cellar references, bridge offers, or tone. Check every character for emoji. If zero emoji found, score 9-10.',
   },
   {
     id: 'G3.4', section: 'G', tags: [],
