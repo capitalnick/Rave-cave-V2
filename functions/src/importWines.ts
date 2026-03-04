@@ -739,7 +739,11 @@ export const mapImportFields = onRequest(
 
 // ── commitImport ──
 
-/** Detect currency from a raw price string's symbol prefix/suffix */
+/**
+ * Detect currency from a raw price string's symbol prefix/suffix.
+ * @param {string} raw The raw price string (e.g. "€50", "A$30").
+ * @return {string | null} ISO currency code or null if ambiguous/missing.
+ */
 function detectCurrencyFromPrice(raw: string): string | null {
   const trimmed = raw.trim();
   if (trimmed.startsWith("€")) return "EUR";
