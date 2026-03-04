@@ -18,11 +18,32 @@ interface Props {
 
 const MAX_CUSTOM = 10;
 
-const inputClass =
-  'w-24 rounded-[var(--rc-input-radius)] border border-[var(--rc-input-border)] bg-[var(--rc-input-bg)] px-3 py-2 text-right text-sm text-[var(--rc-input-text)] outline-none focus:border-[var(--rc-accent-pink)] font-[family-name:var(--rc-font-body)]';
+/** Shared inline styles for inputs — avoids Tailwind v4 class detection issues */
+const rateInputStyle: React.CSSProperties = {
+  width: 96,
+  borderRadius: 'var(--rc-input-radius)',
+  border: '1px solid var(--rc-input-border)',
+  backgroundColor: 'var(--rc-input-bg)',
+  padding: '8px 12px',
+  textAlign: 'right',
+  fontSize: 14,
+  color: 'var(--rc-input-text)',
+  outline: 'none',
+  fontFamily: 'var(--rc-font-body)',
+};
 
-const smallInputClass =
-  'w-20 rounded-[var(--rc-input-radius)] border border-[var(--rc-input-border)] bg-[var(--rc-input-bg)] px-3 py-2 text-sm uppercase text-[var(--rc-input-text)] outline-none focus:border-[var(--rc-accent-pink)] font-[family-name:var(--rc-font-mono)]';
+const codeInputStyle: React.CSSProperties = {
+  width: 80,
+  borderRadius: 'var(--rc-input-radius)',
+  border: '1px solid var(--rc-input-border)',
+  backgroundColor: 'var(--rc-input-bg)',
+  padding: '8px 12px',
+  fontSize: 14,
+  color: 'var(--rc-input-text)',
+  outline: 'none',
+  fontFamily: 'var(--rc-font-mono)',
+  textTransform: 'uppercase',
+};
 
 const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
   const { profile, updateConversionRates, updateCustomCurrencies } = useProfile();
@@ -33,10 +54,11 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
   const [saving, setSaving] = useState(false);
   const [newCode, setNewCode] = useState('');
 
-  // All non-home currencies to show rows for
+  // All non-home currencies — deduplicate built-in vs custom
   const allCurrencies = useMemo(() => {
+    const builtInSet = new Set(BUILT_IN_CURRENCIES as readonly string[]);
     const builtIn = BUILT_IN_CURRENCIES.filter(c => c !== profile.currency);
-    const custom = profile.customCurrencies.filter(c => c !== profile.currency);
+    const custom = profile.customCurrencies.filter(c => c !== profile.currency && !builtInSet.has(c));
     return [...builtIn, ...custom];
   }, [profile.currency, profile.customCurrencies]);
 
@@ -92,7 +114,8 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
       showToast({ tone: 'error', message: `${code} is already your home currency` });
       return;
     }
-    if (BUILT_IN_CURRENCIES.includes(code as any) || profile.customCurrencies.includes(code)) {
+    const builtInSet = new Set(BUILT_IN_CURRENCIES as readonly string[]);
+    if (builtInSet.has(code) || profile.customCurrencies.includes(code)) {
       showToast({ tone: 'error', message: `${code} already exists` });
       return;
     }
@@ -130,11 +153,12 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
   };
 
   const homeSym = getCurrencySymbol(profile.currency).trim();
+  const isCustomCode = (code: string) => profile.customCurrencies.includes(code);
 
   return (
     <div className="px-[var(--rc-row-padding-h)] pb-4 space-y-3">
       <Caption className="text-[var(--rc-text-secondary)]">
-        How many {profile.currency} does 1 unit of each foreign currency buy?
+        How many {homeSym} does 1 unit of each foreign currency buy?
       </Caption>
 
       {allCurrencies.map(code => {
@@ -142,12 +166,12 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
         const rateNum = parseFloat(rateStr);
         const foreignSym = getCurrencySymbol(code).trim();
         const inverse = !isNaN(rateNum) && rateNum > 0 ? (1 / rateNum).toFixed(4) : '—';
-        const isCustom = profile.customCurrencies.includes(code);
+        const isCustom = isCustomCode(code);
         const isUsed = usedCurrencies.has(code);
 
         return (
-          <div key={code} className="flex items-center gap-2">
-            <MonoLabel className="w-12 shrink-0 text-[var(--rc-text-primary)]">{code}</MonoLabel>
+          <div key={code} className="flex items-center gap-2 flex-wrap">
+            <MonoLabel className="w-10 shrink-0 text-[var(--rc-text-primary)]">{code}</MonoLabel>
             <Body className="shrink-0 text-[var(--rc-text-secondary)]">{foreignSym}1 =</Body>
             <input
               type="number"
@@ -156,7 +180,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
               min="0.0001"
               value={rateStr}
               onChange={e => handleRateChange(code, e.target.value)}
-              className={inputClass}
+              style={rateInputStyle}
               placeholder="0.00"
             />
             <Body className="shrink-0 text-[var(--rc-text-secondary)]">{homeSym}</Body>
@@ -191,7 +215,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
           onChange={e => setNewCode(e.target.value.toUpperCase().slice(0, 3))}
           placeholder="e.g. CHF"
           maxLength={3}
-          className={smallInputClass}
+          style={codeInputStyle}
         />
         <button
           onClick={handleAddCurrency}
