@@ -7,16 +7,18 @@ import { stampMissingCurrency } from '@/services/currencyMigrationService';
 
 // ── Types ──
 
-export type BuiltInCurrency = 'AUD' | 'USD' | 'EUR' | 'GBP';
+export type BuiltInCurrency = 'AUD' | 'USD' | 'EUR' | 'GBP' | 'JPY';
 export type Currency = BuiltInCurrency;
 export type Tier = 'free' | 'premium';
 
-/** Default foreign-to-home rates seeded per home currency */
+/** Default foreign-to-home rates seeded per home currency.
+ *  Convention: rates[FROM] = "1 FROM = X HOME" (foreign-to-home multiplier). */
 export const DEFAULT_RATES: Record<BuiltInCurrency, Record<string, number>> = {
-  AUD: { USD: 1.55, EUR: 1.68, GBP: 1.95 },
-  USD: { AUD: 0.65, EUR: 1.08, GBP: 1.26 },
-  EUR: { AUD: 0.60, USD: 0.93, GBP: 1.16 },
-  GBP: { AUD: 0.51, USD: 0.79, EUR: 0.86 },
+  AUD: { USD: 1.43, EUR: 1.65, GBP: 1.90, JPY: 0.009 },
+  USD: { AUD: 0.70, EUR: 1.15, GBP: 1.33, JPY: 0.006 },
+  EUR: { AUD: 0.61, USD: 0.87, GBP: 1.15, JPY: 0.005 },
+  GBP: { AUD: 0.53, USD: 0.75, EUR: 0.87, JPY: 0.005 },
+  JPY: { AUD: 111.11, USD: 158.89, EUR: 183.33, GBP: 211.11 },
 };
 
 interface UserProfile {

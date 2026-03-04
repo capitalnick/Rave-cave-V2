@@ -1,7 +1,7 @@
 import type { BuiltInCurrency } from '@/context/ProfileContext';
 
-/** The four built-in currencies that ship with default rates */
-export const BUILT_IN_CURRENCIES: BuiltInCurrency[] = ['AUD', 'USD', 'EUR', 'GBP'];
+/** The five built-in currencies that ship with default rates */
+export const BUILT_IN_CURRENCIES: BuiltInCurrency[] = ['AUD', 'USD', 'EUR', 'GBP', 'JPY'];
 
 /**
  * Extended currency symbol map — covers 15+ common codes.

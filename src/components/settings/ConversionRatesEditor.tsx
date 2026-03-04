@@ -4,7 +4,6 @@ import { useProfile } from '@/context/ProfileContext';
 import { BUILT_IN_CURRENCIES, getCurrencySymbol } from '@/lib/currencyConversion';
 import {
   Button,
-  Input,
   Divider,
   Body,
   Caption,
@@ -18,6 +17,12 @@ interface Props {
 }
 
 const MAX_CUSTOM = 10;
+
+const inputClass =
+  'w-24 rounded-[var(--rc-input-radius)] border border-[var(--rc-input-border)] bg-[var(--rc-input-bg)] px-3 py-2 text-right text-sm text-[var(--rc-input-text)] outline-none focus:border-[var(--rc-accent-pink)] font-[family-name:var(--rc-font-body)]';
+
+const smallInputClass =
+  'w-20 rounded-[var(--rc-input-radius)] border border-[var(--rc-input-border)] bg-[var(--rc-input-bg)] px-3 py-2 text-sm uppercase text-[var(--rc-input-text)] outline-none focus:border-[var(--rc-accent-pink)] font-[family-name:var(--rc-font-mono)]';
 
 const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
   const { profile, updateConversionRates, updateCustomCurrencies } = useProfile();
@@ -124,15 +129,18 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
     }
   };
 
+  const homeSym = getCurrencySymbol(profile.currency).trim();
+
   return (
     <div className="px-[var(--rc-row-padding-h)] pb-4 space-y-3">
       <Caption className="text-[var(--rc-text-secondary)]">
-        Rates are foreign-to-home: how many {profile.currency} per 1 unit of each currency.
+        How many {profile.currency} does 1 unit of each foreign currency buy?
       </Caption>
 
       {allCurrencies.map(code => {
         const rateStr = localRates[code] ?? '';
         const rateNum = parseFloat(rateStr);
+        const foreignSym = getCurrencySymbol(code).trim();
         const inverse = !isNaN(rateNum) && rateNum > 0 ? (1 / rateNum).toFixed(4) : '—';
         const isCustom = profile.customCurrencies.includes(code);
         const isUsed = usedCurrencies.has(code);
@@ -140,20 +148,20 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
         return (
           <div key={code} className="flex items-center gap-2">
             <MonoLabel className="w-12 shrink-0 text-[var(--rc-text-primary)]">{code}</MonoLabel>
-            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{getCurrencySymbol(code).trim()}1 =</Body>
-            <Input
+            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{foreignSym}1 =</Body>
+            <input
               type="number"
               inputMode="decimal"
               step="any"
               min="0.0001"
               value={rateStr}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleRateChange(code, e.target.value)}
-              className="w-24 text-right"
+              onChange={e => handleRateChange(code, e.target.value)}
+              className={inputClass}
               placeholder="0.00"
             />
-            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{getCurrencySymbol(profile.currency).trim()}</Body>
+            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{homeSym}</Body>
             <Caption className="ml-auto text-[var(--rc-text-tertiary)] whitespace-nowrap">
-              1 {profile.currency} = {inverse} {code}
+              {homeSym}1 = {inverse} {foreignSym}
             </Caption>
             {isCustom && (
               <button
@@ -177,13 +185,13 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
 
       {/* Add custom currency */}
       <div className="flex items-center gap-2">
-        <Input
+        <input
           type="text"
           value={newCode}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewCode(e.target.value.toUpperCase().slice(0, 3))}
+          onChange={e => setNewCode(e.target.value.toUpperCase().slice(0, 3))}
           placeholder="e.g. CHF"
-          className="w-20 uppercase"
           maxLength={3}
+          className={smallInputClass}
         />
         <button
           onClick={handleAddCurrency}
@@ -199,7 +207,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
         <div className="flex justify-end pt-1">
           <Button
             variantType="Primary"
-            label={saving ? 'Saving…' : 'Save Rates'}
+            label={saving ? 'Saving...' : 'Save Rates'}
             onClick={handleSave}
             disabled={saving}
           />

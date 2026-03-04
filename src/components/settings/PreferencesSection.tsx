@@ -23,6 +23,7 @@ const CURRENCY_LABELS: Record<Currency, string> = {
   USD: 'USD — US Dollar',
   EUR: 'EUR — Euro',
   GBP: 'GBP — British Pound',
+  JPY: 'JPY — Japanese Yen',
 };
 
 const PreferencesSection: React.FC = () => {
@@ -95,7 +96,7 @@ const PreferencesSection: React.FC = () => {
             >
               <Divider />
               <div className="px-[var(--rc-row-padding-h)] pb-3">
-                {(['AUD', 'USD', 'EUR', 'GBP'] as Currency[]).map(c => (
+                {(['AUD', 'USD', 'EUR', 'GBP', 'JPY'] as Currency[]).map(c => (
                   <div
                     key={c}
                     className="flex items-center py-2 cursor-pointer"
