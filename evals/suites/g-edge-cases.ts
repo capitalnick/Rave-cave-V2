@@ -13,7 +13,7 @@ import {
 export const sectionG: EvalTestCase[] = [
   // G1. Conversation Flow
   {
-    id: 'G1.1', section: 'G', tags: [],
+    id: 'G1.1', section: 'G', tags: ['regression'],
     prompt: 'What wine should I have with dinner tonight?',
     mode: 'cellar',
     priorTurns: [
@@ -41,7 +41,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'After 8 prior exchanges, Remy handles the new question coherently. Doesn\'t reference messages that should be outside the sliding window. No errors or confusion. Calls queryInventory for dinner recommendation.',
   },
   {
-    id: 'G1.2', section: 'G', tags: [],
+    id: 'G1.2', section: 'G', tags: ['regression'],
     prompt: 'What is Riesling?',
     mode: 'general',
     priorTurns: [
@@ -58,7 +58,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'Consistent answers across 3 asks. Doesn\'t get confused or loop. May acknowledge the repeated question naturally. Doesn\'t contradict previous answers.',
   },
   {
-    id: 'G1.3', section: 'G', tags: [],
+    id: 'G1.3', section: 'G', tags: ['regression'],
     prompt: 'Now show me my Australian reds.',
     mode: 'cellar',
     priorTurns: [
@@ -75,7 +75,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'Handles transition from general to cellar mode smoothly. Calls queryInventory with country: "Australia", wineType: "Red". Doesn\'t lose context or reference Pinot Noir query inappropriately.',
   },
   {
-    id: 'G1.4', section: 'G', tags: [],
+    id: 'G1.4', section: 'G', tags: ['regression'],
     prompt: 'I\'ve been thinking a lot about wine lately and I want to understand more about the relationship between soil composition, specifically limestone and clay-based soils versus volcanic terroir, and how these different geological foundations influence the mineral character, tannin structure, and aging potential of Cabernet Sauvignon wines across different regions like Bordeaux, Napa Valley, Coonawarra, and emerging high-altitude regions in Argentina. Can you give me a comprehensive comparison with specific examples of how terroir translates to flavor profiles?',
     mode: 'general',
     structuralValidators: [
@@ -86,7 +86,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'Handles very long message (500+ chars) gracefully. Response is proportionate — detailed but not excessively long. Addresses the key points (soil types, regions, Cabernet). Organized and coherent.',
   },
   {
-    id: 'G1.6', section: 'G', tags: [],
+    id: 'G1.6', section: 'G', tags: ['regression'],
     prompt: 'do i hav any shraz or cabarnet in my sellr?',
     mode: 'cellar',
     structuralValidators: [
@@ -99,7 +99,7 @@ export const sectionG: EvalTestCase[] = [
 
   // G2. Tool Failure Scenarios
   {
-    id: 'G2.1', section: 'G', tags: [],
+    id: 'G2.1', section: 'G', tags: ['regression'],
     prompt: 'Show me my German Rieslings',
     mode: 'cellar',
     structuralValidators: [
@@ -110,7 +110,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory with country: "Germany" or similar. Gets 0 results (no German wines in fixture). Acknowledges nothing found. Doesn\'t fabricate wines. May suggest broadening search or noting existing Alsace Riesling.',
   },
   {
-    id: 'G2.2', section: 'G', tags: [],
+    id: 'G2.2', section: 'G', tags: ['regression'],
     prompt: 'Show me my Craft Beer collection',
     mode: 'cellar',
     structuralValidators: [
@@ -145,7 +145,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'ZERO emoji in response. This test ONLY checks for emoji — ignore all other aspects like cellar references, bridge offers, or tone. Check every character for emoji. If zero emoji found, score 9-10.',
   },
   {
-    id: 'G3.4', section: 'G', tags: [],
+    id: 'G3.4', section: 'G', tags: ['regression'],
     prompt: 'Is Burgundy better than Bordeaux?',
     mode: 'general',
     structuralValidators: [
@@ -157,7 +157,7 @@ export const sectionG: EvalTestCase[] = [
     judgeCriteria: 'Gives opinionated but balanced take. Shows personality ("In my humble French opinion..." or similar). Doesn\'t refuse to answer. Acknowledges both regions\' strengths.',
   },
   {
-    id: 'G3.5', section: 'G', tags: [],
+    id: 'G3.5', section: 'G', tags: ['regression'],
     prompt: 'Tell me a funny wine joke',
     mode: 'general',
     structuralValidators: [

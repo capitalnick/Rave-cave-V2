@@ -10,7 +10,7 @@ import {
 
 export const sectionH: EvalTestCase[] = [
   {
-    id: 'H1.1', section: 'H', tags: [],
+    id: 'H1.1', section: 'H', tags: ['regression'],
     prompt: 'What wines do I have?',
     mode: 'cellar',
     structuralValidators: [
@@ -21,7 +21,7 @@ export const sectionH: EvalTestCase[] = [
     judgeCriteria: 'Simulates speech-to-text input "What wines do I have?". Cellar intent detected correctly. Responds with cellar overview or calls queryInventory. Accurate to fixture data.',
   },
   {
-    id: 'H1.3', section: 'H', tags: [],
+    id: 'H1.3', section: 'H', tags: ['regression'],
     prompt: 'Do I have any Château Margaux or Côtes du Rhône?',
     mode: 'cellar',
     structuralValidators: [

@@ -35,7 +35,7 @@ export const sectionF: EvalTestCase[] = [
     judgeCriteria: 'All 6 sections present in correct order: THE VERDICT, THE WINE, WHAT TO EXPECT IN THE GLASS, THIS VINTAGE, VALUE VERDICT, REMY\'S CALL. Each section has 2-4 sentences. Tone is opinionated and expert.',
   },
   {
-    id: 'F1.2', section: 'F', tags: [],
+    id: 'F1.2', section: 'F', tags: ['regression'],
     prompt: 'Tell me about this wine.',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Penfolds Bin 389, 2019, South Australia. Type: Red. Grapes: Cabernet Sauvignon 53%, Shiraz 47%. Price: $85 AUD.',
@@ -48,7 +48,7 @@ export const sectionF: EvalTestCase[] = [
     judgeCriteria: 'No empty sections. Each section has 2-4 sentences. THE VERDICT is punchy and opinionated. WHAT TO EXPECT IN THE GLASS is vivid. Content matches the specific wine.',
   },
   {
-    id: 'F1.3', section: 'F', tags: [],
+    id: 'F1.3', section: 'F', tags: ['regression'],
     prompt: 'Wine brief please.',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Cloudy Bay Sauvignon Blanc 2023, Marlborough, New Zealand. Type: White. Grapes: Sauvignon Blanc. Price: $28 AUD.',
@@ -75,7 +75,7 @@ export const sectionF: EvalTestCase[] = [
 
   // F2. Brief Quality
   {
-    id: 'F2.1', section: 'F', tags: [],
+    id: 'F2.1', section: 'F', tags: ['regression'],
     prompt: 'Wine brief for this premium Bordeaux.',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Château Margaux 2015, Margaux, Bordeaux, France. Type: Red. Grapes: Cabernet Sauvignon 87%, Merlot 8%, Petit Verdot 5%. Price: $365 AUD.',
@@ -88,7 +88,7 @@ export const sectionF: EvalTestCase[] = [
     judgeCriteria: 'Vintage assessment accurate for 2015 Bordeaux (excellent year). Value reflects premium pricing ($365). Tasting notes match Bordeaux/Margaux profile (cassis, violet, graphite). THIS VINTAGE section mentions 2015 as an outstanding year.',
   },
   {
-    id: 'F2.2', section: 'F', tags: [],
+    id: 'F2.2', section: 'F', tags: ['regression'],
     prompt: 'What do you think of this wine?',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Yellow Tail Shiraz 2023, South Eastern Australia. Type: Red. Grapes: Shiraz. Price: $18 AUD.',
@@ -101,7 +101,7 @@ export const sectionF: EvalTestCase[] = [
     judgeCriteria: 'Honest verdict (daily drinker, not a gem). Value reflects low price ($18). Doesn\'t oversell quality. THE VERDICT is honest without being cruel. Practical tone.',
   },
   {
-    id: 'F2.3', section: 'F', tags: [],
+    id: 'F2.3', section: 'F', tags: ['regression'],
     prompt: 'Brief this wine for me.',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Domaine Obscure, Cuvée Mystère 2020, Languedoc, France. Type: Red. Grapes: Carignan 50%, Grenache 50%. Price: $35 AUD.',
@@ -114,7 +114,7 @@ export const sectionF: EvalTestCase[] = [
     judgeCriteria: 'Admits uncertainty about producer where appropriate (obscure/unknown). Still provides useful regional context (Languedoc, Southern Rhône style). Doesn\'t fabricate producer history. Honest about what\'s known vs unknown.',
   },
   {
-    id: 'F2.4', section: 'F', tags: [],
+    id: 'F2.4', section: 'F', tags: ['regression'],
     prompt: 'Wine brief.',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Pol Roger Brut Réserve NV, Champagne, France. Type: Sparkling. Grapes: Pinot Noir 33%, Chardonnay 33%, Pinot Meunier 34%. Price: $75 AUD.',
@@ -127,7 +127,7 @@ export const sectionF: EvalTestCase[] = [
     judgeCriteria: 'WHAT TO EXPECT mentions mousse, acidity, dosage. THIS VINTAGE handles NV correctly (explains NV concept, house style consistency). Champagne-appropriate language throughout.',
   },
   {
-    id: 'F2.5', section: 'F', tags: [],
+    id: 'F2.5', section: 'F', tags: ['regression'],
     prompt: 'Brief this for me.',
     mode: 'wine-brief',
     wineBriefContext: '[WINE_BRIEF_CONTEXT] Wine: Lustau Palo Cortado, Jerez, Spain. Type: Fortified. Grapes: Palomino. Price: $28 AUD. Note: This is an aged Sherry.',

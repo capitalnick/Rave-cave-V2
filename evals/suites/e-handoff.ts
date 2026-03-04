@@ -11,7 +11,7 @@ import {
 export const sectionE: EvalTestCase[] = [
   // E1. Dinner Handoff
   {
-    id: 'E1.1', section: 'E', tags: [],
+    id: 'E1.1', section: 'E', tags: ['regression'],
     prompt: 'Tell me more about these wine recommendations.',
     mode: 'handoff',
     handoffContext: '[RECOMMENDATION CONTEXT] The user asked for dinner pairing recommendations for grilled salmon. Rémy suggested: 1) Grosset Polish Hill Riesling 2022 — crisp acidity pairs well with salmon, 2) Cloudy Bay Sauvignon Blanc 2023 — herbal notes complement the fish, 3) Domaine Leflaive Puligny-Montrachet 2020 — premium option with citrus and minerality.',
@@ -24,7 +24,7 @@ export const sectionE: EvalTestCase[] = [
     judgeCriteria: 'Remy acknowledges the dinner context and salmon pairing. References the specific recommendations (Grosset, Cloudy Bay, Leflaive). Offers to explain or adjust. Natural handoff continuation.',
   },
   {
-    id: 'E1.2', section: 'E', tags: [],
+    id: 'E1.2', section: 'E', tags: ['regression'],
     prompt: 'Why did you pick the first wine?',
     mode: 'handoff',
     handoffContext: '[RECOMMENDATION CONTEXT] The user asked for dinner pairing recommendations for grilled salmon. Rémy suggested: 1) Grosset Polish Hill Riesling 2022 — crisp acidity pairs well with salmon, 2) Cloudy Bay Sauvignon Blanc 2023 — herbal notes complement the fish.',
@@ -39,7 +39,7 @@ export const sectionE: EvalTestCase[] = [
     judgeCriteria: 'References the specific first wine (Grosset Polish Hill Riesling). Explains rationale: meal pairing with salmon, acidity, price point. Uses actual wine data.',
   },
   {
-    id: 'E1.3', section: 'E', tags: [],
+    id: 'E1.3', section: 'E', tags: ['regression'],
     prompt: 'Something bolder instead',
     mode: 'handoff',
     handoffContext: '[RECOMMENDATION CONTEXT] The user asked for dinner pairing recommendations for grilled salmon. Rémy suggested white wines. The user wants something bolder.',
@@ -53,7 +53,7 @@ export const sectionE: EvalTestCase[] = [
 
   // E2. Party Handoff
   {
-    id: 'E2.1', section: 'E', tags: [],
+    id: 'E2.1', section: 'E', tags: ['regression'],
     prompt: 'Tell me about this party wine plan.',
     mode: 'handoff',
     handoffContext: '[PARTY CONTEXT] Party for 12 guests, casual vibe, BBQ theme. Allocation: 4 bottles red (under $40), 4 bottles white (under $30), 2 bottles sparkling. Total: 10 bottles needed.',
@@ -65,7 +65,7 @@ export const sectionE: EvalTestCase[] = [
     judgeCriteria: 'Remy references total bottles needed (10), the casual BBQ vibe, and the red/white/sparkling allocation. Offers to adjust or provide specific picks. Natural continuation.',
   },
   {
-    id: 'E2.2', section: 'E', tags: [],
+    id: 'E2.2', section: 'E', tags: ['regression'],
     prompt: 'Can we swap the white for something else?',
     mode: 'handoff',
     handoffContext: '[PARTY CONTEXT] Party for 12 guests, casual BBQ. Current plan: 4x Wynns Black Label ($35), 4x Cloudy Bay SB ($28), 2x Jansz Premium Cuvée ($30).',
@@ -79,7 +79,7 @@ export const sectionE: EvalTestCase[] = [
 
   // E3. Gift Handoff
   {
-    id: 'E3.1', section: 'E', tags: [],
+    id: 'E3.1', section: 'E', tags: ['regression'],
     prompt: 'Tell me more about this gift recommendation.',
     mode: 'handoff',
     handoffContext: '[GIFT CONTEXT] Birthday gift for a wine enthusiast. Personality: adventurous. Budget: $100-200. Rémy recommended: Antinori Tignanello 2019 ($130) — a Super Tuscan with a story, perfect for an adventurous palate.',

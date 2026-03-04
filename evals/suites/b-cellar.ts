@@ -11,7 +11,7 @@ import {
 export const sectionB: EvalTestCase[] = [
   // B1. Inventory Queries
   {
-    id: 'B1.1', section: 'B', tags: [],
+    id: 'B1.1', section: 'B', tags: ['regression'],
     prompt: 'How many bottles do I have?',
     mode: 'cellar',
     structuralValidators: [
@@ -33,7 +33,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory with country: "France" and wineType: "Red". Lists actual wines from results (Château Margaux, DRC, Domaine Tempier). Never invents wines not in results.',
   },
   {
-    id: 'B1.3', section: 'B', tags: [],
+    id: 'B1.3', section: 'B', tags: ['regression'],
     prompt: "What's my most expensive bottle?",
     mode: 'cellar',
     structuralValidators: [
@@ -44,7 +44,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory with sortBy: "price", sortOrder: "desc". Returns actual most expensive wine with price. Data matches fixture.',
   },
   {
-    id: 'B1.4', section: 'B', tags: [],
+    id: 'B1.4', section: 'B', tags: ['regression'],
     prompt: 'Do I have any Pinot Noir?',
     mode: 'cellar',
     structuralValidators: [
@@ -55,7 +55,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory with grapeVarieties: ["Pinot Noir"]. Reports results accurately — should find DRC Échezeaux and Cloudy Bay Pinot Noir. If none, says so clearly.',
   },
   {
-    id: 'B1.5', section: 'B', tags: [],
+    id: 'B1.5', section: 'B', tags: ['regression'],
     prompt: 'What Australian wines are in my cellar?',
     mode: 'cellar',
     structuralValidators: [
@@ -66,7 +66,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory with country: "Australia". Lists results accurately. Should find Penfolds, Henschke, Torbreck, Yellow Tail, Wynns, Grosset, Leeuwin, Turkey Flat, Jansz, De Bortoli, Seppeltsfield, Tyrrell\'s. Doesn\'t fabricate.',
   },
   {
-    id: 'B1.6', section: 'B', tags: [],
+    id: 'B1.6', section: 'B', tags: ['regression'],
     prompt: 'How many whites vs reds do I have?',
     mode: 'cellar',
     structuralValidators: [
@@ -90,7 +90,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory. Prioritises "Drink Now" maturity wines. Considers variety (not just most expensive). Gives 1-3 picks with rationale. Uses actual tasting notes and data.',
   },
   {
-    id: 'B2.2', section: 'B', tags: [],
+    id: 'B2.2', section: 'B', tags: ['regression'],
     prompt: "I'm having steak, what should I open?",
     mode: 'cellar',
     structuralValidators: [
@@ -101,7 +101,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory (semanticQuery for steak/meat pairing or wineType: "Red"). Picks appropriate bold reds. Mentions tannin/body match with steak. Uses actual wines from cellar.',
   },
   {
-    id: 'B2.3', section: 'B', tags: [],
+    id: 'B2.3', section: 'B', tags: ['regression'],
     prompt: 'Something light and refreshing for the afternoon',
     mode: 'cellar',
     structuralValidators: [
@@ -112,7 +112,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory. Suggests whites, rosés, or sparkling. Doesn\'t suggest heavy Cabernets or bold reds. Light and refreshing picks.',
   },
   {
-    id: 'B2.4', section: 'B', tags: [],
+    id: 'B2.4', section: 'B', tags: ['regression'],
     prompt: "What's ready to drink right now?",
     mode: 'cellar',
     structuralValidators: [
@@ -122,7 +122,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory with maturityStatus: "DRINK_NOW" or similar. Lists results with drink windows. Accurate to fixture maturity data.',
   },
   {
-    id: 'B2.5', section: 'B', tags: [],
+    id: 'B2.5', section: 'B', tags: ['regression'],
     prompt: 'I want something under $30 tonight',
     mode: 'cellar',
     structuralValidators: [
@@ -134,7 +134,7 @@ export const sectionB: EvalTestCase[] = [
 
   // B3. Cellar Intelligence
   {
-    id: 'B3.1', section: 'B', tags: [],
+    id: 'B3.1', section: 'B', tags: ['regression'],
     prompt: 'What wines should I drink soon before they go past peak?',
     mode: 'cellar',
     structuralValidators: [
@@ -145,7 +145,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Queries for wines approaching end of drink window. Provides urgency ranking. Should identify wines with drinkUntil dates in the near future. Accurate to fixture data.',
   },
   {
-    id: 'B3.2', section: 'B', tags: [],
+    id: 'B3.2', section: 'B', tags: ['regression'],
     prompt: "What's the best value wine in my cellar?",
     mode: 'cellar',
     structuralValidators: [
@@ -156,7 +156,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Considers price vs rating/quality ratio. Explains reasoning. Uses actual data from cellar. Should identify wines with good rating-to-price ratio.',
   },
   {
-    id: 'B3.3', section: 'B', tags: [],
+    id: 'B3.3', section: 'B', tags: ['regression'],
     prompt: "I notice I don't have much white wine, what should I buy?",
     mode: 'cellar',
     structuralValidators: [
@@ -166,7 +166,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'References actual cellar breakdown. Makes purchase suggestions that complement collection. Shows awareness of what\'s already in the cellar.',
   },
   {
-    id: 'B3.4', section: 'B', tags: [],
+    id: 'B3.4', section: 'B', tags: ['regression'],
     prompt: 'What regions am I missing in my collection?',
     mode: 'cellar',
     structuralValidators: [
@@ -176,7 +176,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Analyzes cellar composition. Identifies gaps (e.g., no German wines, limited South American, no Austrian). Suggests regions to explore. Based on actual data.',
   },
   {
-    id: 'B3.5', section: 'B', tags: [],
+    id: 'B3.5', section: 'B', tags: ['regression'],
     prompt: 'Compare my two best Shiraz bottles',
     mode: 'cellar',
     structuralValidators: [
@@ -210,7 +210,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory for Château Latour (not in fixture). Correctly reports wine not found. May offer general knowledge about Latour. Does NOT pretend it\'s in cellar.',
   },
   {
-    id: 'B4.3', section: 'B', tags: [],
+    id: 'B4.3', section: 'B', tags: ['regression'],
     prompt: 'How much did I pay for the Dom Pérignon?',
     mode: 'cellar',
     structuralValidators: [
@@ -221,7 +221,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Returns actual price from inventory ($320). Correct currency. Accurate to fixture data.',
   },
   {
-    id: 'B4.5', section: 'B', tags: [],
+    id: 'B4.5', section: 'B', tags: ['regression'],
     prompt: "What's my oldest bottle?",
     mode: 'cellar',
     structuralValidators: [
@@ -234,7 +234,7 @@ export const sectionB: EvalTestCase[] = [
 
   // B5. Wine Cards & Formatting
   {
-    id: 'B5.1', section: 'B', tags: [],
+    id: 'B5.1', section: 'B', tags: ['regression'],
     prompt: 'Recommend 3 wines for dinner',
     mode: 'cellar',
     structuralValidators: [
@@ -245,7 +245,7 @@ export const sectionB: EvalTestCase[] = [
     judgeCriteria: 'Response includes ```wine fenced block with valid JSON array. Each wine has producer, name, vintage at minimum. Uses actual cellar wines.',
   },
   {
-    id: 'B5.3', section: 'B', tags: [],
+    id: 'B5.3', section: 'B', tags: ['regression'],
     prompt: "What's in my cellar?",
     mode: 'cellar',
     structuralValidators: [

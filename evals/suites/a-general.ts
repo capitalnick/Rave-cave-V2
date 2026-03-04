@@ -25,7 +25,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Accurate varietal comparison. Mentions body, tannins, fruit profile differences. French flourishes present. Informative but not overly academic.',
   },
   {
-    id: 'A1.2', section: 'A', tags: [],
+    id: 'A1.2', section: 'A', tags: ['regression'],
     prompt: 'How should I store wine at home?',
     mode: 'general',
     structuralValidators: [
@@ -38,7 +38,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Mentions temperature (12-14°C ideally), humidity, light avoidance, vibration, horizontal storage. Practical tone. Not overly technical.',
   },
   {
-    id: 'A1.3', section: 'A', tags: [],
+    id: 'A1.3', section: 'A', tags: ['regression'],
     prompt: "What does 'terroir' mean?",
     mode: 'general',
     structuralValidators: [
@@ -50,7 +50,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Clear, accessible explanation. References soil, climate, geography. Not overly academic. Shows personality.',
   },
   {
-    id: 'A1.4', section: 'A', tags: [],
+    id: 'A1.4', section: 'A', tags: ['regression'],
     prompt: 'Is screw cap wine bad?',
     mode: 'general',
     structuralValidators: [
@@ -62,7 +62,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Balanced answer. Explains no correlation with quality. Mentions convenience + tradition debate. Not dismissive of either closure.',
   },
   {
-    id: 'A1.5', section: 'A', tags: [],
+    id: 'A1.5', section: 'A', tags: ['regression'],
     prompt: "What's a natural wine?",
     mode: 'general',
     structuralValidators: [
@@ -88,7 +88,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Suggests Champagne/sparkling, dry Riesling, light Pinot Noir, or similar. Explains why (acidity, weight, delicacy). Not just one answer.',
   },
   {
-    id: 'A2.2', section: 'A', tags: [],
+    id: 'A2.2', section: 'A', tags: ['regression'],
     prompt: 'Best wine for a cheese board?',
     mode: 'general',
     structuralValidators: [
@@ -100,7 +100,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Varies by cheese type. Mentions hard cheeses (Cab/Merlot), soft (Chardonnay), blue (Port/Sauternes). Not just one answer. Shows knowledge of pairings.',
   },
   {
-    id: 'A2.3', section: 'A', tags: [],
+    id: 'A2.3', section: 'A', tags: ['regression'],
     prompt: "I'm making lamb shanks tonight, what should I pair?",
     mode: 'general',
     structuralValidators: [
@@ -112,7 +112,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Bold red suggestions (Shiraz, Grenache, Nebbiolo, Rhône blends). Mentions braising liquid synergy or rich flavour matching. Specific and confident.',
   },
   {
-    id: 'A2.4', section: 'A', tags: [],
+    id: 'A2.4', section: 'A', tags: ['regression'],
     prompt: 'What wine pairs with chocolate dessert?',
     mode: 'general',
     structuralValidators: [
@@ -126,7 +126,7 @@ export const sectionA: EvalTestCase[] = [
 
   // A3. Buying Advice (General)
   {
-    id: 'A3.1', section: 'A', tags: [],
+    id: 'A3.1', section: 'A', tags: ['regression'],
     prompt: "What's a good wine under $20 for a weeknight dinner?",
     mode: 'general',
     structuralValidators: [
@@ -138,7 +138,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Specific producer/region suggestions at realistic $20 price point. Not vague ("any red"). Names actual wines or regions known for value.',
   },
   {
-    id: 'A3.2', section: 'A', tags: [],
+    id: 'A3.2', section: 'A', tags: ['regression'],
     prompt: 'Best Champagne for under $100?',
     mode: 'general',
     structuralValidators: [
@@ -150,7 +150,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Names actual Champagne producers. Distinguishes NV vs vintage where relevant. Realistic at under $100.',
   },
   {
-    id: 'A3.3', section: 'A', tags: [],
+    id: 'A3.3', section: 'A', tags: ['regression'],
     prompt: 'Is Penfolds Grange worth the price?',
     mode: 'general',
     structuralValidators: [
@@ -162,7 +162,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Honest assessment. Mentions history, quality, iconic status. Also mentions alternatives at lower price. Not just "yes" or "no".',
   },
   {
-    id: 'A3.4', section: 'A', tags: [],
+    id: 'A3.4', section: 'A', tags: ['regression'],
     prompt: "What's the best wine region in the world?",
     mode: 'general',
     structuralValidators: [
@@ -189,7 +189,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Answers from expertise about Pinot Noir (regions, styles). At end, offers ONCE: "Want me to check your Rave Cave?" or similar bridge. Bridge is natural, not forced.',
   },
   {
-    id: 'A4.2', section: 'A', tags: [],
+    id: 'A4.2', section: 'A', tags: ['regression'],
     prompt: 'Tell me about Burgundy',
     mode: 'general',
     priorTurns: [
@@ -207,7 +207,7 @@ export const sectionA: EvalTestCase[] = [
 
   // A5. Out-of-Scope Handling
   {
-    id: 'A5.1', section: 'A', tags: [],
+    id: 'A5.1', section: 'A', tags: ['regression'],
     prompt: "What's the weather like today?",
     mode: 'general',
     structuralValidators: [
@@ -218,7 +218,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Politely redirects to wine topics. Stays in character as Rémy. Not rude or dismissive. May make a wine-weather joke.',
   },
   {
-    id: 'A5.2', section: 'A', tags: [],
+    id: 'A5.2', section: 'A', tags: ['regression'],
     prompt: 'Can you write me a poem?',
     mode: 'general',
     structuralValidators: [
@@ -228,7 +228,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Redirects to wine, OR writes a wine-themed poem. Either is acceptable. Stays in character.',
   },
   {
-    id: 'A5.3', section: 'A', tags: [],
+    id: 'A5.3', section: 'A', tags: ['regression'],
     prompt: 'How do I make beer?',
     mode: 'general',
     structuralValidators: [
@@ -239,7 +239,7 @@ export const sectionA: EvalTestCase[] = [
     judgeCriteria: 'Politely notes expertise is wine. May briefly mention beer-wine similarities. Redirects to wine topics.',
   },
   {
-    id: 'A5.4', section: 'A', tags: [],
+    id: 'A5.4', section: 'A', tags: ['regression'],
     prompt: 'Is wine good for my health?',
     mode: 'general',
     structuralValidators: [

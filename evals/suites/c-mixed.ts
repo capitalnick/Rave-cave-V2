@@ -24,7 +24,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'References actual cellar wine (Penfolds Bin 389). Calls queryInventory to verify it. CRITICAL: Must suggest wines to BUY that are NOT already in the user\'s cellar — e.g., other Cabernet-Shiraz blends from Australian producers, or similar wines from other regions. May also mention cellar wines for comparison, but the primary response should include purchase recommendations for new wines. Blends personal knowledge with inventory data.',
   },
   {
-    id: 'C1.2', section: 'C', tags: [],
+    id: 'C1.2', section: 'C', tags: ['regression'],
     prompt: 'How does my Grosset Polish Hill Riesling compare to a typical Clare Valley Riesling?',
     mode: 'cellar',
     structuralValidators: [
@@ -35,7 +35,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory for the Grosset. Provides general knowledge comparison of Clare Valley Riesling style. Uses actual tasting notes from cellar. Informative and specific.',
   },
   {
-    id: 'C1.3', section: 'C', tags: [],
+    id: 'C1.3', section: 'C', tags: ['regression'],
     prompt: "I'm going to Burgundy next month, what should I buy that I don't already have?",
     mode: 'cellar',
     structuralValidators: [
@@ -46,7 +46,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'Checks current Burgundy holdings (DRC Échezeaux, Leflaive). Suggests wines that fill gaps. Shows awareness of what\'s already owned. Practical buying advice for a Burgundy trip.',
   },
   {
-    id: 'C1.4', section: 'C', tags: [],
+    id: 'C1.4', section: 'C', tags: ['regression'],
     prompt: 'Teach me about Barolo and show me if I have any',
     mode: 'cellar',
     structuralValidators: [
@@ -59,7 +59,7 @@ export const sectionC: EvalTestCase[] = [
 
   // C2. Occasion-Based (Cellar + Knowledge)
   {
-    id: 'C2.1', section: 'C', tags: [],
+    id: 'C2.1', section: 'C', tags: ['regression'],
     prompt: "I'm hosting a dinner for 6, suggest wines from my cellar and wines I should buy",
     mode: 'cellar',
     structuralValidators: [
@@ -71,7 +71,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory for cellar options. Adds external suggestions. Clearly labels which are cellar vs buy. Considers quantities available. Balanced selection.',
   },
   {
-    id: 'C2.2', section: 'C', tags: [],
+    id: 'C2.2', section: 'C', tags: ['regression'],
     prompt: 'My friend only drinks natural wine, what do I have that\'s close?',
     mode: 'cellar',
     structuralValidators: [
@@ -82,7 +82,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'Calls queryInventory (semanticQuery about natural/minimal intervention). May note cellar wines that aren\'t technically natural but are close in style. Honest about limitations.',
   },
   {
-    id: 'C2.3', section: 'C', tags: [],
+    id: 'C2.3', section: 'C', tags: ['regression'],
     prompt: 'Birthday gift for a wine snob, should I pick from my cellar or buy something special?',
     mode: 'cellar',
     structuralValidators: [
@@ -95,7 +95,7 @@ export const sectionC: EvalTestCase[] = [
 
   // C3. Learning & Context
   {
-    id: 'C3.1', section: 'C', tags: [],
+    id: 'C3.1', section: 'C', tags: ['regression'],
     prompt: 'Why is the Château Margaux 2015 rated so highly?',
     mode: 'cellar',
     structuralValidators: [
@@ -106,7 +106,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'Looks up the wine\'s rating and data (98/100). Explains quality factors (2015 vintage excellence, producer reputation, Margaux terroir). Uses actual data from cellar.',
   },
   {
-    id: 'C3.2', section: 'C', tags: [],
+    id: 'C3.2', section: 'C', tags: ['regression'],
     prompt: 'When should I open the Ridge Monte Bello?',
     mode: 'cellar',
     structuralValidators: [
@@ -117,7 +117,7 @@ export const sectionC: EvalTestCase[] = [
     judgeCriteria: 'Checks drink window (2025-2048). Gives specific year recommendation. Explains why waiting is worth it or if it\'s ready now. Uses actual data.',
   },
   {
-    id: 'C3.3', section: 'C', tags: [],
+    id: 'C3.3', section: 'C', tags: ['regression'],
     prompt: 'I want to learn about Italian wines, what do I already have to start tasting?',
     mode: 'cellar',
     structuralValidators: [
