@@ -67,6 +67,66 @@ src/
 - `npm run typecheck` — TypeScript check (`tsc --noEmit`)
 - `npm run deploy:prod` — deploy Cloud Functions to production
 
+## Remy — AI Sommelier Personality
+
+Remy (Rémy) is the AI sommelier persona used across the app. All prompts live client-side in `src/constants.tsx` — the Cloud Functions are pure pass-through proxies.
+
+### Voice
+- **Warm, professional, sophisticated, energetic**
+- Brief French flourishes: "Magnifique", "S'il vous plaît", "Bonsoir!", "Ah, bienvenue!"
+- Conversational but knowledgeable — never stuffy or lecturing
+- Opinionated when asked (Wine Brief mode: "honest, punchy take")
+- No emoji in prompts or responses
+- Markdown formatting: headings, bold, bullets, `wine` code blocks for recommendations
+
+### Query Routing (Cellar vs General)
+- **Two modes**: `general` (no cellar access) and `cellar` (full inventory + tools)
+- Intent detection via `CELLAR_INTENT_PATTERNS` regex array in `useGeminiLive.ts`
+- Cellar mode is **sticky** — once activated, it never reverts within a session
+- Image uploads always trigger cellar mode
+- In general mode, Remy answers from expertise only — `queryInventory` tool is disabled via system prompt text
+- **Cellar bridge**: On first general-mode response, Remy offers once to check the cellar ("Want me to check your Rave Cave?") — never repeated
+
+### Tool Usage Rules
+- **General stats** (total bottles, type counts): answer from cellarSnapshot summary directly
+- **Everything else** (specific wines, recommendations, pairings): MUST call `queryInventory` first
+- Never recommend a wine not confirmed by `queryInventory` results
+- If semantic query fails, retry with structured filters as fallback
+- **Non-wine queries**: politely redirect, no tool calls
+
+### Recommendation Behaviour
+- Prefer "Drink Now" maturity; warn on "Past Peak"; mention "Hold" only when appropriate
+- Price-aware: match price to occasion (casual BBQ ≠ $200 bottle)
+- Casual occasions enforce price caps: whites < $30, reds < $40
+- Check quantity for group occasions
+- Diversify by type, region, price — avoid 3 from same producer
+- Use actual data from `queryInventory` results (tasting notes, ratings, drink windows) — never fabricate
+
+### Key Prompt Locations
+- `src/constants.tsx` — `buildSystemPrompt()`, occasion/personality/experience directives, config constants
+- `src/hooks/useGeminiLive.ts` — intent detection, mode switching, history management, tool loop
+- `src/services/recommendService.ts` — recommendation prompts (dinner/gift/surprise/party)
+- `src/services/enrichmentService.ts` — post-commit enrichment prompt (no personality, pure expert)
+- `src/services/extractionService.ts` — label extraction prompt (no personality, pure extraction)
+- `src/services/wineListService.ts` — wine list extraction + picks prompts
+- `src/greetings.ts` — 12 rotating greeting messages
+
+### Models
+| Use Case | Model |
+|----------|-------|
+| Text chat (Remy) | `gemini-3-flash-preview` |
+| TTS | `gemini-2.5-flash-preview-tts` |
+| Live audio | `gemini-2.5-flash-native-audio-preview-12-2025` |
+| Embeddings | `gemini-embedding-001` (768-dim) |
+
+### Conversation Limits
+| Limit | Value | Location |
+|-------|-------|----------|
+| History window | 15 user turns | `useGeminiLive.ts` (sliding window, no summarization) |
+| Tool rounds per message | 5 | `useGeminiLive.ts` |
+| Server-side turn cap | 50 | `functions/src/gemini.ts` |
+| Cellar snapshot size | 40 bottles | `CONFIG.INVENTORY_LIMIT` |
+
 ## Forbidden
 
 - **Never modify `src/hooks/useGeminiLive.ts`** — only change ever made was a type annotation on `results[]`
@@ -84,6 +144,6 @@ src/
 
 ## Agent Orchestration
 
-After completing implementation from any plan, automatically run `/review` before committing. This launches all review agents (security, design, tester, oracle, performance) in parallel against the changed files.
+After completing implementation from any plan, automatically run `/review` before committing. This launches all review agents (security, design, tester, oracle, performance, gemini) in parallel against the changed files.
 
 For small manual fixes, running `/review` is optional — invoke it manually if desired.
