@@ -140,7 +140,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
         return (
           <div key={code} className="flex items-center gap-2">
             <MonoLabel className="w-12 shrink-0 text-[var(--rc-text-primary)]">{code}</MonoLabel>
-            <Body className="shrink-0 text-[var(--rc-text-secondary)]">1 {getCurrencySymbol(code).trim()} =</Body>
+            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{getCurrencySymbol(code).trim()}1 =</Body>
             <Input
               type="number"
               inputMode="decimal"
@@ -151,7 +151,7 @@ const ConversionRatesEditor: React.FC<Props> = ({ usedCurrencies }) => {
               className="w-24 text-right"
               placeholder="0.00"
             />
-            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{profile.currency}</Body>
+            <Body className="shrink-0 text-[var(--rc-text-secondary)]">{getCurrencySymbol(profile.currency).trim()}</Body>
             <Caption className="ml-auto text-[var(--rc-text-tertiary)] whitespace-nowrap">
               1 {profile.currency} = {inverse} {code}
             </Caption>

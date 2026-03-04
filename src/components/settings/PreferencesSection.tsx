@@ -77,13 +77,65 @@ const PreferencesSection: React.FC = () => {
     <>
       <Heading scale="subhead" className="mb-2">Preferences</Heading>
       <Card elevation="flat">
+        {/* 1. Set local currency */}
         <Row
           title="Currency"
           trailingAction="value"
           trailingValue={profile.currency}
           onClick={() => setCurrencyOpen(prev => !prev)}
+        />
+        <AnimatePresence initial={false}>
+          {currencyOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <Divider />
+              <div className="px-[var(--rc-row-padding-h)] pb-3">
+                {(['AUD', 'USD', 'EUR', 'GBP'] as Currency[]).map(c => (
+                  <div
+                    key={c}
+                    className="flex items-center py-2 cursor-pointer"
+                    onClick={() => handleCurrencySelect(c)}
+                  >
+                    <Radio
+                      variant={profile.currency === c ? 'Selected' : 'Unselected'}
+                      label={CURRENCY_LABELS[c]}
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <Divider />
+        {/* 2. Conversion rates */}
+        <Row
+          title="Conversion Rates"
+          subtitle="Manual rates for multi-currency cellar value"
+          trailingAction="value"
+          trailingValue={ratesOpen ? 'Hide' : 'Edit'}
+          onClick={() => setRatesOpen(prev => !prev)}
           divider={notifStatus !== 'unsupported'}
         />
+        <AnimatePresence initial={false}>
+          {ratesOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <Divider />
+              <ConversionRatesEditor usedCurrencies={usedCurrencies} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* 3. Drinking window alerts */}
         {notifStatus !== 'unsupported' && (
           <>
             <Row
@@ -120,56 +172,6 @@ const PreferencesSection: React.FC = () => {
             )}
           </>
         )}
-        <AnimatePresence initial={false}>
-          {currencyOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <Divider />
-              <div className="px-[var(--rc-row-padding-h)] pb-3">
-                {(['AUD', 'USD', 'EUR', 'GBP'] as Currency[]).map(c => (
-                  <div
-                    key={c}
-                    className="flex items-center py-2 cursor-pointer"
-                    onClick={() => handleCurrencySelect(c)}
-                  >
-                    <Radio
-                      variant={profile.currency === c ? 'Selected' : 'Unselected'}
-                      label={CURRENCY_LABELS[c]}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <Divider />
-        <Row
-          title="Conversion Rates"
-          subtitle="Manual rates for multi-currency cellar value"
-          trailingAction="value"
-          trailingValue={ratesOpen ? 'Hide' : 'Edit'}
-          onClick={() => setRatesOpen(prev => !prev)}
-          divider={false}
-        />
-        <AnimatePresence initial={false}>
-          {ratesOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <Divider />
-              <ConversionRatesEditor usedCurrencies={usedCurrencies} />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </Card>
     </>
   );
