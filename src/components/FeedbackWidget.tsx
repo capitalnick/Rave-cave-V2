@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect, memo, type ChangeEvent } from 'react';
-import { createPortal } from 'react-dom';
 import { useRouterState } from '@tanstack/react-router';
 import { HelpCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -13,7 +12,6 @@ import { submitFeedback } from '@/services/feedbackService';
 import { cn } from '@/lib/utils';
 
 const APP_VERSION = '1.0.0';
-
 type Category = 'bug' | 'suggestion' | null;
 
 const FeedbackWidget = memo(function FeedbackWidget() {
@@ -28,13 +26,29 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  // Draft ref persists text across open/close
   const draftRef = useRef('');
   const [message, setMessage] = useState('');
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const fabRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => () => { clearTimeout(dismissTimerRef.current); }, []);
+
+  // Native DOM listener on the FAB — bypasses React synthetic events entirely
+  useEffect(() => {
+    const el = fabRef.current;
+    if (!el || !isMobile) return;
+    const handler = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeout(dismissTimerRef.current);
+      setMessage(draftRef.current);
+      setError(null);
+      setShowSuccess(false);
+      setIsOpen(true);
+    };
+    el.addEventListener('pointerdown', handler, { passive: false });
+    return () => el.removeEventListener('pointerdown', handler);
+  }, [isMobile]);
 
   const handleOpen = useCallback(() => {
     clearTimeout(dismissTimerRef.current);
@@ -44,16 +58,11 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     setIsOpen(true);
   }, []);
 
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
+  const handleClose = useCallback(() => { setIsOpen(false); }, []);
 
   const handleMessageChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
-    if (val.length <= 500) {
-      setMessage(val);
-      draftRef.current = val;
-    }
+    if (val.length <= 500) { setMessage(val); draftRef.current = val; }
   }, []);
 
   const handleCategoryToggle = useCallback((cat: Category) => {
@@ -63,27 +72,17 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   const handleSubmit = useCallback(async () => {
     const trimmed = message.trim();
     if (!trimmed || isSubmitting) return;
-
     setIsSubmitting(true);
     setError(null);
-
     try {
       await submitFeedback({
-        message: trimmed,
-        category,
-        route,
-        userAgent: navigator.userAgent,
-        appVersion: APP_VERSION,
-        isPremium,
+        message: trimmed, category, route,
+        userAgent: navigator.userAgent, appVersion: APP_VERSION, isPremium,
       });
-
-      // Reset form
       draftRef.current = '';
       setMessage('');
       setCategory(null);
       setShowSuccess(true);
-
-      // Auto-dismiss after 1.2s
       dismissTimerRef.current = setTimeout(() => {
         setShowSuccess(false);
         setIsOpen(false);
@@ -95,11 +94,9 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     }
   }, [message, isSubmitting, category, route, isPremium]);
 
-  // Hide when scan is open, not authenticated, or on Remy page (overlaps chat input)
   if (scanOpen || !user || route === '/remy') return null;
 
-  const trimmedMessage = message.trim();
-  const canSubmit = trimmedMessage.length > 0 && !isSubmitting;
+  const canSubmit = message.trim().length > 0 && !isSubmitting;
 
   const formContent = showSuccess ? (
     <div role="status" className="flex flex-col items-center justify-center gap-3 py-8">
@@ -113,13 +110,10 @@ const FeedbackWidget = memo(function FeedbackWidget() {
       <p className="text-[var(--rc-ink-primary)] font-[family-name:var(--rc-font-display)] font-semibold text-lg">
         Send feedback
       </p>
-
-      {/* Category chips */}
       <div className="flex gap-2">
         {(['bug', 'suggestion'] as const).map((cat) => (
           <button
-            key={cat}
-            type="button"
+            key={cat} type="button"
             onClick={() => handleCategoryToggle(cat)}
             aria-pressed={category === cat}
             className={cn(
@@ -134,23 +128,16 @@ const FeedbackWidget = memo(function FeedbackWidget() {
           </button>
         ))}
       </div>
-
-      {/* Message textarea */}
       <div className="relative">
         <textarea
-          value={message}
-          onChange={handleMessageChange}
-          placeholder="What's on your mind?"
-          aria-label="Feedback message"
-          rows={4}
-          maxLength={500}
+          value={message} onChange={handleMessageChange}
+          placeholder="What's on your mind?" aria-label="Feedback message"
+          rows={4} maxLength={500}
           className={cn(
             'w-full resize-none rounded-[var(--rc-radius-md)] border border-[var(--rc-border-subtle)]',
             'bg-[var(--rc-surface-secondary)] text-[var(--rc-ink-primary)]',
-            'placeholder:text-[var(--rc-ink-ghost)]',
-            'font-[family-name:var(--rc-font-body)] text-sm',
-            'p-3 outline-none',
-            'focus:border-[var(--rc-accent-pink)] focus:ring-1 focus:ring-[var(--rc-accent-pink)]',
+            'placeholder:text-[var(--rc-ink-ghost)] font-[family-name:var(--rc-font-body)] text-sm',
+            'p-3 outline-none focus:border-[var(--rc-accent-pink)] focus:ring-1 focus:ring-[var(--rc-accent-pink)]',
             'transition-colors'
           )}
         />
@@ -158,92 +145,72 @@ const FeedbackWidget = memo(function FeedbackWidget() {
           {message.length}/500
         </span>
       </div>
-
-      {/* Error message */}
       {error && (
         <p role="alert" className="text-sm text-[var(--rc-accent-coral)] font-[family-name:var(--rc-font-body)]">
           {error}
         </p>
       )}
-
-      {/* Submit button */}
       <RCButton
         variantType="Primary"
         label={isSubmitting ? 'Sending...' : 'Send'}
-        disabled={!canSubmit}
-        onClick={handleSubmit}
+        disabled={!canSubmit} onClick={handleSubmit}
       />
     </div>
   );
 
-  const fab = (
-    <button
-      type="button"
-      onClick={isMobile ? handleOpen : undefined}
-      className={cn(
-        'fixed z-[51] flex items-center justify-center',
-        'w-11 h-11 rounded-full',
-        'bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)]',
-        'shadow-[var(--rc-shadow-elevated)]',
-        'text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)]',
-        'transition-colors cursor-pointer',
-        // Mobile: above tab bar (56px + safe area + 20px gap)
-        'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+20px)]',
-        // Desktop: fixed bottom-right
-        'lg:right-6 lg:bottom-6'
-      )}
-      aria-label="Send feedback"
-    >
-      <HelpCircle size={20} />
-    </button>
+  const fabClasses = cn(
+    'fixed z-[9999] flex items-center justify-center',
+    'w-11 h-11 rounded-full pointer-events-auto',
+    'bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)]',
+    'shadow-[var(--rc-shadow-elevated)]',
+    'text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)]',
+    'transition-colors cursor-pointer select-none',
+    'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+20px)]',
+    'lg:right-6 lg:bottom-6',
   );
 
   if (isMobile) {
-    return createPortal(
+    return (
       <>
-        {fab}
+        <button ref={fabRef} type="button" className={fabClasses} aria-label="Send feedback"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
+          <HelpCircle size={20} />
+        </button>
         {isOpen && (
           <BottomSheet
             open={isOpen}
             onOpenChange={(open) => { if (!open) handleClose(); }}
-            snapPoint="half"
-            id="feedback"
-            title="Send feedback"
+            snapPoint="half" id="feedback" title="Send feedback"
             dismissible={!isSubmitting}
           >
             {formContent}
           </BottomSheet>
         )}
-      </>,
-      document.body,
+      </>
     );
   }
 
-  // Desktop: Popover (portaled so FAB is at root DOM level)
-  return createPortal(
+  return (
     <Popover open={isOpen} onOpenChange={(open) => {
-      if (open) handleOpen();
-      else if (!isSubmitting) handleClose();
+      if (open) handleOpen(); else if (!isSubmitting) handleClose();
     }}>
       <PopoverTrigger asChild>
-        {fab}
+        <button ref={fabRef} type="button" className={fabClasses} aria-label="Send feedback">
+          <HelpCircle size={20} />
+        </button>
       </PopoverTrigger>
       <PopoverContent
-        side="top"
-        align="end"
-        sideOffset={8}
+        side="top" align="end" sideOffset={8}
         onInteractOutside={(e) => { if (isSubmitting) e.preventDefault(); }}
         onEscapeKeyDown={(e) => { if (isSubmitting) e.preventDefault(); }}
         className={cn(
-          'w-80 p-4',
-          'bg-[var(--rc-surface-primary)] border border-[var(--rc-border-subtle)]',
+          'w-80 p-4 bg-[var(--rc-surface-primary)] border border-[var(--rc-border-subtle)]',
           'rounded-[var(--rc-radius-lg)] shadow-[var(--rc-shadow-elevated)]'
         )}
       >
         {formContent}
       </PopoverContent>
-    </Popover>,
-    document.body,
+    </Popover>
   );
 });
 

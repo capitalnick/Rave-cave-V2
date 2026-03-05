@@ -181,6 +181,7 @@ function AppShell() {
         subscriptionStatus={profile.subscriptionStatus}
       >
         <Outlet />
+        <FeedbackWidget />
       </Layout>
 
       <ScanOverlay
@@ -214,8 +215,6 @@ function AppShell() {
       )}
 
       <RCToaster />
-
-      <FeedbackWidget />
 
       {pinnedRemyVisible && (
         <PinnedRemyPanel open={remyPanelOpen} onClose={closeRemyPanel} />
