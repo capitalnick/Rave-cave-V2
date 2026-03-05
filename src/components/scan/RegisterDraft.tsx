@@ -131,12 +131,12 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
   const priceValid = fields.price !== undefined && fields.price > 0;
 
   return (
-    <div className="flex flex-col lg:flex-row h-full max-h-[100dvh] lg:max-h-[92vh] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full max-h-[100dvh] lg:max-h-[92dvh] overflow-hidden">
       {/* Hero image (left on desktop, top on mobile) */}
       {image && (
         <div
           className={`lg:w-1/2 lg:h-auto bg-[var(--rc-surface-secondary)] flex items-center justify-center flex-shrink-0 transition-[height] duration-200 ease-out overflow-hidden ${
-            heroCollapsed ? 'h-12' : 'h-[30vh]'
+            heroCollapsed ? 'h-12' : 'h-[30dvh]'
           }`}
         >
           <img
@@ -150,7 +150,7 @@ const RegisterDraft: React.FC<RegisterDraftProps> = ({
       {/* Form — flex-col so footer stays pinned at bottom */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         {/* Scrollable form area */}
-        <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto min-h-0 pb-20 lg:pb-4">
+        <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto overscroll-contain min-h-0 pb-20 lg:pb-4">
           {/* Header */}
           <div className="px-4 pt-5 pb-3 flex items-center justify-between">
             {isManual ? (

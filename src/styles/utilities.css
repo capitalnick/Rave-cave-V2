@@ -3,10 +3,16 @@
  * Migrated from index.html inline <style> block in Phase 4.
  */
 
+/* iOS: prevent 300ms tap delay + double-tap zoom */
+html {
+  touch-action: manipulation;
+}
+
 /* Body base */
 body {
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* Global scrollbar */

@@ -46,7 +46,7 @@ const ModeSelector: React.FC<ModeSelectorProps> = ({ onCameraCapture, onGalleryC
   }, [onGalleryCapture]);
 
   return (
-    <div className="flex flex-col items-center px-6 pt-10 pb-16 space-y-8">
+    <div className="flex flex-col items-center px-6 pt-10 pb-[max(4rem,env(safe-area-inset-bottom))] space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <Heading scale="title">Add Wine</Heading>

@@ -102,7 +102,7 @@ const CellarPage: React.FC = () => {
   const openFilters = () => setMobileFiltersOpen(true);
 
   return (
-    <div data-scroll-container className="relative h-full overflow-y-auto">
+    <div data-scroll-container className="relative h-full overflow-y-auto overscroll-contain">
       <CondensedHeader
         isPastHero={isPastHero}
         totalBottles={totalBottlesFiltered}

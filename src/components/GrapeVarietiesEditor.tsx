@@ -79,7 +79,7 @@ export function GrapeVarietiesEditor({
                 rounded-[var(--rc-radius-sm)]
                 px-2 py-1.5
                 text-[var(--rc-ink-primary)]
-                text-sm text-right
+                text-base text-right
                 focus:outline-none focus:border-[var(--rc-accent-pink)]
                 [appearance:textfield]
                 [&::-webkit-outer-spin-button]:appearance-none

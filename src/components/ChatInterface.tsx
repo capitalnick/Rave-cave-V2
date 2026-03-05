@@ -319,7 +319,7 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[var(--rc-surface-primary)] custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain bg-[var(--rc-surface-primary)] custom-scrollbar">
         <div className="max-w-[720px] mx-auto px-6 py-8">
           {/* Greeting — synthetic first message, not part of Gemini transcript */}
           {visibleTranscript.length === 0 && !isProcessing && (
@@ -397,7 +397,7 @@ Respond with a full Wine Brief (6 sections as described in your system prompt). 
                   }}
                   placeholder="Message Rémy..."
                   rows={1}
-                  className="w-full bg-[var(--rc-ink-primary)] border border-[var(--rc-border-emphasis)] px-4 py-3 pr-12 font-[var(--rc-font-mono)] text-sm text-[var(--rc-ink-on-accent)] placeholder:text-[var(--rc-ink-ghost)] focus:border-[var(--rc-accent-pink)] outline-none rounded-[var(--rc-radius-md)] resize-none overflow-y-auto"
+                  className="w-full bg-[var(--rc-ink-primary)] border border-[var(--rc-border-emphasis)] px-4 py-3 pr-12 font-[var(--rc-font-mono)] text-base text-[var(--rc-ink-on-accent)] placeholder:text-[var(--rc-ink-ghost)] focus:border-[var(--rc-accent-pink)] outline-none rounded-[var(--rc-radius-md)] resize-none overflow-y-auto"
                 />
                 <button
                   onClick={() => startRecording()}

@@ -49,7 +49,7 @@ const WineListCapture: React.FC<WineListCaptureProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto overscroll-contain">
       {/* Header */}
       <div className="flex items-center gap-3 px-6 pt-6 pb-4">
         <button
@@ -175,7 +175,7 @@ const WineListCapture: React.FC<WineListCaptureProps> = ({
           />
           <button
             onClick={() => setPreviewIndex(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center"
+            className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center"
             aria-label="Close preview"
           >
             <X size={20} />

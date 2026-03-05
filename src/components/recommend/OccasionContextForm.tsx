@@ -42,7 +42,7 @@ const OccasionContextForm: React.FC<OccasionContextFormProps> = ({ occasionId, o
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto overscroll-contain">
       {/* Header */}
       <div className="flex items-center gap-3 px-6 pt-6 pb-4">
         <button

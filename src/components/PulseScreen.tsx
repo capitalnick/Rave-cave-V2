@@ -107,6 +107,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
     if (touchStartY.current === 0) return;
     const delta = e.touches[0].clientY - touchStartY.current;
     if (delta > 0 && scrollRef.current && scrollRef.current.scrollTop <= 0) {
+      e.preventDefault(); // Prevent native iOS pull-to-refresh / rubber-band
       setPullDistance(Math.min(delta * 0.5, 80));
     }
   }, []);
@@ -163,7 +164,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   if (pulseView === 'story') {
     const story = stats.storyCards.find(c => c.id === selectedStoryId || c.cta?.payload === selectedStoryId);
     return (
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto overscroll-contain">
         <div className="p-4 sm:p-10 space-y-6 pb-24 sm:pb-20">
           <div className="flex items-center gap-3">
             <IconButton icon={ArrowLeft} aria-label="Back to Pulse" onClick={handleBack} />
@@ -218,7 +219,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
   // Full drinking window list sub-view
   if (pulseView === 'drinking-window') {
     return (
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto overscroll-contain">
         <div className="p-4 sm:p-10 space-y-6 pb-24 sm:pb-20">
           <div className="flex items-center gap-3">
             <IconButton icon={ArrowLeft} aria-label="Back to Pulse" onClick={handleBack} />
@@ -259,7 +260,7 @@ const PulseScreen: React.FC<PulseScreenProps> = ({
     <div
       data-scroll-container
       ref={scrollRef}
-      className="h-full overflow-y-auto"
+      className="h-full overflow-y-auto overscroll-contain"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

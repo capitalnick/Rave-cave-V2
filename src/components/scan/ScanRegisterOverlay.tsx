@@ -467,7 +467,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
 
           {state.stage === 'success-screen' && (
             <motion.div key="success-screen" {...stageMotion}>
-              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[50vh] px-6 py-10 space-y-6">
+              <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[50vh] px-6 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] space-y-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--rc-accent-acid)] flex items-center justify-center">
                   <span className="text-[var(--rc-ink-primary)] text-3xl font-bold">✓</span>
                 </div>

@@ -57,7 +57,7 @@ const CaptureReview: React.FC<CaptureReviewProps> = ({ file, previewUrl, onAccep
   const analysing = !result;
 
   return (
-    <div className="flex flex-col items-center min-h-[60vh] sm:min-h-[50vh] px-6 py-8">
+    <div className="flex flex-col items-center min-h-[60vh] sm:min-h-[50vh] px-6 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
       {/* Preview */}
       <div className="flex-1 flex items-center justify-center w-full">
         <img

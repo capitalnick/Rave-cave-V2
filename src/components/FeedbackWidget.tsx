@@ -126,7 +126,7 @@ const FeedbackWidget = memo(function FeedbackWidget() {
           className={cn(
             'w-full resize-none rounded-[var(--rc-radius-md)] border border-[var(--rc-border-subtle)]',
             'bg-[var(--rc-surface-secondary)] text-[var(--rc-ink-primary)]',
-            'placeholder:text-[var(--rc-ink-ghost)] font-[family-name:var(--rc-font-body)] text-sm',
+            'placeholder:text-[var(--rc-ink-ghost)] font-[family-name:var(--rc-font-body)] text-base',
             'p-3 outline-none focus:border-[var(--rc-accent-pink)] focus:ring-1 focus:ring-[var(--rc-accent-pink)]',
             'transition-colors'
           )}

@@ -124,7 +124,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             "border-t border-[var(--rc-border-subtle)]",
             "shadow-[var(--rc-shadow-elevated)]",
             "outline-none",
-            "max-h-[92vh]",
+            "max-h-[92dvh]",
             className,
           )}
           style={{

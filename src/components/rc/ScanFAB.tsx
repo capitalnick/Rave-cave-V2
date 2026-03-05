@@ -66,6 +66,8 @@ export const ScanFAB = React.forwardRef<HTMLButtonElement, ScanFABProps>(({
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
       onPointerCancel={handlePointerLeave}
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ WebkitTouchCallout: 'none' }}
       {...props}
       onClick={handleClick}
     >

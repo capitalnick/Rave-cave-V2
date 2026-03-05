@@ -106,7 +106,7 @@ const RecommendResults: React.FC<RecommendResultsProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto p-6 sm:p-10 gap-6">
+    <div className="flex flex-col h-full overflow-y-auto overscroll-contain p-6 sm:p-10 gap-6">
       {/* Header */}
       <div className="space-y-1">
         <Heading scale="heading">{occasionTitle}</Heading>

@@ -45,7 +45,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ displayName, onComplete
   };
 
   return (
-    <div className="fixed inset-0 z-40 bg-[var(--rc-surface-primary)]">
+    <div className="fixed inset-0 z-40 bg-[var(--rc-surface-primary)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div
