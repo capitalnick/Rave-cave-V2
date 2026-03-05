@@ -4,7 +4,6 @@ import { HelpCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useInventory } from '@/context/InventoryContext';
 import { useProfile } from '@/context/ProfileContext';
-import { useIsSheetMobile } from '@/components/ui/use-mobile';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button as RCButton } from '@/components/rc/RCButton';
 import { submitFeedback } from '@/services/feedbackService';
@@ -17,7 +16,6 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   const { user } = useAuth();
   const { scanOpen } = useInventory();
   const { isPremium } = useProfile();
-  const isMobile = useIsSheetMobile();
   const route = useRouterState({ select: (s) => s.location.pathname });
 
   const [isOpen, setIsOpen] = useState(false);
@@ -139,7 +137,6 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     </div>
   );
 
-  // Single FAB button — never conditionally rendered, identical at all breakpoints
   return (
     <>
       <button
@@ -153,7 +150,7 @@ const FeedbackWidget = memo(function FeedbackWidget() {
           'text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)]',
           'transition-colors cursor-pointer select-none',
           'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+20px)]',
-          'lg:right-6 lg:bottom-6',
+          'md:right-6 md:bottom-6',
         )}
         style={{ touchAction: 'manipulation' }}
         aria-label="Send feedback"
@@ -161,45 +158,15 @@ const FeedbackWidget = memo(function FeedbackWidget() {
         <HelpCircle size={20} />
       </button>
 
-      {isOpen && isMobile && (
+      {isOpen && (
         <BottomSheet
           open={isOpen}
-          onOpenChange={(open) => { if (!open) handleClose(); }}
+          onOpenChange={(open) => { if (!open && !isSubmitting) handleClose(); }}
           snapPoint="half" id="feedback" title="Send feedback"
           dismissible={!isSubmitting}
         >
           {formContent}
         </BottomSheet>
-      )}
-
-      {isOpen && !isMobile && (
-        <div
-          className={cn(
-            'fixed z-[9999] w-80 p-4 right-4 lg:right-6',
-            'bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+76px)]',
-            'lg:bottom-[62px]',
-            'bg-[var(--rc-surface-primary)] border border-[var(--rc-border-subtle)]',
-            'rounded-[var(--rc-radius-lg)] shadow-[var(--rc-shadow-elevated)]',
-            'animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2',
-          )}
-        >
-          {formContent}
-          <button
-            type="button"
-            onClick={handleClose}
-            className="absolute top-2 right-2 p-1 text-[var(--rc-ink-ghost)] hover:text-[var(--rc-ink-primary)]"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-      )}
-
-      {isOpen && !isMobile && (
-        <div
-          className="fixed inset-0 z-[9998]"
-          onClick={isSubmitting ? undefined : handleClose}
-        />
       )}
     </>
   );
