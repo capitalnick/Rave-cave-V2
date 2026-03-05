@@ -49,8 +49,7 @@ interface AuthContextValue {
   loading: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<void>;
-  continueWithEmail: (email: string, password: string) => Promise<'ok' | 'needs-signup'>;
-  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  continueWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -93,28 +92,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const continueWithEmail = useCallback(async (email: string, password: string): Promise<'ok' | 'needs-signup'> => {
+  const continueWithEmail = useCallback(async (email: string, password: string, displayName?: string) => {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      return 'ok';
-    } catch (e) {
-      const code = (e as AuthError).code;
-      if (code === 'auth/user-not-found') return 'needs-signup';
-      const msg = mapAuthError(e as AuthError);
-      if (msg) setError(msg);
-      return 'ok';
-    }
-  }, []);
-
-  const signUpWithEmail = useCallback(async (email: string, password: string, displayName: string) => {
-    setError(null);
-    try {
-      const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(newUser, { displayName });
-    } catch (e) {
-      const msg = mapAuthError(e as AuthError);
-      if (msg) setError(msg);
+    } catch (signInErr) {
+      const code = (signInErr as AuthError).code;
+      if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+        // User may not exist — attempt sign-up
+        try {
+          const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
+          if (displayName) await updateProfile(newUser, { displayName });
+        } catch (signUpErr) {
+          const signUpCode = (signUpErr as AuthError).code;
+          if (signUpCode === 'auth/email-already-in-use') {
+            // Account exists — the original sign-in failed due to wrong password
+            setError('Incorrect password');
+          } else {
+            const msg = mapAuthError(signUpErr as AuthError);
+            if (msg) setError(msg);
+          }
+        }
+      } else {
+        const msg = mapAuthError(signInErr as AuthError);
+        if (msg) setError(msg);
+      }
     }
   }, []);
 
@@ -134,9 +136,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error,
     signInWithGoogle,
     continueWithEmail,
-    signUpWithEmail,
     signOut,
-  }), [user, loading, error, signInWithGoogle, continueWithEmail, signUpWithEmail, signOut]);
+  }), [user, loading, error, signInWithGoogle, continueWithEmail, signOut]);
 
   return (
     <AuthContext.Provider value={value}>
