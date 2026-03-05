@@ -12,9 +12,10 @@
     }
   ],
   "rewrites": [
+    { "source": "/__/auth/:path*", "destination": "https://rave-cave-prod.firebaseapp.com/__/auth/:path*" },
     { "source": "/welcome", "destination": "/index-landing.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/((?!api|assets|welcome|privacy|terms|robots\\.txt|sitemap\\.xml|icon|apple-touch|og-image|manifest\\.webmanifest).*)", "destination": "/index.html" }
+    { "source": "/((?!api|assets|welcome|privacy|terms|robots\\.txt|sitemap\\.xml|icon|apple-touch|og-image|manifest\\.webmanifest|__/).*)", "destination": "/index.html" }
   ]
 }
