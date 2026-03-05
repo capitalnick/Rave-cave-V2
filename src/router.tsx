@@ -181,8 +181,9 @@ function AppShell() {
         subscriptionStatus={profile.subscriptionStatus}
       >
         <Outlet />
-        <FeedbackWidget />
       </Layout>
+
+      <FeedbackWidget />
 
       <ScanOverlay
         open={ctx.scanOpen}
