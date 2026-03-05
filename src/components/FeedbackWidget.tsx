@@ -6,7 +6,6 @@ import { useInventory } from '@/context/InventoryContext';
 import { useProfile } from '@/context/ProfileContext';
 import { useIsSheetMobile } from '@/components/ui/use-mobile';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Button as RCButton } from '@/components/rc/RCButton';
 import { submitFeedback } from '@/services/feedbackService';
 import { cn } from '@/lib/utils';
@@ -29,26 +28,8 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   const draftRef = useRef('');
   const [message, setMessage] = useState('');
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const fabRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => () => { clearTimeout(dismissTimerRef.current); }, []);
-
-  // Native DOM listener on the FAB — bypasses React synthetic events entirely
-  useEffect(() => {
-    const el = fabRef.current;
-    if (!el || !isMobile) return;
-    const handler = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-      clearTimeout(dismissTimerRef.current);
-      setMessage(draftRef.current);
-      setError(null);
-      setShowSuccess(false);
-      setIsOpen(true);
-    };
-    el.addEventListener('pointerdown', handler, { passive: false });
-    return () => el.removeEventListener('pointerdown', handler);
-  }, [isMobile]);
 
   const handleOpen = useCallback(() => {
     clearTimeout(dismissTimerRef.current);
@@ -158,59 +139,69 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     </div>
   );
 
-  const fabClasses = cn(
-    'fixed z-[9999] flex items-center justify-center',
-    'w-11 h-11 rounded-full pointer-events-auto',
-    'bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)]',
-    'shadow-[var(--rc-shadow-elevated)]',
-    'text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)]',
-    'transition-colors cursor-pointer select-none',
-    'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+20px)]',
-    'lg:right-6 lg:bottom-6',
-  );
-
-  if (isMobile) {
-    return (
-      <>
-        <button ref={fabRef} type="button" className={fabClasses} aria-label="Send feedback"
-          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}>
-          <HelpCircle size={20} />
-        </button>
-        {isOpen && (
-          <BottomSheet
-            open={isOpen}
-            onOpenChange={(open) => { if (!open) handleClose(); }}
-            snapPoint="half" id="feedback" title="Send feedback"
-            dismissible={!isSubmitting}
-          >
-            {formContent}
-          </BottomSheet>
-        )}
-      </>
-    );
-  }
-
+  // Single FAB button — never conditionally rendered, identical at all breakpoints
   return (
-    <Popover open={isOpen} onOpenChange={(open) => {
-      if (open) handleOpen(); else if (!isSubmitting) handleClose();
-    }}>
-      <PopoverTrigger asChild>
-        <button ref={fabRef} type="button" className={fabClasses} aria-label="Send feedback">
-          <HelpCircle size={20} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        side="top" align="end" sideOffset={8}
-        onInteractOutside={(e) => { if (isSubmitting) e.preventDefault(); }}
-        onEscapeKeyDown={(e) => { if (isSubmitting) e.preventDefault(); }}
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
         className={cn(
-          'w-80 p-4 bg-[var(--rc-surface-primary)] border border-[var(--rc-border-subtle)]',
-          'rounded-[var(--rc-radius-lg)] shadow-[var(--rc-shadow-elevated)]'
+          'fixed z-[9999] flex items-center justify-center',
+          'w-11 h-11 rounded-full pointer-events-auto',
+          'bg-[var(--rc-surface-secondary)] border border-[var(--rc-border-subtle)]',
+          'shadow-[var(--rc-shadow-elevated)]',
+          'text-[var(--rc-ink-secondary)] hover:text-[var(--rc-ink-primary)]',
+          'transition-colors cursor-pointer select-none',
+          'right-4 bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+20px)]',
+          'lg:right-6 lg:bottom-6',
         )}
+        style={{ touchAction: 'manipulation' }}
+        aria-label="Send feedback"
       >
-        {formContent}
-      </PopoverContent>
-    </Popover>
+        <HelpCircle size={20} />
+      </button>
+
+      {isOpen && isMobile && (
+        <BottomSheet
+          open={isOpen}
+          onOpenChange={(open) => { if (!open) handleClose(); }}
+          snapPoint="half" id="feedback" title="Send feedback"
+          dismissible={!isSubmitting}
+        >
+          {formContent}
+        </BottomSheet>
+      )}
+
+      {isOpen && !isMobile && (
+        <div
+          className={cn(
+            'fixed z-[9999] w-80 p-4 right-4 lg:right-6',
+            'bottom-[calc(var(--rc-tab-height)+env(safe-area-inset-bottom)+76px)]',
+            'lg:bottom-[62px]',
+            'bg-[var(--rc-surface-primary)] border border-[var(--rc-border-subtle)]',
+            'rounded-[var(--rc-radius-lg)] shadow-[var(--rc-shadow-elevated)]',
+            'animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2',
+          )}
+        >
+          {formContent}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="absolute top-2 right-2 p-1 text-[var(--rc-ink-ghost)] hover:text-[var(--rc-ink-primary)]"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
+      {isOpen && !isMobile && (
+        <div
+          className="fixed inset-0 z-[9998]"
+          onClick={isSubmitting ? undefined : handleClose}
+        />
+      )}
+    </>
   );
 });
 
