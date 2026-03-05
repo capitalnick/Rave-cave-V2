@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, memo, type ChangeEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouterState } from '@tanstack/react-router';
 import { HelpCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -43,7 +44,6 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     setIsOpen(true);
   }, []);
 
-  // draftRef is already synced on every keystroke, so no dependency on message needed
   const handleClose = useCallback(() => {
     setIsOpen(false);
   }, []);
@@ -199,15 +199,13 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   );
 
   if (isMobile) {
-    return (
+    return createPortal(
       <>
         {fab}
         {isOpen && (
           <BottomSheet
             open={isOpen}
-            onOpenChange={(open) => {
-              if (!open) handleClose();
-            }}
+            onOpenChange={(open) => { if (!open) handleClose(); }}
             snapPoint="half"
             id="feedback"
             title="Send feedback"
@@ -216,12 +214,13 @@ const FeedbackWidget = memo(function FeedbackWidget() {
             {formContent}
           </BottomSheet>
         )}
-      </>
+      </>,
+      document.body,
     );
   }
 
-  // Desktop: Popover
-  return (
+  // Desktop: Popover (portaled so FAB is at root DOM level)
+  return createPortal(
     <Popover open={isOpen} onOpenChange={(open) => {
       if (open) handleOpen();
       else if (!isSubmitting) handleClose();
@@ -243,7 +242,8 @@ const FeedbackWidget = memo(function FeedbackWidget() {
       >
         {formContent}
       </PopoverContent>
-    </Popover>
+    </Popover>,
+    document.body,
   );
 });
 
