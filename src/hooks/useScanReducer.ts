@@ -22,6 +22,7 @@ export type ScanAction =
   | { type: 'REVIEW_ACCEPT' }
   | { type: 'EXTRACTION_SUCCESS'; fields: Partial<Wine>; extraction: ExtractionResult }
   | { type: 'EXTRACTION_FAIL'; error: string; errorCode?: ExtractionErrorCode }
+  | { type: 'DECORATIVE_DETECTED' }
   | { type: 'MANUAL_ENTRY' }
   | { type: 'RETAKE' }
   | { type: 'SCAN_NEXT' }
@@ -103,6 +104,8 @@ function reducer(state: ScanState, action: ScanAction): ScanState {
       };
     case 'EXTRACTION_FAIL':
       return { ...state, stage: 'extracting', error: action.error, errorCode: action.errorCode ?? null };
+    case 'DECORATIVE_DETECTED':
+      return { ...state, stage: 'decorative', error: null, errorCode: null };
     case 'MANUAL_ENTRY':
       return {
         ...state,

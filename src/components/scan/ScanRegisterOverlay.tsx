@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModeSelector, { openFilePicker } from './ModeSelector';
 import CaptureReview from './CaptureReview';
+import DecorativeLabel from './DecorativeLabel';
 import ExtractionProgress from './ExtractionProgress';
 import RegisterDraft from './RegisterDraft';
 import DuplicateAlert from './DuplicateAlert';
@@ -95,7 +96,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   useEffect(() => {
     if (!open) return;
     const handlePopState = () => {
-      if (session.isActive && (state.stage === 'draft' || state.stage === 'extracting' || state.stage === 'reviewing')) {
+      if (session.isActive && (state.stage === 'draft' || state.stage === 'extracting' || state.stage === 'reviewing' || state.stage === 'decorative')) {
         setShowDiscard(true);
         window.history.pushState({ scanOverlay: true }, '');
       } else {
@@ -117,6 +118,19 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     try {
       const base64 = await compressImageForExtraction(file);
       const { fields, extraction } = await extractWineFromLabel(base64);
+
+      // Decorative label detection: image quality is fine but almost no text extracted
+      const filledCount = Object.values(extraction.fields)
+        .filter(f => f.value != null).length;
+      const isDecorative = filledCount <= 2
+        && (extraction.imageQuality === 'high' || extraction.imageQuality === 'medium');
+
+      if (isDecorative) {
+        trackEvent('scan_decorative_detected');
+        dispatch({ type: 'DECORATIVE_DETECTED' });
+        return;
+      }
+
       dispatch({ type: 'EXTRACTION_SUCCESS', fields, extraction });
     } catch (e: any) {
       const errorCode = e instanceof ExtractionError ? e.code : 'UNKNOWN';
@@ -178,10 +192,17 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
     if (state.draft && onAskRemy) onAskRemy(state.draft);
   }, [state.draft, onAskRemy]);
 
-  // Image quality warning
-  const imageQualityWarning = state.draft?.extraction?.imageQuality === 'low'
-    ? 'Image quality is low — some fields may need correction.'
+  // Image quality warning (includes decorative fallback)
+  const draftFilledCount = state.draft?.extraction
+    ? Object.values(state.draft.extraction.fields).filter(f => f.value != null).length
     : null;
+  const isDraftDecorative = draftFilledCount !== null && draftFilledCount <= 2
+    && (state.draft?.extraction?.imageQuality === 'high' || state.draft?.extraction?.imageQuality === 'medium');
+  const imageQualityWarning = isDraftDecorative
+    ? 'Decorative label detected. No text found on this side. Try scanning the back label, or fill in the details below.'
+    : state.draft?.extraction?.imageQuality === 'low'
+      ? 'Image quality is low \u2014 some fields may need correction.'
+      : null;
 
   // ── Commit Flow ──
   const handleConfirm = useCallback(async () => {
@@ -427,6 +448,16 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
                 previewUrl={state.previewUrl}
                 onAccept={handleReviewAccept}
                 onRetake={handleRetake}
+              />
+            </motion.div>
+          )}
+
+          {state.stage === 'decorative' && state.previewUrl && (
+            <motion.div key="decorative" {...stageMotion}>
+              <DecorativeLabel
+                previewUrl={state.previewUrl}
+                onScanBack={handleRetake}
+                onManualEntry={handleManualEntry}
               />
             </motion.div>
           )}

@@ -373,6 +373,7 @@ export type ScanStage =
   | 'mode-select'
   | 'reviewing'
   | 'extracting'
+  | 'decorative'
   | 'draft'
   | 'committing'
   | 'committed'
