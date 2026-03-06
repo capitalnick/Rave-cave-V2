@@ -31,10 +31,11 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
 }
 
 Rules:
-- DECORATIVE LABEL: If the label is purely artistic/decorative with NO readable wine text (no producer name, no wine name, no vintage, no region visible as text), set "isDecorativeLabel" to true and set ALL field values to null. Do NOT guess or hallucinate wine details from artwork alone. A label with even one legible wine-related word (e.g. a producer name, cuvee, or vintage) is NOT decorative.
+- DECORATIVE LABEL: If the label is purely artistic/decorative with NO readable wine text at all (no producer name, no wine name, no vintage, no region visible as text), set "isDecorativeLabel" to true and set ALL field values to null. A label with even one legible wine-related word is NOT decorative — set "isDecorativeLabel" to false.
+- KNOWLEDGE INFERENCE: When you CAN read text on the label (e.g. a wine name or producer), you SHOULD use your wine knowledge to infer related fields like cepage, region, country, and type. Set confidence to "medium" for inferred fields. This is encouraged — only decorative labels (no text at all) should have null fields.
 - WINE NAME: The "name" field is the cuvee/bottling name ONLY. It must NEVER match or contain the producer name or grape variety. If no distinct cuvee name is visible, set name to null.
-- Only extract what is clearly visible on the label
-- Set confidence to "high" if text is clearly legible, "medium" if partially visible/inferred, "low" if guessed from context
+- Only extract what is clearly visible on the label, plus inferences from your wine knowledge when text gives you a starting point
+- Set confidence to "high" if text is clearly legible, "medium" if inferred from your wine knowledge, "low" if guessed from context with low certainty
 - For wine type, infer from grape variety, colour cues, or label text if not explicitly stated
 - For region/country, infer from appellation if possible
 - For format, default to "750ml" if not visible (confidence: "low")
