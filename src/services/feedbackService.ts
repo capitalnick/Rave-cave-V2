@@ -8,6 +8,7 @@ export interface FeedbackPayload {
   userAgent: string;
   appVersion: string;
   isPremium: boolean;
+  screenshotUrl?: string | null;
 }
 
 export async function submitFeedback(data: FeedbackPayload): Promise<void> {

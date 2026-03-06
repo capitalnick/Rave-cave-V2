@@ -18,6 +18,7 @@ interface FeedbackBody {
   userAgent?: unknown;
   appVersion?: unknown;
   isPremium?: unknown;
+  screenshotUrl?: unknown;
 }
 
 export const submitFeedback = onRequest(
@@ -82,6 +83,12 @@ export const submitFeedback = onRequest(
       const isPremium = typeof body.isPremium === "boolean" ?
         body.isPremium : false;
 
+      // Validate screenshot URL — must be a Firebase Storage URL
+      const rawScreenshot = body.screenshotUrl;
+      const screenshotUrl = typeof rawScreenshot === "string" &&
+        rawScreenshot.startsWith("https://firebasestorage.googleapis.com/") ?
+        rawScreenshot.slice(0, 2000) : null;
+
       await db.collection("feedback").add({
         uid,
         message,
@@ -90,6 +97,7 @@ export const submitFeedback = onRequest(
         userAgent,
         appVersion,
         isPremium,
+        screenshotUrl,
         createdAt: FieldValue.serverTimestamp(),
       });
 

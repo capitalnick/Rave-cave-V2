@@ -6,7 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useInventory } from '@/context/InventoryContext';
 import { useProfile } from '@/context/ProfileContext';
 import { Button as RCButton } from '@/components/rc/RCButton';
+import { FeedbackAttachment } from '@/components/FeedbackAttachment';
 import { submitFeedback } from '@/services/feedbackService';
+import { compressImageForStorage } from '@/utils/imageCompression';
+import { uploadFeedbackImage } from '@/services/storageService';
 import { cn } from '@/lib/utils';
 
 const APP_VERSION = '1.0.0';
@@ -25,6 +28,7 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   const [showSuccess, setShowSuccess] = useState(false);
   const draftRef = useRef('');
   const [message, setMessage] = useState('');
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => { clearTimeout(dismissTimerRef.current); }, []);
@@ -38,8 +42,23 @@ const FeedbackWidget = memo(function FeedbackWidget() {
   }, []);
 
   const handleClose = useCallback(() => {
-    if (!isSubmitting) setIsOpen(false);
+    if (!isSubmitting) { setIsOpen(false); setAttachedFile(null); }
   }, [isSubmitting]);
+
+  const handleAttach = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image must be under 10MB');
+      return;
+    }
+    setError(null);
+    setAttachedFile(file);
+  }, []);
+
+  const handleRemoveAttachment = useCallback(() => { setAttachedFile(null); }, []);
 
   const handleMessageChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -56,13 +75,20 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     setIsSubmitting(true);
     setError(null);
     try {
+      let screenshotUrl: string | null = null;
+      if (attachedFile) {
+        const compressed = await compressImageForStorage(attachedFile);
+        screenshotUrl = await uploadFeedbackImage(compressed);
+      }
       await submitFeedback({
         message: trimmed, category, route,
         userAgent: navigator.userAgent, appVersion: APP_VERSION, isPremium,
+        screenshotUrl,
       });
       draftRef.current = '';
       setMessage('');
       setCategory(null);
+      setAttachedFile(null);
       setShowSuccess(true);
       dismissTimerRef.current = setTimeout(() => {
         setShowSuccess(false);
@@ -73,7 +99,7 @@ const FeedbackWidget = memo(function FeedbackWidget() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [message, isSubmitting, category, route, isPremium]);
+  }, [message, isSubmitting, category, route, isPremium, attachedFile]);
 
   if (scanOpen || !user || route === '/remy') return null;
 
@@ -135,6 +161,12 @@ const FeedbackWidget = memo(function FeedbackWidget() {
           {message.length}/500
         </span>
       </div>
+      <FeedbackAttachment
+        file={attachedFile}
+        onAttach={handleAttach}
+        onRemove={handleRemoveAttachment}
+        disabled={isSubmitting}
+      />
       {error && (
         <p role="alert" className="text-sm text-[var(--rc-accent-coral)] font-[family-name:var(--rc-font-body)]">
           {error}

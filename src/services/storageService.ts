@@ -56,6 +56,17 @@ export async function uploadWineListPage(blob: Blob, sessionId: string, pageInde
 }
 
 /**
+ * Upload a feedback screenshot to Firebase Storage.
+ * Path: users/{uid}/feedback/{timestamp}.jpg
+ */
+export async function uploadFeedbackImage(blob: Blob): Promise<string> {
+  const uid = requireUid();
+  const storageRef = ref(storage, `users/${uid}/feedback/${Date.now()}.jpg`);
+  await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+  return getDownloadURL(storageRef);
+}
+
+/**
  * Delete all images for a wine list session.
  */
 export async function deleteWineListSession(sessionId: string): Promise<void> {
