@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Filter } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import WineCard from '@/components/WineCard';
@@ -92,9 +92,11 @@ const CellarPage: React.FC = () => {
     }
   }, [triggered, reset, filteredInventory.length]);
 
-  // Reset visible count when filters/sort change
+  // Reset visible count and scroll position when filters/sort change
+  const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
+    scrollRef.current?.scrollTo(0, 0);
   }, [filteredInventory]);
 
   const visibleWines = filteredInventory.slice(0, visibleCount);
@@ -102,7 +104,7 @@ const CellarPage: React.FC = () => {
   const openFilters = () => setMobileFiltersOpen(true);
 
   return (
-    <div data-scroll-container className="relative h-full overflow-y-auto overscroll-contain">
+    <div ref={scrollRef} data-scroll-container className="relative h-full overflow-y-auto overscroll-contain">
       <CondensedHeader
         isPastHero={isPastHero}
         totalBottles={totalBottlesFiltered}
