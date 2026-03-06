@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { RefreshCw, PenLine, WifiOff, RotateCcw } from 'lucide-react';
 import { Heading, MonoLabel, Body, Button } from '@/components/rc';
 import type { ExtractionErrorCode } from '@/types';
@@ -42,6 +42,15 @@ const ExtractionProgress: React.FC<ExtractionProgressProps> = ({
 }) => {
   const errorDisplay = error ? getErrorDisplay(errorCode, isOffline) : null;
 
+  // Show encouraging message after 12s of waiting
+  const [longWait, setLongWait] = useState(false);
+  useEffect(() => {
+    if (error) return;
+    setLongWait(false);
+    const timer = setTimeout(() => setLongWait(true), 12000);
+    return () => clearTimeout(timer);
+  }, [error]);
+
   return (
     <div className="flex flex-col items-center px-6 py-8 space-y-6 min-h-[60vh] sm:min-h-[50vh]">
       {/* Thumbnail */}
@@ -77,8 +86,10 @@ const ExtractionProgress: React.FC<ExtractionProgressProps> = ({
         /* Loading State */
         <div className="w-full max-w-sm space-y-5 flex-1">
           <div className="text-center space-y-1">
-            <Heading scale="heading">READING LABEL</Heading>
-            <MonoLabel size="micro" colour="ghost">Reviewing details…</MonoLabel>
+            <Heading scale="heading">{longWait ? 'TOUGH ONE' : 'READING LABEL'}</Heading>
+            <MonoLabel size="micro" colour="ghost">
+              {longWait ? 'Hmmm, this is a tough one. Hold on a little longer…' : 'Reviewing details…'}
+            </MonoLabel>
           </div>
 
           {/* Progress bar */}
