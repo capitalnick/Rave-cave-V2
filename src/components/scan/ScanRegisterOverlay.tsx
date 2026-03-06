@@ -119,11 +119,11 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
       const base64 = await compressImageForExtraction(file);
       const { fields, extraction } = await extractWineFromLabel(base64);
 
-      // Decorative label detection: image quality is fine but almost no text extracted
+      // Decorative label detection: Gemini flags art-only labels, field count as fallback
       const filledCount = Object.values(extraction.fields)
         .filter(f => f.value != null).length;
-      const isDecorative = filledCount <= 2
-        && (extraction.imageQuality === 'high' || extraction.imageQuality === 'medium');
+      const isDecorative = extraction.isDecorativeLabel
+        || (filledCount <= 2 && (extraction.imageQuality === 'high' || extraction.imageQuality === 'medium'));
 
       if (isDecorative) {
         trackEvent('scan_decorative_detected');
@@ -193,11 +193,7 @@ const ScanRegisterOverlay: React.FC<ScanRegisterOverlayProps> = ({ open, onClose
   }, [state.draft, onAskRemy]);
 
   // Image quality warning (includes decorative fallback)
-  const draftFilledCount = state.draft?.extraction
-    ? Object.values(state.draft.extraction.fields).filter(f => f.value != null).length
-    : null;
-  const isDraftDecorative = draftFilledCount !== null && draftFilledCount <= 2
-    && (state.draft?.extraction?.imageQuality === 'high' || state.draft?.extraction?.imageQuality === 'medium');
+  const isDraftDecorative = state.draft?.extraction?.isDecorativeLabel === true;
   const imageQualityWarning = isDraftDecorative
     ? 'Decorative label detected. No text found on this side. Try scanning the back label, or fill in the details below.'
     : state.draft?.extraction?.imageQuality === 'low'

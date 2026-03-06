@@ -26,10 +26,12 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
   "format": { "value": "string or null", "confidence": "high|medium|low" },
   "drinkFrom": { "value": number_or_null, "confidence": "high|medium|low" },
   "drinkUntil": { "value": number_or_null, "confidence": "high|medium|low" },
-  "imageQuality": "high|medium|low"
+  "imageQuality": "high|medium|low",
+  "isDecorativeLabel": false
 }
 
 Rules:
+- DECORATIVE LABEL: If the label is purely artistic/decorative with NO readable wine text (no producer name, no wine name, no vintage, no region visible as text), set "isDecorativeLabel" to true and set ALL field values to null. Do NOT guess or hallucinate wine details from artwork alone. A label with even one legible wine-related word (e.g. a producer name, cuvee, or vintage) is NOT decorative.
 - WINE NAME: The "name" field is the cuvee/bottling name ONLY. It must NEVER match or contain the producer name or grape variety. If no distinct cuvee name is visible, set name to null.
 - Only extract what is clearly visible on the label
 - Set confidence to "high" if text is clearly legible, "medium" if partially visible/inferred, "low" if guessed from context
@@ -104,6 +106,7 @@ function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: Ex
   const status = filledCount >= 4 ? 'complete' : filledCount >= 2 ? 'partial' : 'failed';
 
   const imageQuality = (['high', 'medium', 'low'].includes(parsed.imageQuality) ? parsed.imageQuality : null) as ExtractionResult['imageQuality'];
+  const isDecorativeLabel = parsed.isDecorativeLabel === true;
 
   return {
     fields: wineFields,
@@ -111,6 +114,7 @@ function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: Ex
       fields: extractionFields,
       status,
       imageQuality,
+      isDecorativeLabel,
     },
   };
 }

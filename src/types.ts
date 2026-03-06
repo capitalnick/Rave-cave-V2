@@ -343,6 +343,7 @@ export interface ExtractionResult {
   fields: Record<string, ExtractedField>;
   status: 'complete' | 'partial' | 'failed';
   imageQuality: 'high' | 'medium' | 'low' | null;
+  isDecorativeLabel: boolean;
 }
 
 export interface DuplicateCandidate {
