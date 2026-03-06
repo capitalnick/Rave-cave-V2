@@ -97,6 +97,7 @@ export const gemini = onRequest(
     secrets: [GEMINI_API_KEY],
     cors: ALLOWED_ORIGINS,
     timeoutSeconds: 60,
+    minInstances: 1,
   },
   async (req, res) => {
     try {

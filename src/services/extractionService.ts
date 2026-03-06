@@ -118,11 +118,11 @@ function parseResponse(rawText: string): { fields: Partial<Wine>; extraction: Ex
 /**
  * Extract wine data from a label image via Gemini.
  * @param base64 - Base64-encoded JPEG (no data URI prefix)
- * @param timeoutMs - Abort after this many ms (default 12000)
+ * @param timeoutMs - Abort after this many ms (default 25000)
  */
 export async function extractWineFromLabel(
   base64: string,
-  timeoutMs = 12000
+  timeoutMs = 25000
 ): Promise<{ fields: Partial<Wine>; extraction: ExtractionResult }> {
   const MAX_ATTEMPTS = 3;
   const RETRY_DELAY = 2000;
