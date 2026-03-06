@@ -182,7 +182,7 @@ const CellarPage: React.FC = () => {
                   key={wine.id}
                   wine={wine}
                   isHero={heroWineIds.includes(wine.id)}
-                  onClick={() => setSelectedWine(wine)}
+                  onClick={() => { (document.activeElement as HTMLElement)?.blur(); setSelectedWine(wine); }}
                   onUpdate={(key, value) => handleUpdate(wine, key, value)}
                   homePrice={homePrices.get(wine.id)}
                 />

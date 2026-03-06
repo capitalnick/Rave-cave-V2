@@ -34,7 +34,7 @@ const MaturityDonut: React.FC<MaturityDonutProps> = ({ breakdown, onChipClick })
       ) : (
         <>
           <div className="relative h-48 sm:h-56">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={data}
